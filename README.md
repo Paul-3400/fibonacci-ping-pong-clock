@@ -46,11 +46,19 @@ Geschätzte Gesamtkosten: ~95–100 CHF.
   (config, mapping, fibonacci, display, tm1637, ntp_time, main), systemd-Autostart,
   Fallstricke, Gehäuse-Konstruktion, Fahrplan und offene Fragen.
 
+- 🧪 **[Wokwi-Prototyp](wokwi/)** – vollständige Simulation der Uhr mit dem
+  **Seeed XIAO ESP32-S3** statt dem Raspberry Pi Zero WH (Wokwi kennt den Pi nicht):
+  [sketch.ino](wokwi/sketch.ino), [diagram.json](wokwi/diagram.json)
+  (40 NeoPixel im 8×5-Raster, sauber verlegte Daisy-Chain) und
+  [libraries.txt](wokwi/libraries.txt). Details: [wokwi/README.md](wokwi/README.md)
+
 ## Status
 
 Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitung.
-Die Code-Dateien aus der Bauanleitung werden schrittweise als lauffähige Module
-eingecheckt.
+
+✅ Der Wokwi-Prototyp (XIAO ESP32-S3) läuft: komplette Anzeige- und NTP-Logik
+   ist simulierbar, die Code-Dateien aus der Bauanleitung werden daraus
+   schrittweise als lauffähige Module für den Pi eingecheckt.
 
 ## Lizenz
 
