@@ -12,7 +12,7 @@
     {
       "type": "wokwi-tm1637-7segment",
       "id": "tm",
-      "left": 640,
+      "left": 480,
       "top": 60,
       "attrs": {
         "color": "red",
@@ -25,7 +25,7 @@
       "left": 140,
       "top": 95,
       "attrs": {
-        "text": "Fibonacci-PingPong-Uhr – Wokwi-Prototyp (XIAO ESP32-S3, 40 LEDs, 8x5-Raster)"
+        "text": "Fibonacci-PingPong-Uhr – Wokwi-Prototyp (XIAO ESP32-S3, 40 LEDs, 5x8-Schnecke hochkant)"
       }
     },
     {
@@ -85,8 +85,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np5",
-      "left": 440,
-      "top": 180,
+      "left": 140,
+      "top": 290,
       "attrs": {
         "color": "white"
       }
@@ -94,8 +94,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np6",
-      "left": 500,
-      "top": 180,
+      "left": 200,
+      "top": 290,
       "attrs": {
         "color": "white"
       }
@@ -103,8 +103,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np7",
-      "left": 560,
-      "top": 180,
+      "left": 260,
+      "top": 290,
       "attrs": {
         "color": "white"
       }
@@ -112,7 +112,7 @@
     {
       "type": "wokwi-neopixel",
       "id": "np8",
-      "left": 140,
+      "left": 320,
       "top": 290,
       "attrs": {
         "color": "white"
@@ -121,7 +121,7 @@
     {
       "type": "wokwi-neopixel",
       "id": "np9",
-      "left": 200,
+      "left": 380,
       "top": 290,
       "attrs": {
         "color": "white"
@@ -130,8 +130,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np10",
-      "left": 260,
-      "top": 290,
+      "left": 140,
+      "top": 400,
       "attrs": {
         "color": "white"
       }
@@ -139,8 +139,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np11",
-      "left": 320,
-      "top": 290,
+      "left": 200,
+      "top": 400,
       "attrs": {
         "color": "white"
       }
@@ -148,8 +148,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np12",
-      "left": 380,
-      "top": 290,
+      "left": 260,
+      "top": 400,
       "attrs": {
         "color": "white"
       }
@@ -157,8 +157,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np13",
-      "left": 440,
-      "top": 290,
+      "left": 320,
+      "top": 400,
       "attrs": {
         "color": "white"
       }
@@ -166,8 +166,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np14",
-      "left": 500,
-      "top": 290,
+      "left": 380,
+      "top": 400,
       "attrs": {
         "color": "white"
       }
@@ -175,8 +175,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np15",
-      "left": 560,
-      "top": 290,
+      "left": 140,
+      "top": 510,
       "attrs": {
         "color": "white"
       }
@@ -184,8 +184,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np16",
-      "left": 140,
-      "top": 400,
+      "left": 200,
+      "top": 510,
       "attrs": {
         "color": "white"
       }
@@ -193,8 +193,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np17",
-      "left": 200,
-      "top": 400,
+      "left": 260,
+      "top": 510,
       "attrs": {
         "color": "white"
       }
@@ -202,8 +202,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np18",
-      "left": 260,
-      "top": 400,
+      "left": 320,
+      "top": 510,
       "attrs": {
         "color": "white"
       }
@@ -211,8 +211,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np19",
-      "left": 320,
-      "top": 400,
+      "left": 380,
+      "top": 510,
       "attrs": {
         "color": "white"
       }
@@ -220,8 +220,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np20",
-      "left": 380,
-      "top": 400,
+      "left": 140,
+      "top": 620,
       "attrs": {
         "color": "white"
       }
@@ -229,8 +229,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np21",
-      "left": 440,
-      "top": 400,
+      "left": 200,
+      "top": 620,
       "attrs": {
         "color": "white"
       }
@@ -238,8 +238,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np22",
-      "left": 500,
-      "top": 400,
+      "left": 260,
+      "top": 620,
       "attrs": {
         "color": "white"
       }
@@ -247,8 +247,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np23",
-      "left": 560,
-      "top": 400,
+      "left": 320,
+      "top": 620,
       "attrs": {
         "color": "white"
       }
@@ -256,8 +256,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np24",
-      "left": 140,
-      "top": 510,
+      "left": 380,
+      "top": 620,
       "attrs": {
         "color": "white"
       }
@@ -265,8 +265,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np25",
-      "left": 200,
-      "top": 510,
+      "left": 140,
+      "top": 730,
       "attrs": {
         "color": "white"
       }
@@ -274,8 +274,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np26",
-      "left": 260,
-      "top": 510,
+      "left": 200,
+      "top": 730,
       "attrs": {
         "color": "white"
       }
@@ -283,8 +283,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np27",
-      "left": 320,
-      "top": 510,
+      "left": 260,
+      "top": 730,
       "attrs": {
         "color": "white"
       }
@@ -292,8 +292,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np28",
-      "left": 380,
-      "top": 510,
+      "left": 320,
+      "top": 730,
       "attrs": {
         "color": "white"
       }
@@ -301,8 +301,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np29",
-      "left": 440,
-      "top": 510,
+      "left": 380,
+      "top": 730,
       "attrs": {
         "color": "white"
       }
@@ -310,8 +310,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np30",
-      "left": 500,
-      "top": 510,
+      "left": 140,
+      "top": 840,
       "attrs": {
         "color": "white"
       }
@@ -319,8 +319,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np31",
-      "left": 560,
-      "top": 510,
+      "left": 200,
+      "top": 840,
       "attrs": {
         "color": "white"
       }
@@ -328,8 +328,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np32",
-      "left": 140,
-      "top": 620,
+      "left": 260,
+      "top": 840,
       "attrs": {
         "color": "white"
       }
@@ -337,8 +337,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np33",
-      "left": 200,
-      "top": 620,
+      "left": 320,
+      "top": 840,
       "attrs": {
         "color": "white"
       }
@@ -346,8 +346,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np34",
-      "left": 260,
-      "top": 620,
+      "left": 380,
+      "top": 840,
       "attrs": {
         "color": "white"
       }
@@ -355,8 +355,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np35",
-      "left": 320,
-      "top": 620,
+      "left": 140,
+      "top": 950,
       "attrs": {
         "color": "white"
       }
@@ -364,8 +364,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np36",
-      "left": 380,
-      "top": 620,
+      "left": 200,
+      "top": 950,
       "attrs": {
         "color": "white"
       }
@@ -373,8 +373,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np37",
-      "left": 440,
-      "top": 620,
+      "left": 260,
+      "top": 950,
       "attrs": {
         "color": "white"
       }
@@ -382,8 +382,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np38",
-      "left": 500,
-      "top": 620,
+      "left": 320,
+      "top": 950,
       "attrs": {
         "color": "white"
       }
@@ -391,8 +391,8 @@
     {
       "type": "wokwi-neopixel",
       "id": "np39",
-      "left": 560,
-      "top": 620,
+      "left": 380,
+      "top": 950,
       "attrs": {
         "color": "white"
       }
@@ -401,9 +401,9 @@
       "type": "wokwi-text",
       "id": "fields",
       "left": 140,
-      "top": 675,
+      "top": 1100,
       "attrs": {
-        "text": "Feld A=5 (25) | B=3 (9) | C=2 (4) | D=1 | E=1 – Mapping: LED-Index = Zeile*8+Spalte"
+        "text": "Feld A=5 (25, oben) | B=3 (9, unten links) | C=2 (4, unten rechts) | D=1 (np28) | E=1 (np29) | Schnecke: E-D-C-B-A | Mapping: Zeile*5+Spalte"
       }
     }
   ],
@@ -579,19 +579,10 @@
       "np5:VDD",
       "red",
       [
-        "v-12px",
-        "h60px",
-        "v12px"
-      ]
-    ],
-    [
-      "np4:VSS",
-      "np5:VSS",
-      "black",
-      [
-        "v12px",
-        "h60px",
-        "v-12px"
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
       ]
     ],
     [
@@ -599,10 +590,21 @@
       "np5:DIN",
       "green",
       [
-        "h-9px",
-        "v-45px",
-        "h90px",
-        "v26px"
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np4:VSS",
+      "np5:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
       ]
     ],
     [
@@ -672,20 +674,9 @@
       "np8:VDD",
       "red",
       [
-        "h-10px",
-        "v45px",
-        "h-410px",
-        "v65px"
-      ]
-    ],
-    [
-      "np7:DOUT",
-      "np8:DIN",
-      "green",
-      [
-        "v38px",
-        "h-399px",
-        "v53px"
+        "v-12px",
+        "h60px",
+        "v12px"
       ]
     ],
     [
@@ -693,11 +684,20 @@
       "np8:VSS",
       "black",
       [
-        "h-10px",
-        "v50px",
-        "h-391px",
-        "v60px",
-        "h-19px"
+        "v12px",
+        "h60px",
+        "v-12px"
+      ]
+    ],
+    [
+      "np7:DOUT",
+      "np8:DIN",
+      "green",
+      [
+        "h-9px",
+        "v-45px",
+        "h90px",
+        "v26px"
       ]
     ],
     [
@@ -736,19 +736,10 @@
       "np10:VDD",
       "red",
       [
-        "v-12px",
-        "h60px",
-        "v12px"
-      ]
-    ],
-    [
-      "np9:VSS",
-      "np10:VSS",
-      "black",
-      [
-        "v12px",
-        "h60px",
-        "v-12px"
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
       ]
     ],
     [
@@ -756,10 +747,21 @@
       "np10:DIN",
       "green",
       [
-        "h-9px",
-        "v-45px",
-        "h90px",
-        "v26px"
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np9:VSS",
+      "np10:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
       ]
     ],
     [
@@ -891,14 +893,47 @@
       "np15:VDD",
       "red",
       [
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
+      ]
+    ],
+    [
+      "np14:DOUT",
+      "np15:DIN",
+      "green",
+      [
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np14:VSS",
+      "np15:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
+      ]
+    ],
+    [
+      "np15:VDD",
+      "np16:VDD",
+      "red",
+      [
         "v-12px",
         "h60px",
         "v12px"
       ]
     ],
     [
-      "np14:VSS",
       "np15:VSS",
+      "np16:VSS",
       "black",
       [
         "v12px",
@@ -907,47 +942,14 @@
       ]
     ],
     [
-      "np14:DOUT",
-      "np15:DIN",
+      "np15:DOUT",
+      "np16:DIN",
       "green",
       [
         "h-9px",
         "v-45px",
         "h90px",
         "v26px"
-      ]
-    ],
-    [
-      "np15:VDD",
-      "np16:VDD",
-      "red",
-      [
-        "h-10px",
-        "v45px",
-        "h-410px",
-        "v65px"
-      ]
-    ],
-    [
-      "np15:DOUT",
-      "np16:DIN",
-      "green",
-      [
-        "v38px",
-        "h-399px",
-        "v53px"
-      ]
-    ],
-    [
-      "np15:VSS",
-      "np16:VSS",
-      "black",
-      [
-        "h-10px",
-        "v50px",
-        "h-391px",
-        "v60px",
-        "h-19px"
       ]
     ],
     [
@@ -1048,19 +1050,10 @@
       "np20:VDD",
       "red",
       [
-        "v-12px",
-        "h60px",
-        "v12px"
-      ]
-    ],
-    [
-      "np19:VSS",
-      "np20:VSS",
-      "black",
-      [
-        "v12px",
-        "h60px",
-        "v-12px"
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
       ]
     ],
     [
@@ -1068,10 +1061,21 @@
       "np20:DIN",
       "green",
       [
-        "h-9px",
-        "v-45px",
-        "h90px",
-        "v26px"
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np19:VSS",
+      "np20:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
       ]
     ],
     [
@@ -1172,47 +1176,14 @@
       "np24:VDD",
       "red",
       [
-        "h-10px",
-        "v45px",
-        "h-410px",
-        "v65px"
-      ]
-    ],
-    [
-      "np23:DOUT",
-      "np24:DIN",
-      "green",
-      [
-        "v38px",
-        "h-399px",
-        "v53px"
-      ]
-    ],
-    [
-      "np23:VSS",
-      "np24:VSS",
-      "black",
-      [
-        "h-10px",
-        "v50px",
-        "h-391px",
-        "v60px",
-        "h-19px"
-      ]
-    ],
-    [
-      "np24:VDD",
-      "np25:VDD",
-      "red",
-      [
         "v-12px",
         "h60px",
         "v12px"
       ]
     ],
     [
+      "np23:VSS",
       "np24:VSS",
-      "np25:VSS",
       "black",
       [
         "v12px",
@@ -1221,14 +1192,47 @@
       ]
     ],
     [
-      "np24:DOUT",
-      "np25:DIN",
+      "np23:DOUT",
+      "np24:DIN",
       "green",
       [
         "h-9px",
         "v-45px",
         "h90px",
         "v26px"
+      ]
+    ],
+    [
+      "np24:VDD",
+      "np25:VDD",
+      "red",
+      [
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
+      ]
+    ],
+    [
+      "np24:DOUT",
+      "np25:DIN",
+      "green",
+      [
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np24:VSS",
+      "np25:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
       ]
     ],
     [
@@ -1360,19 +1364,10 @@
       "np30:VDD",
       "red",
       [
-        "v-12px",
-        "h60px",
-        "v12px"
-      ]
-    ],
-    [
-      "np29:VSS",
-      "np30:VSS",
-      "black",
-      [
-        "v12px",
-        "h60px",
-        "v-12px"
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
       ]
     ],
     [
@@ -1380,10 +1375,21 @@
       "np30:DIN",
       "green",
       [
-        "h-9px",
-        "v-45px",
-        "h90px",
-        "v26px"
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np29:VSS",
+      "np30:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
       ]
     ],
     [
@@ -1422,20 +1428,9 @@
       "np32:VDD",
       "red",
       [
-        "h-10px",
-        "v45px",
-        "h-410px",
-        "v65px"
-      ]
-    ],
-    [
-      "np31:DOUT",
-      "np32:DIN",
-      "green",
-      [
-        "v38px",
-        "h-399px",
-        "v53px"
+        "v-12px",
+        "h60px",
+        "v12px"
       ]
     ],
     [
@@ -1443,11 +1438,20 @@
       "np32:VSS",
       "black",
       [
-        "h-10px",
-        "v50px",
-        "h-391px",
-        "v60px",
-        "h-19px"
+        "v12px",
+        "h60px",
+        "v-12px"
+      ]
+    ],
+    [
+      "np31:DOUT",
+      "np32:DIN",
+      "green",
+      [
+        "h-9px",
+        "v-45px",
+        "h90px",
+        "v26px"
       ]
     ],
     [
@@ -1517,19 +1521,10 @@
       "np35:VDD",
       "red",
       [
-        "v-12px",
-        "h60px",
-        "v12px"
-      ]
-    ],
-    [
-      "np34:VSS",
-      "np35:VSS",
-      "black",
-      [
-        "v12px",
-        "h60px",
-        "v-12px"
+        "h-10px",
+        "v45px",
+        "h-230px",
+        "v65px"
       ]
     ],
     [
@@ -1537,10 +1532,21 @@
       "np35:DIN",
       "green",
       [
-        "h-9px",
-        "v-45px",
-        "h90px",
-        "v26px"
+        "v38px",
+        "h-219px",
+        "v53px"
+      ]
+    ],
+    [
+      "np34:VSS",
+      "np35:VSS",
+      "black",
+      [
+        "h-10px",
+        "v50px",
+        "h-211px",
+        "v60px",
+        "h-19px"
       ]
     ],
     [

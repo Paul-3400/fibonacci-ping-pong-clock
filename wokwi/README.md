@@ -1,18 +1,27 @@
-# 🧪 Wokwi-Prototyp – Fibonacci Ping-Pong-Ball-Uhr
+# 🧪 Wokwi-Prototyp – Fibonacci Ping-Pong-Ball-Uhr (Schnecken-Layout)
 
-Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 18.10.2026
+Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026
 
 Vollständige Simulation der Fibonacci-Uhr im Browser, mit dem **Seeed XIAO ESP32-S3**
 statt dem Raspberry Pi Zero WH – Wokwi kennt den Pi Zero nicht. Die komplette Logik
 (Fibonacci-Zerlegung mit Zufallsauswahl, NTP-Zeitsync, TM1637-Klartext) ist im
 Prototyp lauffähig und wird später auf den Pi portiert.
 
+Das Raster steht **hochkant (5 Spalten × 8 Zeilen)** als sich öffnende
+Fibonacci-Schnecke – dasselbe Layout, das auch für die echte Uhr gebaut wird:
+Feld A (5×5) oben, B (3×3) unten links, C (2×2) unten rechts, D (np28) und
+E (np29) nebeneinander in Zeile 5. Mapping: `LED-Index = Zeile*5 + Spalte`.
+
+Die **fünf Taster** der Ziel-Uhr sind im Prototyp nicht enthalten – die
+Demo-Variante mit Tastern (Feld-Durchschaltung, Handbetrieb, Normalbetrieb)
+liegt im Ordner [wokwidemo](../wokwidemo/).
+
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `sketch.ino` | Firmware: 40 NeoPixel (8×5-Raster), Fibonacci-Zerlegung (setBits-Portierung), TM1637, WLAN+NTP, Self-Test |
-| `diagram.json` | Aufbau: XIAO ESP32-S3, 40 NeoPixel als 8×5-Raster mit durchgängiger Daisy-Chain, TM1637, Legende |
+| `sketch.ino` | Firmware: 40 NeoPixel im 5×8-Schnecken-Raster, Fibonacci-Zerlegung (setBits-Portierung), TM1637, WLAN+NTP, Self-Test |
+| `diagram.json` | Aufbau: XIAO ESP32-S3, 40 NeoPixel als 5×8-Raster hochkant mit durchgängiger Daisy-Chain, TM1637, Legende |
 | `libraries.txt` | `Adafruit NeoPixel`, `TM1637` (Avishay Orpaz) |
 
 ## Pin-Mapping: Pi Zero WH (Bauanleitung) ↔ XIAO ESP32-S3 (Prototyp)
@@ -33,6 +42,8 @@ Hinweis: GPIO18 existiert am XIAO nicht; D2/GPIO3 ist Strapping-Pin und wurde ve
 - **NTP funktioniert in der Simulation mit echter Zeit** (`Wokwi-GUEST` + `pool.ntp.org`,
   Zeitzone Europe/Zurich inkl. Sommerzeit).
 - Helligkeit auf ~35 % gedimmt; am echten Aufbau wären 40 LEDs in Vollelweiss ~2,4 A.
+- Die Taster der Ziel-Uhr (GPIO 5/6/12/13/16 am Pi) sind hier nicht simuliert –
+  siehe [wokwidemo](../wokwidemo/).
 
 ## So startest du die Simulation
 
@@ -43,11 +54,11 @@ Hinweis: GPIO18 existiert am XIAO nicht; D2/GPIO3 ist Strapping-Pin und wurde ve
 3. Play drücken. Beim Start leuchten die Felder A–E nacheinander:
    **A rot → B grün → C blau → D gelb → E magenta** (Self-Test für Mapping und Kette).
 4. Danach: WLAN+NTP verbinden, TM1637 zeigt HH:MM (Doppelpunkt blinkt), das Raster
-   zeigt die Fibonacci-Zerlegung.
+   zeigt die Fibonacci-Zerlegung im Schnecken-Layout.
 
 ## Verdrahtung im Diagramm
 
-- **Daisy-Chain:** LED0 → LED1 → … → LED39, Reihenfolge = Mapping `LED-Index = Zeile*8 + Spalte`.
+- **Daisy-Chain:** LED0 → LED1 → … → LED39, Reihenfolge = Mapping `LED-Index = Zeile*5 + Spalte`.
 - **Farbschema** (auch im Diagramm als Legende): Daten **grün**, 5 V **rot**, GND **schwarz**,
   TM1637 CLK **orange**, DIO **blau**.
 - Strom als Daisy-Chain von Part zu Part (keine Einzeladern vom Board);

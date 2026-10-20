@@ -2,17 +2,25 @@
  * 🏓 Fibonacci Ping-Pong-Ball-Uhr – Wokwi-Prototyp
  *
  * Board:    Seeed XIAO ESP32-S3 (Prototyp-Ersatz für den Raspberry Pi Zero WH)
- * Anzeige:  40x WS2812B NeoPixel im 8x5-Raster (1 LED pro Ping-Pong-Ball)
- *           als Fibonacci-Felder A(5) B(3) C(2) D(1) E(1)
+ * Anzeige:  40x WS2812B NeoPixel im 5x8-Schnecken-Raster hochkant
+ *           (1 LED pro Ping-Pong-Ball), Fibonacci-Felder A(5) B(3) C(2) D(1) E(1)
+ *           Feld A (5x5) oben | B (3x3) unten links | C (2x2) unten rechts
+ *           D (Zeile 5, Spalte 3 / np28) | E (Zeile 5, Spalte 4 / np29)
  * Klartext: TM1637 – im Wokwi-Sim 4-stellig (HH:MM); Ziel: 6-stellig (HH:MM:SS)
  * Zeit:     NTP über WLAN (Wokwi-GUEST, pool.ntp.org), Zeitzone Europe/Zurich
+ *
+ * Mapping: LED-Index = Zeile*5 + Spalte (5 Spalten × 8 Zeilen)
+ *
+ * Die fünf Taster der Ziel-Uhr sind im Prototyp nicht enthalten –
+ * die Demo-Variante mit Tastern liegt im Ordner wokwidemo/.
  *
  * Beim Start leuchtet jedes Feld kurz nacheinander (Self-Test) –
  * damit lassen sich Verdrahtung und Feld-Mapping in einem Durchgang prüfen.
  *
- * Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 18.10.2026
+ * Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026
  * Lizenz: GNU GPL v2 – abgeleitet von der Arduino-Fibonacci-Uhr
  *          von Philippe Chretien (https://github.com/pchretien/fibo)
+ *          Layout-Anordnung inspiriert durch Nerdiy (https://www.nerdiy.de/fibonacciClock)
  */
 
 #include <WiFi.h>
@@ -38,30 +46,30 @@ const uint32_t C_HOURS = Adafruit_NeoPixel::Color(255, 0, 0);  // rot
 const uint32_t C_MIN   = Adafruit_NeoPixel::Color(0, 255, 0);  // gruen
 const uint32_t C_BOTH  = Adafruit_NeoPixel::Color(0, 0, 255);  // blau
 
-// ---------- Fibonacci-Felder (Mapping: LED-Index = Zeile*8 + Spalte) ----------
-// A: Zeilen 0-4, Spalten 0-4 (25 LEDs) | B: Zeilen 0-2, Spalten 5-7 (9)
-// C: Zeilen 3-4, Spalten 5-6 (4)        | D: Zeile 3, Spalte 7 (1)
-// E: Zeile 4, Spalte 7 (1)
+// ---------- Fibonacci-Felder (Mapping: LED-Index = Zeile*5 + Spalte) ----------
+// A: Zeilen 0-4, Spalten 0-4 (25 LEDs) | B: Zeilen 5-7, Spalten 0-2 (9)
+// C: Zeilen 6-7, Spalten 3-4 (4)        | D: Zeile 5, Spalte 3 (np28)
+// E: Zeile 5, Spalte 4 (np29)
 const uint8_t FIELD_VALUE[5] = {5, 3, 2, 1, 1};
 uint8_t fieldLeds[5][25];
 uint8_t fieldCount[5];
 
 void buildFields() {
   uint8_t n = 0;
-  for (uint8_t r = 0; r < 5; r++)
-    for (uint8_t c = 0; c < 5; c++) fieldLeds[0][n++] = r * 8 + c;
+  for (uint8_t r = 0; r < 5; r++)                    // A: Zeilen 0-4, Spalten 0-4
+    for (uint8_t c = 0; c < 5; c++) fieldLeds[0][n++] = r * 5 + c;
   fieldCount[0] = n;
   n = 0;
-  for (uint8_t r = 0; r < 3; r++)
-    for (uint8_t c = 5; c < 8; c++) fieldLeds[1][n++] = r * 8 + c;
+  for (uint8_t r = 5; r < 8; r++)                    // B: Zeilen 5-7, Spalten 0-2
+    for (uint8_t c = 0; c < 3; c++) fieldLeds[1][n++] = r * 5 + c;
   fieldCount[1] = n;
   n = 0;
-  for (uint8_t r = 3; r < 5; r++)
-    for (uint8_t c = 5; c < 7; c++) fieldLeds[2][n++] = r * 8 + c;
+  for (uint8_t r = 6; r < 8; r++)                    // C: Zeilen 6-7, Spalten 3-4
+    for (uint8_t c = 3; c < 5; c++) fieldLeds[2][n++] = r * 5 + c;
   fieldCount[2] = n;
-  fieldLeds[3][0] = 3 * 8 + 7;
+  fieldLeds[3][0] = 5 * 5 + 3;                       // D: Zeile 5, Spalte 3 (np28)
   fieldCount[3] = 1;
-  fieldLeds[4][0] = 4 * 8 + 7;
+  fieldLeds[4][0] = 5 * 5 + 4;                       // E: Zeile 5, Spalte 4 (np29)
   fieldCount[4] = 1;
 }
 
@@ -165,7 +173,7 @@ void setup() {
   display.setBrightness(7);
   display.clear();
 
-  Serial.println("Fibonacci Ping-Pong-Ball-Uhr (Prototyp) startet...");
+  Serial.println("Fibonacci Ping-Pong-Ball-Uhr (Prototyp, Schnecken-Layout) startet...");
   selfTest();
 
   Serial.println("Verbinde WLAN (Wokwi-GUEST)...");
