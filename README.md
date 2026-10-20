@@ -52,6 +52,11 @@ Geschätzte Gesamtkosten: ~95–100 CHF.
   (40 NeoPixel im 8×5-Raster, sauber verlegte Daisy-Chain) und
   [libraries.txt](wokwi/libraries.txt). Details: [wokwi/README.md](wokwi/README.md)
 
+- 🎛️ **[Demo-Variante mit 5 Tastern](wokwidemo/)** – für Demonstrationszwecke:
+  Taster 1 schaltet die Felder A–E durch, Taster 2–4 stellen im Handbetrieb
+  +1 Minute / +5 Minuten / +1 Stunde, Taster 5 ruft den Normalbetrieb
+  (NTP-Zeit) zurück. Details: [wokwidemo/README.md](wokwidemo/README.md)
+
 ## Status
 
 Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitung.
@@ -59,6 +64,9 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
 ✅ Der Wokwi-Prototyp (XIAO ESP32-S3) läuft: komplette Anzeige- und NTP-Logik
    ist simulierbar, die Code-Dateien aus der Bauanleitung werden daraus
    schrittweise als lauffähige Module für den Pi eingecheckt.
+
+✅ Demo-Variante mit 5 Tastern (Feld-Durchschaltung, Handbetrieb, Normalbetrieb)
+   für Demonstrationen der Fibonacci-Codierung.
 
 ## Lizenz
 
