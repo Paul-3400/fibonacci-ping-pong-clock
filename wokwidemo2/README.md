@@ -5,19 +5,19 @@ Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026
 Wie die [Demo-Variante](../wokwidemo/), aber das Raster ist **hochkant (5 Spalten ×
 8 Zeilen)** als **sich öffnende Fibonacci-Schnecke** angeordnet – die Anordnung der
 [Nerdiy-Fibonacci-Uhr](https://www.nerdiy.de/fibonacciClock) bzw. des Originals.
-Das grosse Feld oben dominiert wie ein Zifferblatt, die kleinen Felder stehen unten
-rechts – das Ablesen ist intuitiver als beim waagrechten 8×5-Layout, weil das Auge
-der öffnenden Schnecke folgt.
+Das grosse Feld oben dominiert wie ein Zifferblatt, und die Quadrate wachsen vom
+Zentrum aus spiralförmig nach aussen – das Ablesen ist intuitiver als beim
+waagrechten 8×5-Layout, weil das Auge der öffnenden Schnecke folgt.
 
-## Feld-Anordnung (Schnecke, gegen den Uhrzeigersinn öffnend: E → D → C → B → A)
+## Feld-Anordnung (Schnecke, vom Zentrum nach aussen öffnend: D → E → C → B → A)
 
-| Feld | Wert | Bälle | Lage (5 Spalten × 8 Zeilen) |
-|---|---|---|---|
-| **A** | 5 | 25 | Zeilen 0–4, Spalten 0–4 – **oben, volle Breite** (5×5-Quadrat) |
-| **B** | 3 | 9 | Zeilen 5–7, Spalten 0–2 – **unten links** (3×3-Quadrat) |
-| **C** | 2 | 4 | Zeilen 5–6, Spalten 3–4 – **unten rechts** (2×2-Quadrat) |
-| **D** | 1 | 1 | Zeile 7, Spalte 3 |
-| **E** | 1 | 1 | Zeile 7, Spalte 4 |
+| Feld | Wert | Bälle | Lage (5 Spalten × 8 Zeilen) | np-Indizes |
+|---|---|---|---|---|
+| **A** | 5 | 25 | Zeilen 0–4, Spalten 0–4 – **oben, volle Breite** (5×5-Quadrat) | np0–np24 |
+| **B** | 3 | 9 | Zeilen 5–7, Spalten 0–2 – **unten links** (3×3-Quadrat) | np25–np27, np30–np32, np35–np37 |
+| **C** | 2 | 4 | Zeilen 6–7, Spalten 3–4 – **unten rechts** (2×2-Quadrat) | np33, np34, np38, np39 |
+| **D** | 1 | 1 | Zeile 5, Spalte 3 | np28 |
+| **E** | 1 | 1 | Zeile 5, Spalte 4 | np29 |
 
 ```
 A A A A A
@@ -25,12 +25,21 @@ A A A A A
 A A A A A
 A A A A A
 A A A A A
+B B B D E     ← D und E nebeneinander (Zentrum der Schnecke)
+B B B C C     ← C direkt darunter
 B B B C C
-B B B C C
-B B B D E
 ```
 
 Mapping: `LED-Index = Zeile*5 + Spalte` – alle 40 Bälle, Summe der Werte 12.
+
+**Zur Schnecke:** Die Quadrate wachsen vom Zentrum nach aussen in echter
+Fibonacci-Manier: D (1) und E (1) liegen nebeneinander, C (2) schliesst direkt
+darunter an, B (3) links daneben, A (5) schliesslich oben über die volle Breite.
+Jedes Quadrat umschliesst damit die kleineren – klassische Fibonacci-Spirale.
+
+> *Änderung 20.10.2026:* C/D/E gegenüber der ersten Version verschoben – C liegt
+> neu **unter** D/E (np33, np34, np38, np39 statt np28–np34), D/E neu in Zeile 5
+> (np28, np29 statt np38, np39). So entsteht die korrekte öffnende Schnecke.
 
 ## Die fünf Taster
 
@@ -53,8 +62,8 @@ Mapping: `LED-Index = Zeile*5 + Spalte` – alle 40 Bälle, Summe der Werte 12.
 
 ## Demo-Szenarien
 
-1. **Schnecke zeigen:** T1 fünfmal drücken – von den kleinen Feldern unten (D, E) über
-   C und B zum grossen Feld A oben. TM1637 zeigt Buchstabe + Wert.
+1. **Schnecke zeigen:** T1 fünfmal drücken – vom Zentrum (D, E) über C und B zum
+   grossen Feld A oben. TM1637 zeigt Buchstabe + Wert.
 2. **Ablesen üben (Beispiel 08:10):** mit T4/T3 einstellen – A+B rot (Stunde 5+3), C grün (Minute 2×5).
 3. **Zwischen den Layouts vergleichen:** gleiche Zeit in [wokwidemo](../wokwidemo/)
    (8×5 waagrecht) und hier (5×8 Schnecke) einstellen – Lesbarkeitsvergleich live.
@@ -72,7 +81,7 @@ Mapping: `LED-Index = Zeile*5 + Spalte` – alle 40 Bälle, Summe der Werte 12.
 
 | Datei | Inhalt |
 |---|---|
-| `sketch.ino` | Demo-2-Firmware: identische Logik zur Demo 1, neues Schnecken-Mapping |
+| `sketch.ino` | Demo-2-Firmware: identische Logik zur Demo 1, Schnecken-Mapping (C unter D/E) |
 | `diagram.json` | Hochkantes 5×8-Raster mit 5 Tastern und Beschriftung |
 | `libraries.txt` | `Adafruit NeoPixel`, `TM1637` |
 

@@ -1,17 +1,18 @@
 /*
  * 🏓 Fibonacci Ping-Pong-Ball-Uhr – Wokwi-DEMO 2 (Schnecken-Layout, 5 Taster)
  *
- * Wie die Demo-Variante, aber das 8x5-Raster ist hochkant als
- * "sich oeffnende Fibonacci-Schnecke" angeordnet (Anordnung nach dem
- * Nerdiy-/Original-Fibonacci-Uhr-Layout, 5 Spalten x 8 Zeilen):
+ * Wie die Demo-Variante, aber das Raster ist hochkant als
+ * "sich oeffnende Fibonacci-Schnecke" angeordnet (5 Spalten x 8 Zeilen):
  *
  *      Feld A (Wert 5, 25 Baelle): Zeilen 0-4, Spalten 0-4  (oben, volle Breite)
  *      Feld B (Wert 3,  9 Baelle): Zeilen 5-7, Spalten 0-2  (unten links)
- *      Feld C (Wert 2,  4 Baelle): Zeilen 5-6, Spalten 3-4  (unten rechts)
- *      Feld D (Wert 1,  1 Ball):   Zeile 7,   Spalte 3
- *      Feld E (Wert 1,  1 Ball):   Zeile 7,   Spalte 4
+ *      Feld C (Wert 2,  4 Baelle): Zeilen 6-7, Spalten 3-4  (unten rechts,
+ *                                  np33, np34, np38, np39)
+ *      Feld D (Wert 1,  1 Ball):   Zeile 5,   Spalte 3      (np28)
+ *      Feld E (Wert 1,  1 Ball):   Zeile 5,   Spalte 4      (np29)
  *
- * Die Schnecke oeffnet sich gegen den Uhrzeigersinn: E -> D -> C -> B -> A.
+ * Die Schnecke oeffnet sich vom Zentrum (D/E, Zeile 5) nach aussen:
+ * D -> E -> C (darunter) -> B (links) -> A (oben).
  * Mapping: LED-Index = Zeile*5 + Spalte
  *
  * Taster:
@@ -62,8 +63,8 @@ const uint32_t C_WHITE = Adafruit_NeoPixel::Color(255, 255, 255);
 
 // ---------- Fibonacci-Felder im Schnecken-Layout ----------
 // Mapping: LED-Index = Zeile*5 + Spalte (5 Spalten x 8 Zeilen, hochkant)
-// A: 5x5 oben | B: 3x3 unten links | C: 2x2 unten rechts
-// D: unten (Zeile 7, Spalte 3) | E: unten (Zeile 7, Spalte 4)
+// A: 5x5 oben | B: 3x3 unten links | C: 2x2 unten rechts (unter D/E)
+// D: Zeile 5, Spalte 3 (np28) | E: Zeile 5, Spalte 4 (np29)
 const uint8_t FIELD_VALUE[5] = {5, 3, 2, 1, 1};   // A, B, C, D, E
 uint8_t fieldLeds[5][25];
 uint8_t fieldCount[5];
@@ -78,12 +79,12 @@ void buildFields() {
     for (uint8_t c = 0; c < 3; c++) fieldLeds[1][n++] = r * 5 + c;
   fieldCount[1] = n;
   n = 0;
-  for (uint8_t r = 5; r < 7; r++)                    // C: Zeilen 5-6, Spalten 3-4
-    for (uint8_t c = 3; c < 5; c++) fieldLeds[2][n++] = r * 5 + c;
+  for (uint8_t r = 6; r < 8; r++)                    // C: Zeilen 6-7, Spalten 3-4
+    for (uint8_t c = 3; c < 5; c++) fieldLeds[2][n++] = r * 5 + c;   // np33, np34, np38, np39
   fieldCount[2] = n;
-  fieldLeds[3][0] = 7 * 5 + 3;                       // D: Zeile 7, Spalte 3
+  fieldLeds[3][0] = 5 * 5 + 3;                       // D: Zeile 5, Spalte 3 (np28)
   fieldCount[3] = 1;
-  fieldLeds[4][0] = 7 * 5 + 4;                       // E: Zeile 7, Spalte 4
+  fieldLeds[4][0] = 5 * 5 + 4;                       // E: Zeile 5, Spalte 4 (np29)
   fieldCount[4] = 1;
 }
 
