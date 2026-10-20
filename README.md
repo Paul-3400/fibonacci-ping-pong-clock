@@ -1,14 +1,16 @@
 # 🏓 Fibonacci Ping-Pong-Ball-Uhr
 
-Eine Fibonacci-LED-Uhr mit **40 Ping-Pong-Bällen in einem 8×5-Raster** (⌀ 40 mm),
-gesteuert durch einen **Raspberry Pi Zero WH**, mit zusätzlichem **TM1637 6-stelligem
-LED-Display** (0,36″) als Klartext-Anzeige HH:MM:SS.
+Eine Fibonacci-LED-Uhr mit **40 Ping-Pong-Bällen**, gesteuert durch einen
+**Raspberry Pi Zero WH**, mit zusätzlichem **TM1637 6-stelligem LED-Display**
+(0,36″) als Klartext-Anzeige HH:MM:SS – wahlweise als 8×5-Raster (Bauanleitung)
+oder als **hochkantes Schnecken-Layout 5×8** (Demo 2).
 
 > Schwesternprojekt der 9-Bälle-Ping-Pong-Uhr: <https://github.com/Paul-3400/ping-pong-ball-clock>
 
 ## Funktionsprinzip
 
-Die fünf Fibonacci-Felder (Werte 1, 1, 2, 3, 5) kacheln lückenlos das 8×5-Rechteck:
+Die fünf Fibonacci-Felder (Werte 1, 1, 2, 3, 5) kacheln lückenlos 40 Bälle
+– entweder in ein 8×5-Raster oder in die öffnende Fibonacci-Schnecke (5×8):
 
 | Feld | Wert | Bälle |
 |------|------|-------|
@@ -57,6 +59,12 @@ Geschätzte Gesamtkosten: ~95–100 CHF.
   +1 Minute / +5 Minuten / +1 Stunde, Taster 5 ruft den Normalbetrieb
   (NTP-Zeit) zurück. Details: [wokwidemo/README.md](wokwidemo/README.md)
 
+- 🐌 **[Demo-Variante 2 – Schnecken-Layout](wokwidemo2/)** – wie die Demo, aber das
+  Raster ist **hochkant (5×8) als sich öffnende Fibonacci-Schnecke** angeordnet
+  (Feld 5 oben, 1er unten rechts; Anordnung wie bei der
+  [Nerdiy-Fibonacci-Uhr](https://www.nerdiy.de/fibonacciClock)). Gleiche 5 Taster.
+  Details: [wokwidemo2/README.md](wokwidemo2/README.md)
+
 ## Status
 
 Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitung.
@@ -67,6 +75,9 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
 
 ✅ Demo-Variante mit 5 Tastern (Feld-Durchschaltung, Handbetrieb, Normalbetrieb)
    für Demonstrationen der Fibonacci-Codierung.
+
+✅ Demo 2 mit Schnecken-Layout (5×8 hochkant, spiralförmige Feld-Anordnung) –
+   bessere Lesbarkeit, Layout-Vergleich mit der 8×5-Variante möglich.
 
 ## Lizenz
 
@@ -83,4 +94,4 @@ GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
 
 ---
 
-Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 18.10.2026
+Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026
