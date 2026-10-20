@@ -2,23 +2,25 @@
 
 Eine Fibonacci-LED-Uhr mit **40 Ping-Pong-Bällen**, gesteuert durch einen
 **Raspberry Pi Zero WH**, mit zusätzlichem **TM1637 6-stelligem LED-Display**
-(0,36″) als Klartext-Anzeige HH:MM:SS – wahlweise als 8×5-Raster (Bauanleitung)
-oder als **hochkantes Schnecken-Layout 5×8** (Demo 2).
+(0,36″) als Klartext-Anzeige HH:MM:SS. Das Raster steht **hochkant als sich
+öffnende Fibonacci-Schnecke (5 Spalten × 8 Zeilen)**.
 
 > Schwesternprojekt der 9-Bälle-Ping-Pong-Uhr: <https://github.com/Paul-3400/ping-pong-ball-clock>
 
 ## Funktionsprinzip
 
 Die fünf Fibonacci-Felder (Werte 1, 1, 2, 3, 5) kacheln lückenlos 40 Bälle
-– entweder in ein 8×5-Raster oder in die öffnende Fibonacci-Schnecke (5×8):
+in die öffnende Fibonacci-Schnecke (5×8 hochkant): Feld A (5×5) oben über die
+volle Breite, B (3×3) unten links, C (2×2) unten rechts, D und E nebeneinander
+dazwischen – die Quadrate wachsen vom Zentrum nach aussen wie eine Spirale.
 
-| Feld | Wert | Bälle |
-|------|------|-------|
-| A    | 5    | 25    |
-| B    | 3    |  9    |
-| C    | 2    |  4    |
-| D    | 1    |  1    |
-| E    | 1    |  1    |
+| Feld | Wert | Bälle | Lage (5 Spalten × 8 Zeilen) |
+|------|------|-------|------------------------------|
+| A    | 5    | 25    | Zeilen 0–4, Spalten 0–4 (oben) |
+| B    | 3    |  9    | Zeilen 5–7, Spalten 0–2 (unten links) |
+| C    | 2    |  4    | Zeilen 6–7, Spalten 3–4 (unten rechts) |
+| D    | 1    |  1    | Zeile 5, Spalte 3 |
+| E    | 1    |  1    | Zeile 5, Spalte 4 |
 
 - **rot** = Feld zählt zur Stunde
 - **grün** = Feld zählt zu den Minuten (×5)
@@ -27,57 +29,67 @@ Die fünf Fibonacci-Felder (Werte 1, 1, 2, 3, 5) kacheln lückenlos 40 Bälle
 
 Anzeige bewusst 5-Minuten-genau (wie im Original von Philippe Chretien);
 die Zerlegung wird pro Zeitstempel per Zufall aus allen gültigen
-Fibonacci-Summen gewählt.
+Fibonacci-Summen gewählt. Mapping: `LED-Index = Zeile*5 + Spalte`.
 
 ## Hardware (Kurzfassung)
 
 | Komponente              | Funktion                          |
 |------------------------|-----------------------------------|
 | Raspberry Pi Zero WH   | Steuerung, NTP, Farb-/Zeitlogik   |
-| 40× WS2812B NeoPixel   | 1 LED pro Ball (Schlangenlinie)   |
+| 40× WS2812B NeoPixel   | 1 LED pro Ball (Schlangenlinie im 5×8-Raster) |
 | TM1637 0,36″ 6-stellig | Klartext HH:MM:SS                 |
+| 5× Taster (GPIO 5/6/12/13/16) | Feld-Durchschaltung, Handbetrieb, Normalbetrieb |
 | 5V-Netzteil ≥3 A       | Pi + LEDs                         |
 | Level-Shifter 74AHCT125| 3,3V→5V Datenpegel (empfohlen)    |
+| Lochplatte 200×320 mm  | Ball-Halterung, hochkant (5×8 Bälle à 40 mm) |
 
-Geschätzte Gesamtkosten: ~95–100 CHF.
+Geschätzte Gesamtkosten: ~100 CHF.
+
+## Die fünf Taster
+
+| Taster | GPIO (Pi) | Funktion |
+|---|---|---|
+| T1 | 5  | Felder A–E durchschalten (weiss) |
+| T2 | 6  | Handbetrieb: +1 Minute |
+| T3 | 12 | Handbetrieb: +5 Minuten |
+| T4 | 13 | Handbetrieb: +1 Stunde |
+| T5 | 16 | Normalbetrieb (NTP-Zeit, Offset auf 0) |
 
 ## Dokumentation
 
 - 📄 **[Bauanleitung & Entwurf](docs/Fibonacci_PingPong_Uhr_Bauanleitung.md)** –
-  Funktionsprinzip, Hardware-Liste, Verdrahtung, LED-Mapping, Code-Entwürfe
-  (config, mapping, fibonacci, display, tm1637, ntp_time, main), systemd-Autostart,
-  Fallstricke, Gehäuse-Konstruktion, Fahrplan und offene Fragen.
+  5×8-Schnecken-Layout mit 5 Tastern: Funktionsprinzip, Hardware-Liste,
+  Verdrahtung, LED-Mapping, Code-Entwürfe (config, mapping, buttons, fibonacci,
+  display, tm1637, ntp_time, main), systemd-Autostart, Fallstricke,
+  Gehäuse-Konstruktion (200×320 mm hochkant), Fahrplan und offene Fragen.
 
 - 🧪 **[Wokwi-Prototyp](wokwi/)** – vollständige Simulation der Uhr mit dem
   **Seeed XIAO ESP32-S3** statt dem Raspberry Pi Zero WH (Wokwi kennt den Pi nicht):
-  [sketch.ino](wokwi/sketch.ino), [diagram.json](wokwi/diagram.json)
-  (40 NeoPixel im 8×5-Raster, sauber verlegte Daisy-Chain) und
-  [libraries.txt](wokwi/libraries.txt). Details: [wokwi/README.md](wokwi/README.md)
+  40 NeoPixel im 5×8-Schnecken-Raster hochkant, NTP-Zeitsync, TM1637, Self-Test –
+  ohne Taster. Details: [wokwi/README.md](wokwi/README.md)
 
-- 🎛️ **[Demo-Variante mit 5 Tastern](wokwidemo/)** – für Demonstrationszwecke:
-  Taster 1 schaltet die Felder A–E durch, Taster 2–4 stellen im Handbetrieb
-  +1 Minute / +5 Minuten / +1 Stunde, Taster 5 ruft den Normalbetrieb
-  (NTP-Zeit) zurück. Details: [wokwidemo/README.md](wokwidemo/README.md)
+- 🎛️ **[Demo-Variante mit 5 Tastern](wokwidemo/)** – dieselbe Uhr mit den fünf
+  Tastern des echten Aufbaus: Feld-Durchschaltung A–E, Handbetrieb
+  (+1 Minute / +5 Minuten / +1 Stunde als Offset zur NTP-Zeit), Normalbetrieb.
+  **Vorschau des echten Aufbaus.** Details: [wokwidemo/README.md](wokwidemo/README.md)
 
-- 🐌 **[Demo-Variante 2 – Schnecken-Layout](wokwidemo2/)** – wie die Demo, aber das
-  Raster ist **hochkant (5×8) als sich öffnende Fibonacci-Schnecke** angeordnet
-  (Feld 5 oben, 1er unten rechts; Anordnung wie bei der
-  [Nerdiy-Fibonacci-Uhr](https://www.nerdiy.de/fibonacciClock)). Gleiche 5 Taster.
-  Details: [wokwidemo2/README.md](wokwidemo2/README.md)
+> *Ordner-Umbenennung 20.10.2026:* Bis dahin hiess die Schnecken-Demo
+> `wokwidemo2` und die ältere 8×5-Demo `wokwidemo`. Nach der Entscheidung für
+> das Schnecken-Layout wurde die 8×5-Demo gelöscht und die Schnecken-Demo in
+> `wokwidemo` umbenannt.
 
 ## Status
 
 Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitung.
 
-✅ Der Wokwi-Prototyp (XIAO ESP32-S3) läuft: komplette Anzeige- und NTP-Logik
-   ist simulierbar, die Code-Dateien aus der Bauanleitung werden daraus
-   schrittweise als lauffähige Module für den Pi eingecheckt.
+✅ Layout-Entscheidung gefallen: 5×8-Schnecke hochkant (bessere Lesbarkeit,
+   Anordnung wie bei der [Nerdiy-Fibonacci-Uhr](https://www.nerdiy.de/fibonacciClock)).
 
-✅ Demo-Variante mit 5 Tastern (Feld-Durchschaltung, Handbetrieb, Normalbetrieb)
-   für Demonstrationen der Fibonacci-Codierung.
+✅ Wokwi-Prototyp (XIAO ESP32-S3) läuft: Anzeige- und NTP-Logik simulierbar,
+   die Python-Module aus der Bauanleitung werden daraus portiert.
 
-✅ Demo 2 mit Schnecken-Layout (5×8 hochkant, spiralförmige Feld-Anordnung) –
-   bessere Lesbarkeit, Layout-Vergleich mit der 8×5-Variante möglich.
+✅ Demo-Variante mit 5 Tastern im Schnecken-Layout (Feld-Durchschaltung,
+   Handbetrieb, Normalbetrieb) – Vorschau des echten Aufbaus.
 
 ## Lizenz
 
