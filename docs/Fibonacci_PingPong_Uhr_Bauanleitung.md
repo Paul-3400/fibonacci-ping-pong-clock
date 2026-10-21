@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Umstellung auf Schnecken-Layout 5×8 hochkant + 5 Taster"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox)"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 5 Taster"
@@ -12,11 +12,15 @@ license: "GNU GPL (abgeleitet von Philippe Chretien / Fabian Steppat)"
 
 # 🏓 Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf
 
-> Bauanleitung von Paul Simmen, erstellt mit Vibe (GLM-5-2), überarbeitet 20.10.2026.
+> Bauanleitung von Paul Simmen, erstellt mit Vibe (GLM-5-2), überarbeitet 20./21.10.2026.
 > Eine Fibonacci-LED-Uhr mit 40 Ping-Pong-Bällen im hochkanten 5×8-Raster
 > (sich öffnende Fibonacci-Schnecke), gesteuert durch einen Raspberry Pi Zero WH,
 > mit zusätzlichem 0,36″ TM1637 6-stelligem LED-Display als Klartext-Anzeige
 > und fünf Tastern für Feld-Durchschaltung, Handbetrieb und Normalbetrieb.
+>
+> **Aufbau in zwei Gehäusen:** **Steuerbox** (Pi, Taster, TM1637-Anzeige) und
+> **Anzeigebox** (Lochplatte mit Bällen, NeoPixel, Level-Shifter, Kondensatoren,
+> 5V-Anschluss). Versorgungsspannung überall **5V**, Datenleitungen **3,3V**.
 
 ---
 
@@ -96,23 +100,29 @@ anders aus (keine Mehrdeutigkeit-Auflösung wie bei Base4 nötig; **Konfidenz: h
 
 ```mermaid
 graph TD
-    A[Raspberry Pi Zero WH] -->|GPIO 18 PWM| B[40× WS2812B NeoPixel]
-    A -->|GPIO 23/24| C[TM1637 6-stellig Display]
+    NET[5V-Netzteil ≥3 A] --> KL[5V-Klemme · Anzeigebox]
+    KL --> B[40× WS2812B NeoPixel · Anzeigebox]
+    KL -->|Verbindungskabel 4-adrig| A[Raspberry Pi Zero WH · Steuerbox]
+    A -->|GPIO 18 · 3,3V Data über Kabel| S[74AHCT125 Level-Shifter · Anzeigebox]
+    S -->|5V Data + 330 Ω| B
+    A -->|GPIO 23/24 · 3,3V| C[TM1637 6-stellig · Steuerbox]
     A -->|WLAN| D[NTP-Zeitquelle]
     D --> A
-    A -->|GPIO 5/6/12/13/16| G[5× Taster]
+    A -->|GPIO 5/6/12/13/16| G[5× Taster · Steuerbox]
     B --> E[5×8 Ping-Pong-Ball-Raster Schnecke]
     C --> F[Klartext HH:MM:SS]
 ```
 
-| Komponente             | Funktion                              |
-|-----------------------|---------------------------------------|
-| Pi Zero WH            | Steuerung, NTP, Farb- und Zeitlogik    |
-| 40× WS2812B NeoPixel  | Anzeige im 5×8-Ball-Raster (Schnecke)  |
-| TM1637 6-stellig      | Klartext-Uhrzeit HH:MM:SS              |
-| 5× Taster             | Feld-Modus, Handbetrieb, Normalbetrieb |
-| 5V-Netzteil ≥3 A      | Strom Pi + 40 LEDs                     |
-| Level-Shifter         | 3,3V→5V Datenpegel (empfohlen)         |
+| Komponente                     | Box        | Funktion                              |
+|-------------------------------|------------|---------------------------------------|
+| Pi Zero WH                    | Steuerbox  | Steuerung, NTP, Farb- und Zeitlogik   |
+| 5× Taster                     | Steuerbox  | Feld-Modus, Handbetrieb, Normalbetrieb |
+| TM1637 6-stellig              | Steuerbox  | Klartext HH:MM:SS (VCC 5V, Daten 3,3V) |
+| Level-Shifter 74AHCT125       | Anzeigebox | hebt Data-Leitung 3,3V → 5V vor LED 0 |
+| 40× WS2812B NeoPixel          | Anzeigebox | Anzeige im 5×8-Ball-Raster (Schnecke)  |
+| 1000 µF Elko (+ nF je Modul)  | Anzeigebox | Stabilisierung der LED-Versorgung     |
+| 5V-Klemme / Netzteilanschluss| Anzeigebox | gemeinsame 5V-Einspeisung beider Boxen |
+| Verbindungskabel 4-adrig      | dazwischen | 5V, GND, Data (3,3V), Reserve          |
 
 ---
 
@@ -124,60 +134,114 @@ graph TD
 | 2 | MicroSD 8–16 GB               | OS (Bookworm Lite)             | 8.–            | hoch  |
 | 3 | 40× WS2812B NeoPixel          | 1 LED pro Ball                 | 15.–           | hoch  |
 | 4 | TM1637 0,36″ 6-stellig        | Klartext HH:MM:SS              | 5.–            | hoch  |
-| 5 | 5V-Netzteil ≥3 A              | Pi + LEDs                      | 20.–           | hoch  |
-| 6 | Level-Shifter 74AHCT125       | 3,3V→5V Datenpegel             | 3.–            | mittel|
+| 5 | 5V-Netzteil ≥3 A              | gemeinsame Versorgung beider Boxen (Einspeisung in Anzeigebox) | 20.– | hoch |
+| 6 | Level-Shifter 74AHCT125       | 3,3V→5V Datenpegel (in Anzeigebox verbaut) | 3.–      | hoch  |
 | 7 | Widerstand 330–470 Ω          | Schutz am LED-Data-In          | <1.–           | hoch  |
-| 8 | Elko 1000 µF / 6,3V           | Schutz/Stabilisierung          | 1.–            | hoch  |
+| 8 | Elko 1000 µF / 6,3V           | Stabilisierung an der 5V-Einspeisung (Anzeigebox) | 1.– | hoch |
 | 9 | 40× Ping-Pong-Bälle           | Diffusor / Anzeige             | 15.–           | hoch  |
 | 10| Lochplatte / Brett 5×8        | Ball-Halterung (200×320 mm hochkant) | Bastelkiste | hoch |
 | 11| 5× Taster (Öffner, gg. GND)   | Feld-Modus, Handbetrieb, Normalbetrieb | 2.–      | hoch  |
-| 12| Jumper-Wires                  | Verdrahtung TM1637 + Taster    | 2.–            | hoch  |
-| 13| Micro-USB-Kabel               | Strom-Pi (oder via HAT)        | 3.–            | hoch  |
+| 12| Jumper-Wires                  | Verdrahtung TM1637 + Taster (Steuerbox) | 2.–   | hoch  |
+| 13| Verbindungskabel 4-adrig ≥0,5 mm² + Steckverbinder | Anzeigebox↔Steuerbox: 5V, GND, Data, Reserve | 6.– | hoch |
+| 14| 5V-Klemme / DC-Buchse         | Netzteil-Einspeisung in der Anzeigebox | 3.– | hoch |
+| 15| 2× Gehäuse                    | Steuerbox + Anzeigebox         | Bastelkiste   | hoch  |
 
-**Geschätzte Gesamtkosten:** ~100 CHF
+**Geschätzte Gesamtkosten:** ~110 CHF
 
 ---
 
 ## 4. Verdrahtung
 
-### 4.1 NeoPixel (40 LEDs)
+### 4.1 Stromversorgung (5V) & Gehäuseaufteilung
+
+**Prinzip:** Ein gemeinsames 5V-Netzteil versorgt beide Gehäuse. Alle
+Datenleitungen laufen mit **3,3V** (Pi-Pegel); erst der 74AHCT125 in der
+Anzeigebox hebt die NeoPixel-Datenleitung auf 5V.
 
 ```
-Pi Zero WH               Level-Shifter            NeoPixel-Kette
-─────────────            ──────────────           ──────────────
-GPIO 18 (PWM0) ──[330Ω]──> 74AHCT125 IN ──>      DIN (LED 0)
-                                                  DOUT → DIN(LED 1) → ... → LED 39
-3,3V ──────────────────> 74AHCT125 VCC
-5V  ──────────────────────────────────────>      VCC (alle LEDs, Einspeisung Anfang)
-GND ───────────────────> 74AHCT125 GND ──>       GND (alle LEDs)
-                                              + 1000 µF Elko über VCC/GND am Anfang
+                          ┌────────── Steuerbox ──────────────────┐
+                          │  Pi Zero WH  ·  5× Taster  ·  TM1637  │
+                          │  (Pi & TM1637 versorgt mit 5V)        │
+                          └───┬───────────────▲────────────────────┘
+              5V + GND       │               │  Data 3,3V (GPIO 18)
+              (Verbindungskabel 4-adrig)     │
+                          ┌───▼──────────────┴───── Anzeigebox ─────┐
+ Netzteil 5V/≥3A ───────► │ 5V-Klemme ─┬─ 1000 µF Elko (nah dran)  │
+                          │             ├─ 40× NeoPixel VCC (5V)   │
+                          │             └─ 74AHCT125 VCC (Pin 14)  │
+                          │ 74AHCT125: 1A (Pin 2) ◄── Data 3,3V    │
+                          │             1Y (Pin 3) ─[330–470 Ω]─► DIN LED 0
+                          │             OE (Pin 1) → GND           │
+                          └────────────────────────────────────────┘
+```
+
+**Wichtig (Konfidenz: hoch):**
+- **Einspeisung in der Anzeigebox:** Das Netzteil hängt an der 5V-Klemme der
+  Anzeigebox und versorgt dort direkt die NeoPixel-Kette (bis 2,4 A bei
+  Vollelweiss), den 1000 µF-Elko und den Level-Shifter. Über das
+  Verbindungskabel werden zusätzlich die Steuerbox-Komponenten versorgt.
+- **Verbindungskabel (4-adrig, ≥0,5 mm²):** 5V, GND, Data (3,3V), Reserve.
+  Es trägt nur den Strom von Pi + TM1637 (~0,5 A) – der NeoPixel-Strom
+  bleibt komplett in der Anzeigebox. Die GND-Ader ist zwingend (gemeinsame
+  Masse beider Boxen).
+- **Pi speisen:** 5V-Pin 2/4 direkt von der Steuerbox-Verteilung (Achtung:
+  umgeht den Polyfuse) – oder sauberer über ein am 5V-Kabel angeschlossenes
+  Micro-USB-Kabel (Schutz des Pi bleibt wirksam).
+- **74AHCT125 (in der Anzeigebox):** VCC (Pin 14) = 5V, GND (Pin 7) = Masse,
+  OE (Pin 1) → GND (Ausgang dauerhaft aktiv), 1A (Pin 2) ← Data,
+  1Y (Pin 3) → [330–470 Ω] → DIN von LED 0. Unbenutzte Gatter: A-Eingänge
+  (Pins 5/9/12) und OE (Pins 4/10/13) auf GND legen.
+- **Kondensatoren:** 1000 µF-Elko direkt an der 5V-Einspeisung der Kette
+  (Empfehlung laut WS2812B-Datenblatt). Die China-Einzelmodule haben meist
+  zusätzlich je ein 100 nF onboard – siehe `docs/WS2812B_ChinaModul.pdf`.
+- **Datenblätter** (im Repo unter `docs/`): `WS2812B_ChinaModul.pdf`,
+  `TM1637_7SegmentChinaModul.pdf`, `sn54ahct125.pdf`.
+
+### 4.2 NeoPixel (40 LEDs, in der Anzeigebox)
+
+```
+Steuerbox                  Anzeigebox
+─────────────              ──────────────────────────────────────────────
+GPIO 18 (PWM0) ──Kabel──►  74AHCT125 1A (Pin 2, 3,3V-Pegel)
+                            74AHCT125 1Y (Pin 3) ──[330–470 Ω]──► DIN (LED 0)
+                                              DOUT → DIN(LED 1) → ... → LED 39
+5V-Klemme ──┬────────────►  74AHCT125 VCC (Pin 14, 5V)
+            ├────────────►  VCC aller NeoPixel (Einspeisung am Anfang)
+GND ────────┴────────────►  GND (74AHCT125 Pin 7 + alle LEDs)
+                            + 1000 µF Elko über VCC/GND an der Einspeisung
 ```
 
 **Wichtig (Konfidenz: hoch):**
 - GPIO 18 = PWM0, der klassische Pin für `rpi_ws281x` / Adafruit NeoPixel.
+- Die 3,3V-Datenleitung läuft durch das Verbindungskabel bis zum Shifter in
+  der Anzeigebox; erst ab 1Y liegt 5V-Pegel an der Kette (Empfehlung laut
+  WS2812B-Datenblatt, da VIH der LEDs bei 5V-Versorgung ca. 3,5 V beträgt).
 - Bei 40 LEDs ab einer Einspeisung: Spannungsabfall am Ende möglich.
-  Falls das ferne Ende farblich „abdriftet" → zweite 5V-Einspeisung am Ende.
-- Strom: 40 × 60 mA = 2,4 A (Volweiß) → 3A-Netzteil mit Reserve.
+  Falls das ferne Ende farblich „abdriftet" → zweite 5V-Einspeisung am Ende
+  (direkt von der 5V-Klemme der Anzeigebox).
+- Strom: 40 × 60 mA = 2,4 A (Volleiweiß) → 3A-Netzteil mit Reserve.
 
-### 4.2 TM1637 6-stelliges Display
+### 4.3 TM1637 6-stelliges Display (in der Steuerbox)
 
 ```
-Pi Zero WH               TM1637 Modul
+Pi Zero WH               TM1637 Modul (Steuerbox)
 ─────────────            ────────────
-GPIO 23  ──────────────>  CLK
-GPIO 24  ──────────────>  DIO
-3,3V     ──────────────>  VCC
+GPIO 23  ──────────────>  CLK   (Daten 3,3V)
+GPIO 24  ──────────────>  DIO   (Daten 3,3V)
+5V       ──────────────>  VCC   (aus der 5V-Verteilung der Steuerbox)
 GND      ──────────────>  GND
 ```
 
 **Hinweis (Konfidenz: mittel):**
-- TM1637-Module sind meist 3,3V-tolerant auf den Datenpins, laufen aber
-  offiziell oft mit 5V. Falls Anzeige flackert oder dunkel bleibt → VCC auf 5V
-  legen, Datenpins über Level-Shifter oder direkt (meist OK bei kurzen Leitungen).
+- Versorgung 5V, Daten 3,3V: Laut TM1637-Datenblatt liegt VIH bei ca.
+  0,7 × VDD ≈ 3,5 V – der 3,3V-Pegel des Pi ist damit grenzwertig, funktioniert
+  mit den China-Modulen aber praktisch immer (`docs/TM1637_7SegmentChinaModul.pdf`).
+  Falls die Anzeige unzuverlässig ist: Modul-Pull-ups entfernen oder das Modul
+  mit 3,3V betreiben (Anzeige dann geringfügig dunkler).
 - Die 6-stellige Variante ist seltener als die 4-stellige; darauf achten,
   dass das Modul tatsächlich 6 Ziffern hat (Typ: „TM1637 6 digit 0.36″").
 
-### 4.3 Taster (5× Öffner gegen GND)
+### 4.4 Taster (5× Öffner gegen GND, in der Steuerbox)
 
 ```
 Pi Zero WH                    Taster
@@ -196,20 +260,23 @@ GND      ─────────────────>  gemeinsame Masse 
   (`Button(..., pull_up=True)` ist Standard) – keine externen Widerstände nötig.
 - Entprellung regelt `gpiozero` in Software (`bounce_time`).
 
-### 4.4 Gesamt-Pin-Übersicht
+### 4.5 Gesamt-Pin-Übersicht
 
-| Pin          | Funktion           | Ziel               |
-|--------------|--------------------|--------------------|
-| GPIO 18      | PWM0 / NeoPixel    | Level-Shifter → DIN|
-| GPIO 23      | CLK                | TM1637             |
-| GPIO 24      | DIO                | TM1637             |
-| GPIO 5       | Taster 1           | Feld-Modus         |
-| GPIO 6       | Taster 2           | +1 Minute          |
-| GPIO 12      | Taster 3           | +5 Minuten         |
-| GPIO 13      | Taster 4           | +1 Stunde          |
-| GPIO 16      | Taster 5           | Normalbetrieb      |
-| 5V (Pin 2/4) | Strom              | NeoPixel + TM1637  |
-| GND          | Masse              | Alle               |
+| Pin          | Funktion           | Ziel                                          |
+|--------------|--------------------|-----------------------------------------------|
+| GPIO 18      | PWM0 / NeoPixel    | Kabel → 74AHCT125 1A → 1Y → [330 Ω] → DIN LED 0 |
+| GPIO 23      | CLK                | TM1637 (Steuerbox, Daten 3,3V)                 |
+| GPIO 24      | DIO                | TM1637 (Steuerbox, Daten 3,3V)                 |
+| GPIO 5       | Taster 1           | Feld-Modus (Steuerbox)                        |
+| GPIO 6       | Taster 2           | +1 Minute (Steuerbox)                         |
+| GPIO 12      | Taster 3           | +5 Minuten (Steuerbox)                        |
+| GPIO 13      | Taster 4           | +1 Stunde (Steuerbox)                         |
+| GPIO 16      | Taster 5           | Normalbetrieb (Steuerbox)                     |
+| 5V (Pin 2/4) | Strom              | Pi + TM1637 (aus Verbindungskabel)            |
+| GND          | Masse              | Alle – gemeinsame Masse beider Boxen          |
+
+Strompfad: Netzteil → 5V-Klemme (Anzeigebox) → NeoPixel + Shifter direkt,
+und über das 4-adrige Verbindungskabel → Steuerbox (Pi 5V-Pin, TM1637 VCC).
 
 ---
 
@@ -802,8 +869,8 @@ sudo python3 main.py
 | 1 | **GRB vs. RGB** | WS2812B sind meist GRB. `LED_STRIP_TYPE` auf `NEO_GRB` setzen, sonst ist Rot=Grün | hoch |
 | 2 | **rpi_ws281x braucht root** | `sudo python3` oder systemd als `User=root` | hoch |
 | 3 | **PWM kollidiert mit Audio** | `dtparam=audio=off` in `/boot/config.txt` | hoch |
-| 4 | **3,3V-Datenpegel** | Bei 40 LEDs oft OK ohne Shifter, sauberer mit 74AHCT125 | mittel |
-| 5 | **Spannungsabfall am Ende** | Bei 40 LEDs ab einer Seite: ggf. zweite 5V-Einspeisung | mittel |
+| 4 | **3,3V-Datenpegel** | Shifter 74AHCT125 (in Anzeigebox) hebt auf 5V – sauberer als direkt, da VIH der LEDs bei 5V-Versorgung ca. 3,5 V | hoch |
+| 5 | **Spannungsabfall am Ende** | Bei 40 LEDs ab einer Seite: ggf. zweite 5V-Einspeisung (von der 5V-Klemme der Anzeigebox) | mittel |
 | 6 | **Farbstreuung LED zu LED** | Bälle sortieren oder Kalibrierungs-Array pro LED | mittel |
 | 7 | **Hotspot im Ball** | LED in den Ball hinein (Loch schneiden) oder ~5 mm Abstand | mittel |
 | 8 | **Feld 5 dominant** | Großes Feld ggf. auf 70% dimmen (separate Helligkeit) | mittel |
@@ -813,6 +880,10 @@ sudo python3 main.py
 | 12 | **Ball-Qualität** | Matte, weiß-transluzente Bälle, keine opaken/weißen Trainingsbälle | hoch |
 | 13 | **Taster prellen** | `bounce_time` (gpiozero) bzw. `BTN_BOUNCE_SEC` setzen, sonst Doppelereignisse | hoch |
 | 14 | **Feld-Modus zeigt keine Uhrzeit** | Gewollt: erst mit Taster 2–5 (Zeitmodus) oder Taster 5 (Normalbetrieb) kehrt die Zeit-Anzeige zurück | hoch |
+| 15 | **TM1637: 5V-Versorgung + 3,3V-Daten** | VIH = 0,7·VDD ≈ 3,5 V laut Datenblatt grenzwertig; Praxis meist OK. Falls unzuverlässig: Modul-Pull-ups entfernen oder VCC auf 3,3V | mittel |
+| 16 | **Boxen ohne gemeinsame Masse** | GND-Ader im Verbindungskabel ist zwingend – ohne gemeinsame Masse gehen weder LEDs noch TM1637 zuverlässig | hoch |
+| 17 | **74AHCT125 ohne OE auf GND** | Pin 1 (OE) muss an GND, sonst ist der Ausgang hochohmig und die Kette bleibt dunkel. VCC = 5V (nie 3,3V – AHCT ist ein 5V-Baustein) | hoch |
+| 18 | **Stromverteilung Kabel/Boxen** | NeoPixel-Strom (bis 2,4 A) bleibt in der Anzeigebox; das Verbindungskabel trägt nur ~0,5 A (Pi + TM1637) – Querschnitt ≥0,5 mm² trotzdem sinnvoll | hoch |
 
 ---
 
@@ -838,9 +909,31 @@ sudo python3 main.py
 
 - Bälle herausnehmbar (Presspassung)
 - LED-Knoten/Verbindungen erreichbar (Klappe oder Schrauben)
-- Pi auf separater Trägerplatte hinten, nicht hinter den Bällen
-- 5 Taster zugänglich an Gehäuserückseite oder unten (kein Platzbedarf
-  hinter den Bällen, Verdrahtung mit Jumper-Wires direkt zum Pi-Header)
+- Elektronik der Anzeigebox (Level-Shifter, Elko, 5V-Klemme) auf einer
+  Trägerplatte hinter der Lochplatte, über Rückwand/Klappe erreichbar
+- Steuerbox mit abnehmbarem Deckel: Pi, Taster und TM1637 warten, ohne
+  die Anzeigebox zu öffnen
+
+### 10.4 Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox)
+
+**Steuerbox** (Pi, 5 Taster, TM1637):
+- Pi auf kleiner Trägerplatte, Kabelabgänge über Lötstellen/Klemmen
+- Taster frontal oder unten zugänglich, beschriftet (T1–T5)
+- TM1637 frontal sichtbar (Klartext HH:MM:SS)
+- 5V und GND aus dem Verbindungskabel auf kleine Klemme verteilt
+  (Pi 5V-Pin 2/4 bzw. Micro-USB, TM1637 VCC)
+
+**Anzeigebox** (Lochplatte, Bälle, NeoPixel, Elektronik, 5V-Anschluss):
+- Lochplatte 200×320 mm hochkant mit den 40 Bällen (siehe 10.1/10.2)
+- Level-Shifter, 1000 µF-Elko und 5V-Klemme auf Lochraster-/Trägerplatte
+  hinter der Lochplatte – die 5V-Datenleitung wird erst hier erzeugt
+- Netzteil-Zuleitung und Verbindungskabel mit Zugentlastung einführen
+- Trennbare Steckverbinder an beiden Kabelenden (Netzteil + Verbindungskabel)
+
+**Verbindungskabel:**
+- 4-adrig: 5V, GND, Data (3,3V), Reserve; Querschnitt ≥0,5 mm²
+- Data-Ader mit einer GND-Ader verdrillen (Störfestigkeit), Länge unkritisch
+  bis ca. 2 m – bei mehr: 5V-Ende der Kette prüfen bzw. Datenrate senken
 
 ---
 
@@ -868,7 +961,7 @@ sudo python3 main.py
 6. [ ] Software testen (NeoPixel-Test, TM1637-Test, NTP-Test, Taster-Test)
 7. [ ] `main.py` integrieren und testen
 8. [ ] systemd-Service einrichten
-9. [ ] Gehäuse fertigstellen
+9. [ ] Gehäuse fertigstellen (Steuerbox + Anzeigebox, Verbindungskabel, Zugentlastung)
 10. [ ] In Core-Framework integrieren (gemeinsam mit Base4-Uhr)
 
 ---
@@ -882,19 +975,28 @@ sudo python3 main.py
 - TM1637 Python Library: https://github.com/timofurrer/raspberrypi-tm1637
 - Raspberry Pi Pinout: https://pinout.xyz/
 
+**Datenblätter (im Repo unter `docs/`):**
+- WS2812B China-Modul: `docs/WS2812B_ChinaModul.pdf`
+- TM1637 7-Segment China-Modul: `docs/TM1637_7SegmentChinaModul.pdf`
+- Level-Shifter SN54AHCT125: `docs/sn54ahct125.pdf`
+
 ---
 
 ## 14. Offene Fragen
 
 - [ ] LEDs pro Ball: 1 (Standard) oder mehr für größere Felder?
 - [ ] TM1637-Modul: exaktes Modell/Hersteller spezifizieren?
-- [ ] Level-Shifter: zwingend oder „try without first"?
+- [x] Level-Shifter: 74AHCT125 fest verbaut in der Anzeigebox (OE→GND, 1A←GPIO 18, 1Y→[330 Ω]→DIN) – entschieden 21.10.2026
+- [ ] Steckverbinder für Verbindungskabel und Netzteil-Zuleitung wählen (Klemme, JST, RJ45 …)?
+- [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
 - [ ] Ball-Orientierung: Naht-Äquator ausrichten?
+- [ ] Pi-Speisung: 5V-Pin direkt (ohne Polyfuse-Schutz) oder Micro-USB-Kabel an der Steuerbox-Klemme?
 - [ ] Integration ins Core-Framework mit Base4-Uhr: ja/nein jetzt?
 
 ---
 
 *Erstellt von Paul Simmen mit Vibe (GLM-5-2), 14.09.2026*
 *Überarbeitet auf 5×8-Schnecken-Layout + 5 Taster von Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026*
+*Überarbeitet: Stromversorgung 5V + Zwei-Gehäuse-Konzept (Steuerbox/Anzeigebox) von Paul Simmen mit Vibe (GLM-5-latest-short), 21.10.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
