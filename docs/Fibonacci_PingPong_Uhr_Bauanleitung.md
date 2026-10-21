@@ -100,9 +100,9 @@ anders aus (keine Mehrdeutigkeit-Auflösung wie bei Base4 nötig; **Konfidenz: h
 
 ```mermaid
 graph TD
-    NET[5V-Netzteil ≥3 A] --> KL[5V-Klemme · Anzeigebox]
+    NET[5V-Netzteil ≥3 A, 5,5/2,1-Stecker] --> KL[DC-Buchse 5,5×2,1 + Verteilklemme · Anzeigebox]
     KL --> B[40× WS2812B NeoPixel · Anzeigebox]
-    KL -->|Verbindungskabel 4-adrig| A[Raspberry Pi Zero WH · Steuerbox]
+    KL -->|GX12 4-polig, Kabel 4-adrig| A[Raspberry Pi Zero WH · Steuerbox]
     A -->|GPIO 18 · 3,3V Data über Kabel| S[74AHCT125 Level-Shifter · Anzeigebox]
     S -->|5V Data + 330 Ω| B
     A -->|GPIO 23/24 · 3,3V| C[TM1637 6-stellig · Steuerbox]
@@ -121,8 +121,8 @@ graph TD
 | Level-Shifter 74AHCT125       | Anzeigebox | hebt Data-Leitung 3,3V → 5V vor LED 0 |
 | 40× WS2812B NeoPixel          | Anzeigebox | Anzeige im 5×8-Ball-Raster (Schnecke)  |
 | 1000 µF Elko (+ nF je Modul)  | Anzeigebox | Stabilisierung der LED-Versorgung     |
-| 5V-Klemme / Netzteilanschluss| Anzeigebox | gemeinsame 5V-Einspeisung beider Boxen |
-| Verbindungskabel 4-adrig      | dazwischen | 5V, GND, Data (3,3V), Reserve          |
+| 5V-Einspeisung: DC-Buchse 5,5×2,1 (Anzeigebox) | Anzeigebox | gemeinsame 5V-Einspeisung beider Boxen |
+| Verbindungskabel 4-adrig + GX12 4-polig | dazwischen | 5V, GND, Data (3,3V), Reserve |
 
 ---
 
@@ -142,11 +142,12 @@ graph TD
 | 10| Lochplatte / Brett 5×8        | Ball-Halterung (200×320 mm hochkant) | Bastelkiste | hoch |
 | 11| 5× Taster (Öffner, gg. GND)   | Feld-Modus, Handbetrieb, Normalbetrieb | 2.–      | hoch  |
 | 12| Jumper-Wires                  | Verdrahtung TM1637 + Taster (Steuerbox) | 2.–   | hoch  |
-| 13| Verbindungskabel 4-adrig ≥0,5 mm² + Steckverbinder | Anzeigebox↔Steuerbox: 5V, GND, Data, Reserve | 6.– | hoch |
-| 14| 5V-Klemme / DC-Buchse         | Netzteil-Einspeisung in der Anzeigebox | 3.– | hoch |
-| 15| 2× Gehäuse                    | Steuerbox + Anzeigebox         | Bastelkiste   | hoch  |
+| 13| Verbindungskabel 4-adrig ≥0,5 mm² | Anzeigebox↔Steuerbox: 5V, GND, Data, Reserve | 5.– | hoch |
+| 14| 1 Paar Avionik-Kupplungen GX12, 4-polig (Stecker + Dose) | Verbindungskabel trennbar steckbar | 8.– | hoch |
+| 15| DC-Steckerbuchse 5,5×2,1 mm (Einbau, Gewinde) | 5V-Netzteil-Zuleitung in der Anzeigebox | 3.– | hoch |
+| 16| 2× Gehäuse                    | Steuerbox + Anzeigebox         | Bastelkiste   | hoch  |
 
-**Geschätzte Gesamtkosten:** ~110 CHF
+**Geschätzte Gesamtkosten:** ~115 CHF
 
 ---
 
@@ -166,9 +167,9 @@ Anzeigebox hebt die NeoPixel-Datenleitung auf 5V.
               5V + GND       │               │  Data 3,3V (GPIO 18)
               (Verbindungskabel 4-adrig)     │
                           ┌───▼──────────────┴───── Anzeigebox ─────┐
- Netzteil 5V/≥3A ───────► │ 5V-Klemme ─┬─ 1000 µF Elko (nah dran)  │
-                          │             ├─ 40× NeoPixel VCC (5V)   │
-                          │             └─ 74AHCT125 VCC (Pin 14)  │
+ Netzteil 5V/≥3A ───────► │ DC-Buchse 5,5×2,1 ─┬─ 1000 µF Elko (nah dran) │
+                          │                     ├─ 40× NeoPixel VCC (5V)   │
+                          │                     └─ 74AHCT125 VCC (Pin 14)  │
                           │ 74AHCT125: 1A (Pin 2) ◄── Data 3,3V    │
                           │             1Y (Pin 3) ─[330–470 Ω]─► DIN LED 0
                           │             OE (Pin 1) → GND           │
@@ -176,14 +177,26 @@ Anzeigebox hebt die NeoPixel-Datenleitung auf 5V.
 ```
 
 **Wichtig (Konfidenz: hoch):**
-- **Einspeisung in der Anzeigebox:** Das Netzteil hängt an der 5V-Klemme der
-  Anzeigebox und versorgt dort direkt die NeoPixel-Kette (bis 2,4 A bei
-  Vollelweiss), den 1000 µF-Elko und den Level-Shifter. Über das
-  Verbindungskabel werden zusätzlich die Steuerbox-Komponenten versorgt.
-- **Verbindungskabel (4-adrig, ≥0,5 mm²):** 5V, GND, Data (3,3V), Reserve.
-  Es trägt nur den Strom von Pi + TM1637 (~0,5 A) – der NeoPixel-Strom
-  bleibt komplett in der Anzeigebox. Die GND-Ader ist zwingend (gemeinsame
+- **Einspeisung in der Anzeigebox:** Das Netzteil wird an der eingebauten
+  **DC-Steckerbuchse 5,5×2,1 mm** angeschlossen (Innenpol = **+5V**, Aussenring
+  = GND; Netzteil mit Pluspol innen wählen). Dahinter verteilt eine kleine
+  Klemme die 5V an NeoPixel-Kette (bis 2,4 A bei Vollelweiss), 1000 µF-Elko
+  und Level-Shifter. Über das Verbindungskabel werden zusätzlich die
+  Steuerbox-Komponenten versorgt.
+- **Verbindungskabel (4-adrig, ≥0,5 mm²):** 5V, GND, Data (3,3V), Reserve –
+  getrennt steckbar über ein **Avionik-Kupplungspaar GX12, 4-polig**
+  (Stecker an der einen, Dose an der anderen Box; Panelmontage mit
+  ⌀-12-mm-Bohrung, Kontermutter und Kabelverschraubung als Zugentlastung).
+  Belegung beidseitig identisch: **Pin 1 = 5V, Pin 2 = GND, Pin 3 = Data,
+  Pin 4 = Reserve**; das Metallgehäuse des GX12 wird nicht als Leiter
+  benutzt (GND läuft über Pin 2). Das Kabel trägt nur den Strom von
+  Pi + TM1637 (~0,5 A) – der NeoPixel-Strom bleibt in der Anzeigebox.
+  GX12 4-polig ist dafür strommässig weit überdimensioniert (typ. einige A
+  pro Pin; Konfidenz: mittel). Die GND-Ader ist zwingend (gemeinsame
   Masse beider Boxen).
+- **Kondensatoren:** 1000 µF-Elko direkt an der 5V-Einspeisung der Kette
+  (Empfehlung laut WS2812B-Datenblatt). Die China-Einzelmodule haben meist
+  zusätzlich je ein 100 nF onboard – siehe `docs/WS2812B_ChinaModul.pdf`.
 - **Pi speisen:** 5V-Pin 2/4 direkt von der Steuerbox-Verteilung (Achtung:
   umgeht den Polyfuse) – oder sauberer über ein am 5V-Kabel angeschlossenes
   Micro-USB-Kabel (Schutz des Pi bleibt wirksam).
@@ -191,9 +204,6 @@ Anzeigebox hebt die NeoPixel-Datenleitung auf 5V.
   OE (Pin 1) → GND (Ausgang dauerhaft aktiv), 1A (Pin 2) ← Data,
   1Y (Pin 3) → [330–470 Ω] → DIN von LED 0. Unbenutzte Gatter: A-Eingänge
   (Pins 5/9/12) und OE (Pins 4/10/13) auf GND legen.
-- **Kondensatoren:** 1000 µF-Elko direkt an der 5V-Einspeisung der Kette
-  (Empfehlung laut WS2812B-Datenblatt). Die China-Einzelmodule haben meist
-  zusätzlich je ein 100 nF onboard – siehe `docs/WS2812B_ChinaModul.pdf`.
 - **Datenblätter** (im Repo unter `docs/`): `WS2812B_ChinaModul.pdf`,
   `TM1637_7SegmentChinaModul.pdf`, `sn54ahct125.pdf`.
 
@@ -205,7 +215,7 @@ Steuerbox                  Anzeigebox
 GPIO 18 (PWM0) ──Kabel──►  74AHCT125 1A (Pin 2, 3,3V-Pegel)
                             74AHCT125 1Y (Pin 3) ──[330–470 Ω]──► DIN (LED 0)
                                               DOUT → DIN(LED 1) → ... → LED 39
-5V-Klemme ──┬────────────►  74AHCT125 VCC (Pin 14, 5V)
+5V-Verteiler (DC-Buchse) ──┬────────────►  74AHCT125 VCC (Pin 14, 5V)
             ├────────────►  VCC aller NeoPixel (Einspeisung am Anfang)
 GND ────────┴────────────►  GND (74AHCT125 Pin 7 + alle LEDs)
                             + 1000 µF Elko über VCC/GND an der Einspeisung
@@ -218,7 +228,7 @@ GND ────────┴────────────►  GND (74A
   WS2812B-Datenblatt, da VIH der LEDs bei 5V-Versorgung ca. 3,5 V beträgt).
 - Bei 40 LEDs ab einer Einspeisung: Spannungsabfall am Ende möglich.
   Falls das ferne Ende farblich „abdriftet" → zweite 5V-Einspeisung am Ende
-  (direkt von der 5V-Klemme der Anzeigebox).
+  (direkt von der 5V-Verteilklemme der Anzeigebox).
 - Strom: 40 × 60 mA = 2,4 A (Volleiweiß) → 3A-Netzteil mit Reserve.
 
 ### 4.3 TM1637 6-stelliges Display (in der Steuerbox)
@@ -275,7 +285,7 @@ GND      ─────────────────>  gemeinsame Masse 
 | 5V (Pin 2/4) | Strom              | Pi + TM1637 (aus Verbindungskabel)            |
 | GND          | Masse              | Alle – gemeinsame Masse beider Boxen          |
 
-Strompfad: Netzteil → 5V-Klemme (Anzeigebox) → NeoPixel + Shifter direkt,
+Strompfad: Netzteil → DC-Buchse 5,5×2,1 → Verteilklemme (Anzeigebox) → NeoPixel + Shifter direkt,
 und über das 4-adrige Verbindungskabel → Steuerbox (Pi 5V-Pin, TM1637 VCC).
 
 ---
@@ -870,7 +880,7 @@ sudo python3 main.py
 | 2 | **rpi_ws281x braucht root** | `sudo python3` oder systemd als `User=root` | hoch |
 | 3 | **PWM kollidiert mit Audio** | `dtparam=audio=off` in `/boot/config.txt` | hoch |
 | 4 | **3,3V-Datenpegel** | Shifter 74AHCT125 (in Anzeigebox) hebt auf 5V – sauberer als direkt, da VIH der LEDs bei 5V-Versorgung ca. 3,5 V | hoch |
-| 5 | **Spannungsabfall am Ende** | Bei 40 LEDs ab einer Seite: ggf. zweite 5V-Einspeisung (von der 5V-Klemme der Anzeigebox) | mittel |
+| 5 | **Spannungsabfall am Ende** | Bei 40 LEDs ab einer Seite: ggf. zweite 5V-Einspeisung (von der 5V-Verteilklemme der Anzeigebox) | mittel |
 | 6 | **Farbstreuung LED zu LED** | Bälle sortieren oder Kalibrierungs-Array pro LED | mittel |
 | 7 | **Hotspot im Ball** | LED in den Ball hinein (Loch schneiden) oder ~5 mm Abstand | mittel |
 | 8 | **Feld 5 dominant** | Großes Feld ggf. auf 70% dimmen (separate Helligkeit) | mittel |
@@ -884,6 +894,7 @@ sudo python3 main.py
 | 16 | **Boxen ohne gemeinsame Masse** | GND-Ader im Verbindungskabel ist zwingend – ohne gemeinsame Masse gehen weder LEDs noch TM1637 zuverlässig | hoch |
 | 17 | **74AHCT125 ohne OE auf GND** | Pin 1 (OE) muss an GND, sonst ist der Ausgang hochohmig und die Kette bleibt dunkel. VCC = 5V (nie 3,3V – AHCT ist ein 5V-Baustein) | hoch |
 | 18 | **Stromverteilung Kabel/Boxen** | NeoPixel-Strom (bis 2,4 A) bleibt in der Anzeigebox; das Verbindungskabel trägt nur ~0,5 A (Pi + TM1637) – Querschnitt ≥0,5 mm² trotzdem sinnvoll | hoch |
+| 19 | **Steckverbinder-Belegung** | DC-Buchse 5,5×2,1: Innenpol = +5V (Netzteil mit Plus innen wählen!). GX12: beidseitig identisch löten (Pin 1=5V, 2=GND, 3=Data, 4=Reserve), Gehäuse nicht als Leiter, Belegung notieren | hoch |
 
 ---
 
@@ -909,7 +920,7 @@ sudo python3 main.py
 
 - Bälle herausnehmbar (Presspassung)
 - LED-Knoten/Verbindungen erreichbar (Klappe oder Schrauben)
-- Elektronik der Anzeigebox (Level-Shifter, Elko, 5V-Klemme) auf einer
+- Elektronik der Anzeigebox (Level-Shifter, Elko, 5V-Verteilklemme) auf einer
   Trägerplatte hinter der Lochplatte, über Rückwand/Klappe erreichbar
 - Steuerbox mit abnehmbarem Deckel: Pi, Taster und TM1637 warten, ohne
   die Anzeigebox zu öffnen
@@ -922,18 +933,25 @@ sudo python3 main.py
 - TM1637 frontal sichtbar (Klartext HH:MM:SS)
 - 5V und GND aus dem Verbindungskabel auf kleine Klemme verteilt
   (Pi 5V-Pin 2/4 bzw. Micro-USB, TM1637 VCC)
+- Verbindungskabel endet an der **GX12-Einbaudose** (Bohrung ⌀ 12 mm,
+  Kontermutter; eingebaute Kabelverschraubung = Zugentlastung)
 
 **Anzeigebox** (Lochplatte, Bälle, NeoPixel, Elektronik, 5V-Anschluss):
 - Lochplatte 200×320 mm hochkant mit den 40 Bällen (siehe 10.1/10.2)
-- Level-Shifter, 1000 µF-Elko und 5V-Klemme auf Lochraster-/Trägerplatte
+- Level-Shifter, 1000 µF-Elko und 5V-Verteilklemme auf Lochraster-/Trägerplatte
   hinter der Lochplatte – die 5V-Datenleitung wird erst hier erzeugt
-- Netzteil-Zuleitung und Verbindungskabel mit Zugentlastung einführen
-- Trennbare Steckverbinder an beiden Kabelenden (Netzteil + Verbindungskabel)
+- **DC-Steckerbuchse 5,5×2,1 mm** (Einbau, Gewinde + Mutter) an der Rückwand
+  für das Netzteil; daneben die **GX12-Einbaudose** für das Verbindungskabel
+- Trennbare Steckverbinder an allen Kabelenden (Netzteil-DC + GX12) – beide
+  Boxen lassen sich komplett voneinander trennen
 
-**Verbindungskabel:**
-- 4-adrig: 5V, GND, Data (3,3V), Reserve; Querschnitt ≥0,5 mm²
-- Data-Ader mit einer GND-Ader verdrillen (Störfestigkeit), Länge unkritisch
-  bis ca. 2 m – bei mehr: 5V-Ende der Kette prüfen bzw. Datenrate senken
+**Verbindungskabel (GX12, 4-polig):**
+- Belegung beidseitig identisch: **Pin 1 = 5V, Pin 2 = GND, Pin 3 = Data
+  (3,3V), Pin 4 = Reserve** – Belegung ins Gehäuse notieren
+- Metallgehäuse des GX12 nicht als Leiter verwenden (GND über Pin 2)
+- Querschnitt ≥0,5 mm²; Data-Ader mit einer GND-Ader verdrillen
+  (Störfestigkeit), Länge unkritisch bis ca. 2 m – bei mehr: 5V-Ende der
+  Kette prüfen bzw. Datenrate senken
 
 ---
 
@@ -987,7 +1005,7 @@ sudo python3 main.py
 - [ ] LEDs pro Ball: 1 (Standard) oder mehr für größere Felder?
 - [ ] TM1637-Modul: exaktes Modell/Hersteller spezifizieren?
 - [x] Level-Shifter: 74AHCT125 fest verbaut in der Anzeigebox (OE→GND, 1A←GPIO 18, 1Y→[330 Ω]→DIN) – entschieden 21.10.2026
-- [ ] Steckverbinder für Verbindungskabel und Netzteil-Zuleitung wählen (Klemme, JST, RJ45 …)?
+- [x] Steckverbinder entschieden (21.10.2026): DC-Steckerbuchse 5,5×2,1 mm für die 5V-Zuleitung der Anzeigebox; GX12-Kupplungspaar 4-polig (Stecker/Dose) für das Verbindungskabel zur Steuerbox
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
 - [ ] Ball-Orientierung: Naht-Äquator ausrichten?
