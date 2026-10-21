@@ -1,10 +1,10 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox)"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
-hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 5 Taster"
+hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 5 Taster + Kippschalter (Fibonacci↔Base4)"
 purpose: "Bauanleitung mit Hardware-Liste, Verdrahtung, LED-Mapping, Tastern und Code-Entwürfen"
 related: "Base4 Clock (Schwesterprojekt), Fibonacci-Uhr Arduino-Analyse"
 license: "GNU GPL (abgeleitet von Philippe Chretien / Fabian Steppat)"
@@ -17,10 +17,14 @@ license: "GNU GPL (abgeleitet von Philippe Chretien / Fabian Steppat)"
 > (sich öffnende Fibonacci-Schnecke), gesteuert durch einen Raspberry Pi Zero WH,
 > mit zusätzlichem 0,36″ TM1637 6-stelligem LED-Display als Klartext-Anzeige
 > und fünf Tastern für Feld-Durchschaltung, Handbetrieb und Normalbetrieb.
+> Über einen **Kippschalter** ist ab Beginn auch der **Base4-Modus** der
+> 9-Bälle-Ping-Pong-Uhr (Schwesterprojekt) integriert: 9 der 40 Bälle zeigen
+> die Zeit als 3×3-Wertematrix – minutengenau statt 5-Minuten-genau.
 >
-> **Aufbau in zwei Gehäusen:** **Steuerbox** (Pi, Taster, TM1637-Anzeige) und
-> **Anzeigebox** (Lochplatte mit Bällen, NeoPixel, Level-Shifter, Kondensatoren,
-> 5V-Anschluss). Versorgungsspannung überall **5V**, Datenleitungen **3,3V**.
+> **Aufbau in zwei Gehäusen:** **Steuerbox** (Pi, Taster, Kippschalter,
+> TM1637-Anzeige) und **Anzeigebox** (Lochplatte mit Bällen, NeoPixel,
+> Level-Shifter, Kondensatoren, 5V-Anschluss). Versorgungsspannung überall
+> **5V**, Datenleitungen **3,3V**.
 
 ---
 
@@ -56,7 +60,7 @@ B B B C C
 Die Quadrate öffnen sich vom Zentrum nach aussen: **D → E → C → B → A** –
 jedes grössere Quadrat umschliesst die kleineren (klassische Fibonacci-Spirale).
 
-### 1.2 Farbcodierung
+### 1.2 Farbcodierung (Fibonacci-Modus)
 
 | Farbe  | Bedeutung                         |
 |--------|-----------------------------------|
@@ -64,6 +68,8 @@ jedes grössere Quadrat umschliesst die kleineren (klassische Fibonacci-Spirale)
 | grün   | Feld zählt zu den Minuten (×5)    |
 | blau   | Feld zählt zu Stunde UND Minute   |
 | aus    | Feld zählt nicht                  |
+
+*(Im Base4-Modus gilt eine eigene Farbkodierung mit gelb – siehe 1.6.)*
 
 ### 1.3 Ablesen
 
@@ -94,6 +100,41 @@ wählt per `random()` eine davon → die Uhr sieht bei jedem 5-Minuten-Wechsel
 anders aus (keine Mehrdeutigkeit-Auflösung wie bei Base4 nötig; **Konfidenz: hoch**,
 übernommen aus der Original-Arduino-Firmware von Philippe Chretien).
 
+### 1.6 Zweiter Anzeige-Modus: Base4 (ab 21.10.2026 von Beginn integriert)
+
+Über den **Kippschalter** an der Steuerbox (GPIO 26) schaltet die Uhr live
+zwischen den beiden Anzeige-Modi um:
+
+| Kippschalter | Modus | Anzeige | Auflösung |
+|---|---|---|---|
+| offen | **Fibonacci** | 5 Felder A–E (Schnecke), rot/grün/blau | 5 Minuten |
+| zu (GND) | **Base4** | 9-Bälle-Matrix (3×3), rot/grün/gelb | **1 Minute** |
+
+Im Base4-Modus übernehmen **9 der 40 Bälle** die Wertematrix der 9-Bälle-
+Ping-Pong-Uhr (Schwesterprojekt) – Zeilen 0–2, Spalten 1–3, vollständig
+innerhalb des Fibonacci-Felds A. Die übrigen 31 Bälle bleiben aus.
+
+```
+ .  48  12   3 .
+ .  32   8   2 .
+ .  16   4   1 .
+```
+
+| Farbe  | Bedeutung (Base4)                |
+|--------|----------------------------------|
+| rot    | Ball zählt zur Stunde            |
+| grün   | Ball zählt zur Minute            |
+| gelb   | Ball zählt zu Stunde UND Minute   |
+| aus    | Ball zählt nicht                  |
+
+- **Stunde** = Summe(rote + gelbe Bälle), **Minute** = Summe(grüne + gelbe Bälle)
+- Wertemengen (vollständig, seit 14.10.2026 im Schwesterprojekt verifiziert):
+  Stunden {16, 12, 8, 4, 3, 2, 1}, Minuten {48, 32, 16, 8, 4, 3, 2, 1} –
+  alle 24 Stunden und 60 Minuten lückenlos darstellbar
+- **Wichtig:** Im Base4-Modus gilt die Fibonacci-Feldbedeutung der Bälle
+  nicht – die 9 Werte ergeben sich aus der obigen Matrix (Wertekarte ins
+  Gehäuse legen, wie bei der 9-Bälle-Uhr)
+
 ---
 
 ## 2. Systemübersicht
@@ -109,6 +150,7 @@ graph TD
     A -->|WLAN| D[NTP-Zeitquelle]
     D --> A
     A -->|GPIO 5/6/12/13/16| G[5× Taster · Steuerbox]
+    A -->|GPIO 26| SW[Kippschalter Fibonacci ↔ Base4 · Steuerbox]
     B --> E[5×8 Ping-Pong-Ball-Raster Schnecke]
     C --> F[Klartext HH:MM:SS]
 ```
@@ -117,6 +159,7 @@ graph TD
 |-------------------------------|------------|---------------------------------------|
 | Pi Zero WH                    | Steuerbox  | Steuerung, NTP, Farb- und Zeitlogik   |
 | 5× Taster                     | Steuerbox  | Feld-Modus, Handbetrieb, Normalbetrieb |
+| Kippschalter (GPIO 26)        | Steuerbox  | Modus-Umschalter Fibonacci ↔ Base4   |
 | TM1637 6-stellig              | Steuerbox  | Klartext HH:MM:SS (VCC 5V, Daten 3,3V) |
 | Level-Shifter 74AHCT125       | Anzeigebox | hebt Data-Leitung 3,3V → 5V vor LED 0 |
 | 40× WS2812B NeoPixel          | Anzeigebox | Anzeige im 5×8-Ball-Raster (Schnecke)  |
@@ -146,8 +189,9 @@ graph TD
 | 14| 1 Paar Avionik-Kupplungen GX12, 4-polig (Stecker + Dose) | Verbindungskabel trennbar steckbar | 8.– | hoch |
 | 15| DC-Steckerbuchse 5,5×2,1 mm (Einbau, Gewinde) | 5V-Netzteil-Zuleitung in der Anzeigebox | 3.– | hoch |
 | 16| 2× Gehäuse                    | Steuerbox + Anzeigebox         | Bastelkiste   | hoch  |
+| 17| Kippschalter 1-polig (Ein/Ein, z. B. MTS-102) | Modus-Umschalter Fibonacci ↔ Base4 (GPIO 26) | 3.– | hoch |
 
-**Geschätzte Gesamtkosten:** ~115 CHF
+**Geschätzte Gesamtkosten:** ~118 CHF
 
 ---
 
@@ -251,17 +295,18 @@ GND      ──────────────>  GND
 - Die 6-stellige Variante ist seltener als die 4-stellige; darauf achten,
   dass das Modul tatsächlich 6 Ziffern hat (Typ: „TM1637 6 digit 0.36″").
 
-### 4.4 Taster (5× Öffner gegen GND, in der Steuerbox)
+### 4.4 Taster & Modus-Schalter (in der Steuerbox)
 
 ```
-Pi Zero WH                    Taster
+Pi Zero WH                    Taster / Schalter
 ─────────────                 ──────────────────────────────────
 GPIO 5   ─────────────────>  T1  (Felder A–E durchschalten)
 GPIO 6   ─────────────────>  T2  (+1 Minute, Handbetrieb)
 GPIO 12  ─────────────────>  T3  (+5 Minuten, Handbetrieb)
 GPIO 13  ─────────────────>  T4  (+1 Stunde, Handbetrieb)
 GPIO 16  ─────────────────>  T5  (Normalbetrieb / NTP)
-GND      ─────────────────>  gemeinsame Masse aller Taster
+GPIO 26  ─────────────────>  Kippschalter (Fibonacci ↔ Base4)
+GND      ─────────────────>  gemeinsame Masse aller Taster + Schalter
 ```
 
 **Hinweis (Konfidenz: hoch):**
@@ -269,6 +314,10 @@ GND      ─────────────────>  gemeinsame Masse 
 - Die internen Pull-Ups des Pi aktiviert `gpiozero` automatisch
   (`Button(..., pull_up=True)` ist Standard) – keine externen Widerstände nötig.
 - Entprellung regelt `gpiozero` in Software (`bounce_time`).
+- **Kippschalter:** 1-poliger Ein/Ein-Schalter, eine Seite an GPIO 26 (Pin 37,
+  frei), die andere an GND. gpiozero behandelt ihn wie einen Taster, der
+  gedrückt **bleibt**: offen = Fibonacci-Modus (Pull-Up), zu = Base4-Modus.
+  Umschalten im Betrieb jederzeit möglich.
 
 ### 4.5 Gesamt-Pin-Übersicht
 
@@ -282,6 +331,7 @@ GND      ─────────────────>  gemeinsame Masse 
 | GPIO 12      | Taster 3           | +5 Minuten (Steuerbox)                        |
 | GPIO 13      | Taster 4           | +1 Stunde (Steuerbox)                         |
 | GPIO 16      | Taster 5           | Normalbetrieb (Steuerbox)                     |
+| GPIO 26      | Kippschalter       | Modus Fibonacci ↔ Base4 (Steuerbox, zu = Base4) |
 | 5V (Pin 2/4) | Strom              | Pi + TM1637 (aus Verbindungskabel)            |
 | GND          | Masse              | Alle – gemeinsame Masse beider Boxen          |
 
@@ -343,6 +393,23 @@ assert sum(len(feld[1]) for feld in FELDER) == 40  # alle LEDs erfasst
 assert sum(feld[0] for feld in FELDER) == 12       # 5+3+2+1+1 = 12
 ```
 
+### 5.4 Base4-Matrix im 5×8-Raster
+
+Der 3×3-Block des Base4-Modus sitzt bei **Zeilen 0–2, Spalten 1–3** –
+vollständig innerhalb des Fibonacci-Felds A, mittig oben. Vorteile: keine
+Trennstege im Block, das dunkle Umfeld rahmt die Matrix sauber.
+
+| Zeile \ Spalte | 1             | 2            | 3           |
+|----------------|---------------|--------------|-------------|
+| Zeile 0        | LED 1 · **48** | LED 2 · **12** | LED 3 · **3** |
+| Zeile 1        | LED 6 · **32** | LED 7 · **8**  | LED 8 · **2** |
+| Zeile 2        | LED 11 · **16** | LED 12 · **4** | LED 13 · **1** |
+
+- LED-Indizes nach derselben Formel: `Zeile × 5 + Spalte`
+- Werte identisch zur 9-Bälle-Ping-Pong-Uhr (Schwesterprojekt)
+- Der Block überlappt kein Fibonacci-Feld mehrfach bewusst: alle 9 Bälle
+  gehören im Fibonacci-Modus zu Feld A – die beiden Modi stören sich nicht
+
 ---
 
 ## 6. Software-Architektur
@@ -353,10 +420,14 @@ graph TD
     T -->|Feld-Modus| F1[Nur gewähltes Feld zeigen]
     T -->|Handbetrieb| O[Zeit-Offset anpassen]
     T -->|Normalbetrieb| R[Offset auf 0 / NTP]
-    A --> B[NTP-Zeit holen]
-    B --> C[Stunde & Minute in Fibonacci-Zerlegung]
-    C --> D[Farbe pro Feld bestimmen]
+    A --> SW{Kippschalter GPIO 26}
+    SW -->|offen = Fibonacci| C[Stunde & Minute in Fibonacci-Zerlegung, alle 5 min]
+    SW -->|zu = Base4| B4[Stunde & Minute in Base4-Zerlegung, jede Minute]
+    C --> D[Farbe pro Feld: rot/grün/blau]
+    B4 --> D4[Farbe pro Ball: rot/grün/gelb]
     D --> E[NeoPixel setzen 40 LEDs]
+    D4 --> E
+    A --> B[NTP-Zeit holen]
     D --> F[TM1637: HH:MM:SS ausgeben]
     E --> G[strip.show]
     F --> H[tm1637.show]
@@ -408,12 +479,16 @@ BTN_HOUR_PIN  = 13           # T4: Handbetrieb +1 Stunde
 BTN_NORM_PIN  = 16           # T5: Normalbetrieb (Offset zurücksetzen)
 BTN_BOUNCE_SEC = 0.05        # Prellen abfangen
 
+# --- Modus-Umschalter (Kippschalter Fibonacci <-> Base4) ---
+SWITCH_MODE_PIN = 26        # GPIO 26 (Pin 37), gegen GND; zu = Base4-Modus
+
 # --- Farben (R, G, B) ---
 COLOR_OFF    = (0,   0,   0)
 COLOR_HOURS  = (255, 0,   0)   # rot
 COLOR_MIN    = (0,   255, 0)   # grün
-COLOR_BOTH   = (0,   0,   255) # blau
+COLOR_BOTH   = (0,   0,   255) # blau (Fibonacci: Stunde + Minute)
 COLOR_FIELD  = (255, 255, 255) # weiss (Feld-Durchschaltung)
+COLOR_BASE4_BOTH = (255, 255, 0) # gelb (Base4: Stunde + Minute)
 
 # --- NTP ---
 NTP_SERVER   = "ch.pool.ntp.org"
@@ -445,15 +520,30 @@ FELDER = [
 # Verifikation beim Import
 assert sum(len(f[1]) for f in FELDER) == 40, "LED-Anzahl stimmt nicht!"
 assert sum(f[0] for f in FELDER) == 12, "Fibonacci-Summe stimmt nicht!"
+
+# Base4-Matrix (2. Anzeige-Modus): 3x3-Block in Zeilen 0-2, Spalten 1-3
+# (innerhalb von Feld A). Werte identisch zur 9-Baelle-Ping-Pong-Uhr.
+# LED-Index = Zeile*5 + Spalte
+BASE4_MATRIX = [
+    # (Wert, LED-Index)
+    (48, 0 * 5 + 1), (12, 0 * 5 + 2), ( 3, 0 * 5 + 3),
+    (32, 1 * 5 + 1), ( 8, 1 * 5 + 2), ( 2, 1 * 5 + 3),
+    (16, 2 * 5 + 1), ( 4, 2 * 5 + 2), ( 1, 2 * 5 + 3),
+]
+assert len(BASE4_MATRIX) == 9, "Base4-Matrix muss 9 Baelle haben!"
+assert [w for w, _ in BASE4_MATRIX] == [48, 12, 3, 32, 8, 2, 16, 4, 1], \
+    "Base4-Werte stimmen nicht mit der 9-Baelle-Uhr ueberein!"
 ```
 
 ### 7.3 Taster-Steuerung (`buttons.py`)
 
 ```python
-"""Taster-Steuerung: Feld-Modus, Handbetrieb (Offset), Normalbetrieb."""
+"""Taster-Steuerung: Feld-Modus, Handbetrieb (Offset), Normalbetrieb,
+Modus-Umschaltung Fibonacci <-> Base4 (Kippschalter)."""
 from gpiozero import Button
 from config import (BTN_FIELD_PIN, BTN_MIN_PIN, BTN_MIN5_PIN,
-                    BTN_HOUR_PIN, BTN_NORM_PIN, BTN_BOUNCE_SEC)
+                    BTN_HOUR_PIN, BTN_NORM_PIN, BTN_BOUNCE_SEC,
+                    SWITCH_MODE_PIN)
 
 MODE_NORMAL = "normal"   # NTP-Zeit, Fibonacci-Anzeige
 MODE_MANUAL = "manual"   # Zeitversatz (Offset), Uhr läuft weiter
@@ -466,6 +556,10 @@ class ButtonController:
     Handbetrieb = Offset in Sekunden zur Systemzeit; Taster 5 setzt ihn auf 0.
     on_event(mode, field_idx, offset_sec) wird bei jedem Tasterdruck aufgerufen
     ( gpiozero ruft when_pressed in einem Hintergrund-Thread auf ).
+
+    Der Kippschalter (GPIO 26, gegen GND) verhält sich wie ein dauerhaft
+    gedrückter Taster: geschlossen = Base4-Modus. Er wird im Hauptprogramm
+    per is_base4() abgefragt – Umschalten jederzeit möglich.
     """
 
     def __init__(self, on_event):
@@ -487,11 +581,19 @@ class ButtonController:
         taster["hour"].when_pressed  = lambda: self._manual_pressed(3600)
         taster["norm"].when_pressed  = self._normal_pressed
 
+        # Kippschalter: zu (GND) = Base4-Modus; Prellen beim Umschalten
+        # ebenfalls über bounce_time abfangen
+        self._mode_sw = Button(SWITCH_MODE_PIN, bounce_time=BTN_BOUNCE_SEC)
+
+    def is_base4(self):
+        """True = Schalter geschlossen (GND) -> Base4-Modus."""
+        return self._mode_sw.is_pressed
+
     def _emit(self):
         self._notify(self._mode, self._field, self._offset_sec)
 
     def _field_pressed(self):
-        """Taster 1: Felder A-E durchschalten."""
+        """Taster 1: Felder A-E durchschalten (Fibonacci-Funktion)."""
         self._mode = MODE_FIELD
         self._field = (self._field + 1) % 5
         self._emit()
@@ -582,7 +684,50 @@ def get_field_assignment(hours, minutes):
     return assignment
 ```
 
-### 7.5 NeoPixel-Ansteuerung (`display.py`)
+### 7.5 Base4-Zerlegung (`base4.py`)
+
+```python
+"""Base4-Zerlegung – portiert aus der 9-Baelle-Ping-Pong-Uhr (Schwesterprojekt).
+Wertemengen seit 14.10.2026 vollstaendig (alle 24 h / 60 min darstellbar)."""
+from mapping import BASE4_MATRIX
+
+# Werte je Ball (feste Position, siehe mapping.BASE4_MATRIX)
+HOUR_VALUES   = [16, 12, 8, 4, 3, 2, 1]        # 48/32 nur fuer Minuten
+MINUTE_VALUES = [48, 32, 16, 8, 4, 3, 2, 1]
+
+def _decompose(value, values):
+    """Zerlegt value gierig in Summanden aus values (jeder Wert max. 1x)."""
+    parts = []
+    for v in values:
+        if v <= value:
+            parts.append(v)
+            value -= v
+    return parts
+
+def get_ball_states(h, m):
+    """
+    Liefert {led_index: 'hours'|'minutes'|'both'|'off'} fuer die 9 Matrix-Baelle.
+    Im Base4-Modus bedeutet 'both' GELB (Stunde + Minute), nicht blau.
+    Aufloesung: 1 Minute (Update jede Minute).
+    """
+    h = h % 24
+    hparts = set(_decompose(h, HOUR_VALUES))
+    mparts = set(_decompose(m, MINUTE_VALUES))
+
+    states = {}
+    for wert, led in BASE4_MATRIX:
+        role = 'off'
+        if wert in hparts and wert in mparts:
+            role = 'both'          # gelb
+        elif wert in hparts:
+            role = 'hours'         # rot
+        elif wert in mparts:
+            role = 'minutes'       # gruen
+        states[led] = role
+    return states
+```
+
+### 7.6 NeoPixel-Ansteuerung (`display.py`)
 
 ```python
 """NeoPixel-Ansteuerung für 40 LEDs im 5×8-Schnecken-Raster."""
@@ -601,7 +746,8 @@ COLOR_MAP = {
     'off':    Color(0, 0, 0),
     'hours':  Color(255, 0, 0),    # rot  (GRB-Reihenfolge beachten!)
     'minutes': Color(0, 255, 0),    # grün
-    'both':   Color(0, 0, 255),    # blau
+    'both':   Color(0, 0, 255),    # blau (Fibonacci: Stunde + Minute)
+    'both4':  Color(255, 255, 0),  # gelb (Base4: Stunde + Minute)
     'field':  Color(255, 255, 255), # weiss (Feld-Durchschaltung)
 }
 
@@ -629,6 +775,20 @@ def show_field(field_idx):
         strip.setPixelColor(led, COLOR_MAP['field'])
     strip.show()
 
+def show_base4(ball_states):
+    """
+    Zeigt die Base4-Matrix: 9 Bälle gemäß ball_states
+    ({led_index: 'hours'|'minutes'|'both'|'off'}), alle übrigen LEDs aus.
+    'both' = gelb (im Base4-Modus), nicht blau!
+    """
+    role_color = {'hours': 'hours', 'minutes': 'minutes',
+                  'both': 'both4', 'off': 'off'}
+    for i in range(LED_COUNT):
+        strip.setPixelColor(i, COLOR_MAP['off'])
+    for led, role in ball_states.items():
+        strip.setPixelColor(led, COLOR_MAP[role_color[role]])
+    strip.show()
+
 def clear_all():
     """Schaltet alle LEDs aus."""
     for i in range(LED_COUNT):
@@ -636,7 +796,7 @@ def clear_all():
     strip.show()
 ```
 
-### 7.6 TM1637-Ansteuerung (`tm1637_display.py`)
+### 7.7 TM1637-Ansteuerung (`tm1637_display.py`)
 
 ```python
 """TM1637 6-stelliges Display – zeigt HH:MM:SS."""
@@ -679,7 +839,7 @@ def clear_display():
     display.clear()
 ```
 
-### 7.7 Zeit-Verwaltung (`ntp_time.py`)
+### 7.8 Zeit-Verwaltung (`ntp_time.py`)
 
 ```python
 """NTP-Zeitsynchronisation und lokale Zeit."""
@@ -722,11 +882,12 @@ def needs_resync(interval_min=30):
     return elapsed_min >= interval_min
 ```
 
-### 7.8 Hauptprogramm (`main.py`)
+### 7.9 Hauptprogramm (`main.py`)
 
 ```python
 #!/usr/bin/env python3
-"""Fibonacci Ping-Pong-Ball-Uhr – Hauptprogramm (5×8 Schnecke, 5 Taster)."""
+"""Fibonacci Ping-Pong-Ball-Uhr – Hauptprogramm
+(5×8 Schnecke, 5 Taster, Kippschalter Fibonacci <-> Base4)."""
 import time
 import signal
 import sys
@@ -734,8 +895,9 @@ import sys
 from config import *
 from mapping import FELDER
 from fibonacci import get_field_assignment
+from base4 import get_ball_states
 from buttons import ButtonController, MODE_NORMAL, MODE_MANUAL, MODE_FIELD
-from display import strip, show_time, show_field, clear_all
+from display import strip, show_time, show_field, show_base4, clear_all
 from tm1637_display import show_clock, show_field_text, clear_display
 from ntp_time import sync_ntp, get_local_time, needs_resync
 
@@ -762,7 +924,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 def main():
     print("Fibonacci Ping-Pong-Ball-Uhr startet...")
 
-    # Taster
+    # Taster + Modus-Schalter
     buttons = ButtonController(on_event)
 
     # Erste NTP-Synchronisation
@@ -771,21 +933,25 @@ def main():
         print("WARNUNG: NTP-Sync fehlgeschlagen – laufe mit Systemzeit.")
 
     last_display_time = ""
-    last_shown = None  # was zuletzt im Raster stand
+    last_raster = None  # was zuletzt im Raster stand
 
     while running:
-        # NTP gelegentlich resynchronisieren (nur im Normalbetrieb nötig,
-        # schadet im Handbetrieb aber nicht)
+        # NTP gelegentlich resynchronisieren
         if needs_resync(NTP_SYNC_INTERVAL_MIN):
             sync_ntp()
 
+        # Feld-Modus ist eine Fibonacci-Funktion: bei umgelegtem
+        # Schalter (Base4) automatisch verlassen
+        if state["mode"] == MODE_FIELD and buttons.is_base4():
+            state["mode"] = MODE_NORMAL
+
         if state["mode"] == MODE_FIELD:
             # --- Feld-Durchschaltung (Taster 1): Feld weiss zeigen ---
-            if last_shown != ("field", state["field"]):
+            if last_raster != ("field", state["field"]):
                 wert, leds = FELDER[state["field"]]
                 show_field(state["field"])
                 show_field_text(state["field"], wert)
-                last_shown = ("field", state["field"])
+                last_raster = ("field", state["field"])
                 print(f"Feldmodus: {'ABCDE'[state['field']]} (Wert {wert})")
         else:
             h, m, s = get_local_time(state["offset"])
@@ -796,13 +962,20 @@ def main():
                 show_clock(h, m, s)
                 last_display_time = current_display
 
-            # --- Fibonacci-Anzeige: nur bei 5-Minuten-Wechsel ---
-            current_fibo = (h, m // 5)
-            if last_shown != ("time", current_fibo):
-                assignment = get_field_assignment(h, m)
-                show_time(assignment)
-                last_shown = ("time", current_fibo)
-                print(f"Zeit: {h:02d}:{m:02d} – Felder: {assignment}")
+            if buttons.is_base4():
+                # --- Base4-Modus: Update jede Minute ---
+                if last_raster != ("base4", (h, m)):
+                    show_base4(get_ball_states(h, m))
+                    last_raster = ("base4", (h, m))
+                    print(f"Base4: {h:02d}:{m:02d}")
+            else:
+                # --- Fibonacci-Modus: Update alle 5 Minuten ---
+                slot = (h, m // 5)
+                if last_raster != ("fib", slot):
+                    assignment = get_field_assignment(h, m)
+                    show_time(assignment)
+                    last_raster = ("fib", slot)
+                    print(f"Zeit: {h:02d}:{m:02d} – Felder: {assignment}")
 
         # Kurze Pause
         time.sleep(UPDATE_INTERVAL_SEC)
@@ -811,7 +984,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### 7.9 Autostart (systemd-Service)
+### 7.10 Autostart (systemd-Service)
 
 Datei: `/etc/systemd/system/fibonacci-clock.service`
 
@@ -895,6 +1068,9 @@ sudo python3 main.py
 | 17 | **74AHCT125 ohne OE auf GND** | Pin 1 (OE) muss an GND, sonst ist der Ausgang hochohmig und die Kette bleibt dunkel. VCC = 5V (nie 3,3V – AHCT ist ein 5V-Baustein) | hoch |
 | 18 | **Stromverteilung Kabel/Boxen** | NeoPixel-Strom (bis 2,4 A) bleibt in der Anzeigebox; das Verbindungskabel trägt nur ~0,5 A (Pi + TM1637) – Querschnitt ≥0,5 mm² trotzdem sinnvoll | hoch |
 | 19 | **Steckverbinder-Belegung** | DC-Buchse 5,5×2,1: Innenpol = +5V (Netzteil mit Plus innen wählen!). GX12: beidseitig identisch löten (Pin 1=5V, 2=GND, 3=Data, 4=Reserve), Gehäuse nicht als Leiter, Belegung notieren | hoch |
+| 20 | **Kippschalter prellt beim Umlegen** | `bounce_time` auch am Schalter-Eingang setzen; Modus wird im Loop abgefragt → robust gegen Prellen | hoch |
+| 21 | **Base4-Werte nicht geometrisch ablesbar** | Die 9 Matrix-Werte (48…1) folgen nicht der Schnecken-Logik – Wertekarte ins Gehäuse legen (wie bei der 9-Bälle-Uhr) | hoch |
+| 22 | **Farb-Semantik je Modus unterschiedlich** | Fibonacci: blau = beides; Base4: gelb = beides. Beide Paletten im Gehäuse dokumentieren, sonst verwirrt die Uhr beim Umschalten | hoch |
 
 ---
 
@@ -927,10 +1103,13 @@ sudo python3 main.py
 
 ### 10.4 Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox)
 
-**Steuerbox** (Pi, 5 Taster, TM1637):
+**Steuerbox** (Pi, 5 Taster, Kippschalter, TM1637):
 - Pi auf kleiner Trägerplatte, Kabelabgänge über Lötstellen/Klemmen
 - Taster frontal oder unten zugänglich, beschriftet (T1–T5)
+- Kippschalter frontal neben den Tastern, beschriftet «FIB | BASE4»
+  (Schalter zu = Base4)
 - TM1637 frontal sichtbar (Klartext HH:MM:SS)
+- Base4-Wertekarte (9 Werte der 3×3-Matrix) ins Gehäuseinnere kleben
 - 5V und GND aus dem Verbindungskabel auf kleine Klemme verteilt
   (Pi 5V-Pin 2/4 bzw. Micro-USB, TM1637 VCC)
 - Verbindungskabel endet an der **GX12-Einbaudose** (Bohrung ⌀ 12 mm,
@@ -962,9 +1141,10 @@ sudo python3 main.py
 | LDR (Helligkeitssensor) | Auto-Dim je Raumbeleuchtung | gering |
 | Nachtabschaltung | 22:00–06:00 LEDs dimmen/aus | gering |
 | Web-Interface | Uhrzeit/Modus im Browser stellen | mittel |
-| Modus-Umschalter | Fibonacci ↔ Base4 (gemeinsames Framework) | mittel |
+| Modus-Umschalter | ✅ integriert: Kippschalter Fibonacci ↔ Base4 (GPIO 26, ab 21.10.2026 von Beginn eingeplant) | erledigt |
 | Farbpaletten | 10 Paletten wie im Original | gering |
 | Regenbogen-Modus | Demo-Modus wie Original | gering |
+| Base4-Wertekarte im Deckel | 3×3-Matrix mit Werten einkleben/drucken | gering |
 | Second-Precision | Sekunden auf TM1637 (Ball-Anzeige bleibt 5-Min) | bereits geplant |
 
 ---
@@ -976,7 +1156,7 @@ sudo python3 main.py
 3. [ ] Hardware beschaffen (siehe Bauteilliste)
 4. [ ] LED-Kette verlegen + Mapping-Tabelle verifizieren
 5. [ ] Lochplatte bohren + Bälle einpassen (200×320 hochkant)
-6. [ ] Software testen (NeoPixel-Test, TM1637-Test, NTP-Test, Taster-Test)
+6. [ ] Software testen (NeoPixel-Test, TM1637-Test, NTP-Test, Taster-Test, Kippschalter-/Base4-Test)
 7. [ ] `main.py` integrieren und testen
 8. [ ] systemd-Service einrichten
 9. [ ] Gehäuse fertigstellen (Steuerbox + Anzeigebox, Verbindungskabel, Zugentlastung)
@@ -1006,6 +1186,7 @@ sudo python3 main.py
 - [ ] TM1637-Modul: exaktes Modell/Hersteller spezifizieren?
 - [x] Level-Shifter: 74AHCT125 fest verbaut in der Anzeigebox (OE→GND, 1A←GPIO 18, 1Y→[330 Ω]→DIN) – entschieden 21.10.2026
 - [x] Steckverbinder entschieden (21.10.2026): DC-Steckerbuchse 5,5×2,1 mm für die 5V-Zuleitung der Anzeigebox; GX12-Kupplungspaar 4-polig (Stecker/Dose) für das Verbindungskabel zur Steuerbox
+- [x] Base4-Modus von Beginn integriert (21.10.2026): Kippschalter an GPIO 26 (Pin 37, offen = Fibonacci / zu = Base4); 3×3-Matrix in Zeilen 0–2, Spalten 1–3 (innerhalb Feld A); Farben rot/grün/gelb; Auflösung 1 Minute; Wertemengen wie 9-Bälle-Uhr
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
 - [ ] Ball-Orientierung: Naht-Äquator ausrichten?
@@ -1017,4 +1198,5 @@ sudo python3 main.py
 *Erstellt von Paul Simmen mit Vibe (GLM-5-2), 14.09.2026*
 *Überarbeitet auf 5×8-Schnecken-Layout + 5 Taster von Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026*
 *Überarbeitet: Stromversorgung 5V + Zwei-Gehäuse-Konzept (Steuerbox/Anzeigebox) von Paul Simmen mit Vibe (GLM-5-latest-short), 21.10.2026*
+*Base4-Modus mit Kippschalter (Fibonacci ↔ Base4) ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 21.10.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
