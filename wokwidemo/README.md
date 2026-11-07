@@ -7,11 +7,19 @@ Demo-Variante der Uhr für Demonstrationszwecke: Das Raster steht **hochkant
 der [Nerdiy-Fibonacci-Uhr](https://www.nerdiy.de/fibonacciClock) bzw. des Originals.
 Das grosse Feld oben dominiert wie ein Zifferblatt, und die Quadrate wachsen vom
 Zentrum aus spiralförmig nach aussen – das Ablesen ist intuitiver, weil das Auge
-der öffnenden Schnecke folgt. **Dieses Layout wird auch für die echte Uhr gebaut.**
+der öffnenden Schnecke folgt. **Dieses Layout war die Planung bis 21.10.2026** – die reale Tafel ist das
+gespiegelte Spiegelbild davon (siehe Hinweis unten).
 
 > *Hinweis:* Dieser Ordner hiess bis zum 20.10.2026 `wokwidemo2` (mit einer
 > älteren 8×5-Demo als `wokwidemo`). Nach der Entscheidung für das Schnecken-Layout
 > wurde die alte 8×5-Demo gelöscht und diese Demo in `wokwidemo` umbenannt.
+
+> ⚠️ *Stand 07.11.2026:* Die reale Anzeigetafel wurde vermessen: Feld B (Wert 3)
+> liegt unten **rechts** (Spalten C–E), Feld C (Wert 2) unten **links** (Spalten
+> A–B), D = A5, E = B5; Daten- und Stromkette laufen **spaltenweise**
+> (`LED = Spalte×8+Zeile`). Diese Demo bleibt beim Planungsstand vom 21.10.2026
+> und wird nicht weiter angepasst (Entscheid: keine weitere Wokwi-Simulation) –
+> massgeblich ist die [Bauanleitung](../docs/Fibonacci_PingPong_Uhr_Bauanleitung.md).
 
 ## Feld-Anordnung (Schnecke, vom Zentrum nach aussen öffnend: D → E → C → B → A)
 

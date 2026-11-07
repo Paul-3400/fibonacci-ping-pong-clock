@@ -8,9 +8,17 @@ statt dem Raspberry Pi Zero WH – Wokwi kennt den Pi Zero nicht. Die komplette 
 Prototyp lauffähig und wird später auf den Pi portiert.
 
 Das Raster steht **hochkant (5 Spalten × 8 Zeilen)** als sich öffnende
-Fibonacci-Schnecke – dasselbe Layout, das auch für die echte Uhr gebaut wird:
+Fibonacci-Schnecke – das Layout der ursprünglichen Planung:
 Feld A (5×5) oben, B (3×3) unten links, C (2×2) unten rechts, D (np28) und
 E (np29) nebeneinander in Zeile 5. Mapping: `LED-Index = Zeile*5 + Spalte`.
+
+> ⚠️ *Stand 07.11.2026:* Die reale Anzeigetafel wurde vermessen und weicht von
+> dieser Simulation ab: Feld B (Wert 3) liegt unten **rechts** (Spalten C–E),
+> Feld C (Wert 2) unten **links** (Spalten A–B), D = A5, E = B5; Daten- und
+> Stromkette laufen **spaltenweise** (`LED = Spalte×8+Zeile`). Diese Wokwi-
+> Demo bleibt beim früheren Planungsstand und wird nicht weiter angepasst
+> (Entscheid 21.10.2026: keine weitere Wokwi-Simulation) – massgeblich ist
+> die [Bauanleitung](../docs/Fibonacci_PingPong_Uhr_Bauanleitung.md).
 
 Die **fünf Taster** der Ziel-Uhr sind im Prototyp nicht enthalten – die
 Demo-Variante mit Tastern (Feld-Durchschaltung, Handbetrieb, Normalbetrieb)

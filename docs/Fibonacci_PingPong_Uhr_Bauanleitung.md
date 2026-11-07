@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile)"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 5 Taster + Kippschalter (Fibonacci↔Base4)"
@@ -14,7 +14,7 @@ license: "GNU GPL (abgeleitet von Philippe Chretien / Fabian Steppat)"
 
 > Bauanleitung von Paul Simmen, erstellt mit Vibe (GLM-5-2), überarbeitet 20./21.10.2026.
 > Eine Fibonacci-LED-Uhr mit 40 Ping-Pong-Bällen im hochkanten 5×8-Raster
-> (sich öffnende Fibonacci-Schnecke), gesteuert durch einen Raspberry Pi Zero WH,
+> (sich öffnende Fibonacci-Schnecke, Layout der realen Anzeigetafel), gesteuert durch einen Raspberry Pi Zero WH,
 > mit zusätzlichem 0,36″ TM1637 6-stelligem LED-Display als Klartext-Anzeige
 > und fünf Tastern für Feld-Durchschaltung, Handbetrieb und Normalbetrieb.
 > Über einen **Kippschalter** ist ab Beginn auch der **Base4-Modus** der
@@ -33,17 +33,24 @@ license: "GNU GPL (abgeleitet von Philippe Chretien / Fabian Steppat)"
 ### 1.1 Fibonacci-Verlegung im 5×8-Raster (Schnecke)
 
 Die fünf Fibonacci-Felder (Werte 1, 1, 2, 3, 5) kacheln lückenlos in ein
-**hochkantes 5×8-Rechteck** – als **sich öffnende Fibonacci-Schnecke**
-(Anordnung wie bei der Nerdiy-/Original-Uhr). Jedes Feld besteht aus mehreren
-gleich gefärbten Bällen:
+**hochkantes 5×8-Rechteck** – als **sich öffnende Fibonacci-Schnecke**.
+Das Layout entspricht der **realen Anzeigetafel** (vermessen; PDF «Fibonacci
+Front»). Jedes Feld besteht aus mehreren gleich gefärbten Bällen.
+
+**Positionsangabe:** Eine Position auf der Tafel wird mit **Spalte (A–E) +
+Zeile (0–7)** bezeichnet, z. B. «C5» = Spalte C, Zeile 5 – so ist die reale
+Tafel beschriftet. **Achtung Namens-Kollision:** Die Spaltenbuchstaben A–E
+bezeichnen *Positionen*; die Fibonacci-**Felder** A–E (Werte 5, 3, 2, 1, 1)
+liegen teils an anderen Orten – z. B. liegt das Fibonacci-Feld B (Wert 3)
+in den Spalten C–E der Tafel.
 
 | Feld | Wert | Bälle | Lage (Spalten × Zeilen)  |
 |------|------|-------|--------------------------|
-| A    | 5    | 25    | Spalten 0–4 × Zeilen 0–4 (oben, volle Breite) |
-| B    | 3    |  9    | Spalten 0–2 × Zeilen 5–7 (unten links) |
-| C    | 2    |  4    | Spalten 3–4 × Zeilen 6–7 (unten rechts) |
-| D    | 1    |  1    | Spalte 3 × Zeile 5 (LED 28) |
-| E    | 1    |  1    | Spalte 4 × Zeile 5 (LED 29) |
+| A    | 5    | 25    | Spalten A–E × Zeilen 0–4 (oben, volle Breite) |
+| B    | 3    |  9    | Spalten C–E × Zeilen 5–7 (unten rechts) |
+| C    | 2    |  4    | Spalten A–B × Zeilen 6–7 (unten links, unter D/E) |
+| D    | 1    |  1    | Spalte A × Zeile 5 (A5, LED 5) |
+| E    | 1    |  1    | Spalte B × Zeile 5 (B5, LED 13) |
 | **Total** | **12** | **40** | 5×8 = 40 Bälle      |
 
 ```
@@ -52,13 +59,15 @@ A A A A A
 A A A A A
 A A A A A
 A A A A A
-B B B D E     <- D/E nebeneinander = Zentrum der Schnecke
-B B B C C     <- C direkt darunter
-B B B C C
+D E B B B     <- D=A5 und E=B5: Zentrum der Schnecke (links)
+C C B B B     <- C direkt darunter
+C C B B B
 ```
 
 Die Quadrate öffnen sich vom Zentrum nach aussen: **D → E → C → B → A** –
-jedes grössere Quadrat umschliesst die kleineren (klassische Fibonacci-Spirale).
+jedes grössere Quadrat umschliesst die kleineren (klassische Fibonacci-Spirale;
+die reale Tafel ist das seitenverkehrte, funktional identische Spiegelbild
+des Nerdiy-/Original-Layouts).
 
 ### 1.2 Farbcodierung (Fibonacci-Modus)
 
@@ -111,8 +120,8 @@ zwischen den beiden Anzeige-Modi um:
 | zu (GND) | **Base4** | 9-Bälle-Matrix (3×3), rot/grün/gelb | **1 Minute** |
 
 Im Base4-Modus übernehmen **9 der 40 Bälle** die Wertematrix der 9-Bälle-
-Ping-Pong-Uhr (Schwesterprojekt) – Zeilen 0–2, Spalten 1–3, vollständig
-innerhalb des Fibonacci-Felds A. Die übrigen 31 Bälle bleiben aus.
+Ping-Pong-Uhr (Schwesterprojekt) – Zeilen 0–2, Spalten B–D (Positionsindex
+1–3), vollständig innerhalb des Fibonacci-Felds A. Die übrigen 31 Bälle bleiben aus.
 
 ```
  .  48  12   3 .
@@ -257,10 +266,10 @@ Anzeigebox hebt die NeoPixel-Datenleitung auf 5V.
 Steuerbox                  Anzeigebox
 ─────────────              ──────────────────────────────────────────────
 GPIO 18 (PWM0) ──Kabel──►  74AHCT125 1A (Pin 2, 3,3V-Pegel)
-                            74AHCT125 1Y (Pin 3) ──[330–470 Ω]──► DIN (LED 0)
-                                              DOUT → DIN(LED 1) → ... → LED 39
+                            74AHCT125 1Y (Pin 3) ──[330–470 Ω]──► DIN (LED 0 = A0)
+                            Kette spaltenweise: A0 → A7 → B0 → B7 → C0 → C7 → D0 → D7 → E0 → E7 (= LED 39)
 5V-Verteiler (DC-Buchse) ──┬────────────►  74AHCT125 VCC (Pin 14, 5V)
-            ├────────────►  VCC aller NeoPixel (Einspeisung am Anfang)
+            ├────────────►  VCC aller NeoPixel (Einspeisung an Spalte A)
 GND ────────┴────────────►  GND (74AHCT125 Pin 7 + alle LEDs)
                             + 1000 µF Elko über VCC/GND an der Einspeisung
 ```
@@ -274,6 +283,8 @@ GND ────────┴────────────►  GND (74A
   Falls das ferne Ende farblich „abdriftet" → zweite 5V-Einspeisung am Ende
   (direkt von der 5V-Verteilklemme der Anzeigebox).
 - Strom: 40 × 60 mA = 2,4 A (Volleiweiß) → 3A-Netzteil mit Reserve.
+- **Stromführung wie Datenkette:** Auf der realen Tafel laufen 5V und GND auf
+  derselben spaltenweisen Route mit (A0–A7 → B0–B7 → C0–C7 → D0–D7 → E0–E7).
 
 ### 4.3 TM1637 6-stelliges Display (in der Steuerbox)
 
@@ -342,14 +353,19 @@ und über das 4-adrige Verbindungskabel → Steuerbox (Pi 5V-Pin, TM1637 VCC).
 
 ## 5. LED-Mapping (40 LEDs → 5 Felder)
 
-### 5.1 Verdrahtungsreihenfolge
+### 5.1 Verdrahtungsreihenfolge (wie die reale Anzeigetafel)
 
-Empfehlung: LED-Kette in **Schlangenlinie** (Zeile für Zeile, links→rechts,
-dann nächste Zeile) verlegen. Dann ist die Formel einfach:
+Die LED-Kette läuft **spaltenweise** – Daten- **und** Stromleitung (5V/GND)
+auf derselben Route: **IN an A0** (oben links) → **A0–A7** (Spalte A von
+oben nach unten) → **B0–B7** → **C0–C7** → **D0–D7** → **E0–E7** (endet
+unten rechts). Damit ist die Formel einfach:
 
 ```
-LED-Index = Zeile × 5 + Spalte     (Zeile 0–7, Spalte 0–4)
+LED-Index = Spalte × 8 + Zeile     (Spalte A–E = 0–4, Zeile 0–7)
 ```
+
+Positionsangaben wie «A5» meinen: **Spalte A, Zeile 5** (Beschriftung der
+realen Tafel, siehe PDF «Fibonacci Front»).
 
 Das Raster steht **hochkant**: 5 Spalten (Breite) × 8 Zeilen (Höhe).
 
@@ -357,18 +373,18 @@ Das Raster steht **hochkant**: 5 Spalten (Breite) × 8 Zeilen (Höhe).
 
 ```python
 # Feld-Definition: (Wert, [Liste der LED-Indizes])
-# Annahme: Schlangenlinie, Zeile 0 oben links, LED 0 = (0,0)
+# Annahme: spaltenweise Kette (IN an A0), LED 0 = Spalte A, Zeile 0 (oben links)
 
-def led_index(row, col):
-    """Schlangenlinie: Zeile für Zeile, links nach rechts."""
-    return row * 5 + col
+def led_index(spalte, zeile):
+    """Spaltenweise Kette: Spalte für Spalte, oben nach unten."""
+    return spalte * 8 + zeile
 
 FELDER = {
-    5: [led_index(r, c) for r in range(5) for c in range(5)],    # 25 LEDs
-    3: [led_index(r, c) for r in range(5,8) for c in range(3)],  #  9 LEDs
-    2: [led_index(r, c) for r in range(6,8) for c in range(3,5)],#  4 LEDs
-    1: [led_index(5, 3)],                                        #  1 LED (Feld D, LED 28)
-    1: [led_index(5, 4)],                                        #  1 LED (Feld E, LED 29)
+    5: [led_index(s, z) for s in range(5) for z in range(5)],        # 25 LEDs
+    3: [led_index(s, z) for s in range(2, 5) for z in range(5, 8)],  #  9 LEDs
+    2: [led_index(s, z) for s in range(0, 2) for z in range(6, 8)],  #  4 LEDs
+    1: [led_index(0, 5)],                                            #  1 LED (Feld D = A5)
+    1: [led_index(1, 5)],                                            #  1 LED (Feld E = B5)
 }
 # ACHTUNG: Python-Dictionary kann keine doppelten Keys!
 # Besser als Liste von Tupeln:
@@ -376,15 +392,26 @@ FELDER = {
 
 ```python
 # Korrekt: Liste von (Wert, [LED-Indizes])
+# LED-Index = Spalte × 8 + Zeile (spaltenweise Kette, IN an A0)
 FELDER = [
-    (5, [r * 5 + c for r in range(5) for c in range(5)]),         # Feld A: 25 LEDs (oben)
-    (3, [r * 5 + c for r in range(5, 8) for c in range(3)]),      # Feld B:  9 LEDs (unten links)
-    (2, [r * 5 + c for r in range(6, 8) for c in range(3, 5)]),  # Feld C:  4 LEDs (unten rechts)
-    (1, [5 * 5 + 3]),                                             # Feld D:  1 LED (LED 28)
-    (1, [5 * 5 + 4]),                                             # Feld E:  1 LED (LED 29)
+    (5, [s * 8 + z for s in range(5) for z in range(5)]),         # Feld A: 25 LEDs (Spalten A–E, Zeilen 0–4)
+    (3, [s * 8 + z for s in range(2, 5) for z in range(5, 8)]),   # Feld B:  9 LEDs (Spalten C–E, Zeilen 5–7)
+    (2, [s * 8 + z for s in range(0, 2) for z in range(6, 8)]),   # Feld C:  4 LEDs (Spalten A–B, Zeilen 6–7)
+    (1, [0 * 8 + 5]),                                             # Feld D:  1 LED (A5 = LED 5)
+    (1, [1 * 8 + 5]),                                             # Feld E:  1 LED (B5 = LED 13)
 ]
 NUM_LEDS = 40
 ```
+
+Feld → LED-Indizes im Überblick (spaltenweise Kette, LED = Spalte×8+Zeile):
+
+| Feld | Wert | LED-Indizes                          |
+|------|------|--------------------------------------|
+| A    | 5    | 0–4, 8–12, 16–20, 24–28, 32–36       |
+| B    | 3    | 21–23, 29–31, 37–39                  |
+| C    | 2    | 6, 7, 14, 15                         |
+| D    | 1    | 5 (Position A5)                      |
+| E    | 1    | 13 (Position B5)                     |
 
 ### 5.3 Verifikation
 
@@ -395,17 +422,18 @@ assert sum(feld[0] for feld in FELDER) == 12       # 5+3+2+1+1 = 12
 
 ### 5.4 Base4-Matrix im 5×8-Raster
 
-Der 3×3-Block des Base4-Modus sitzt bei **Zeilen 0–2, Spalten 1–3** –
-vollständig innerhalb des Fibonacci-Felds A, mittig oben. Vorteile: keine
-Trennstege im Block, das dunkle Umfeld rahmt die Matrix sauber.
+Der 3×3-Block des Base4-Modus sitzt bei **Zeilen 0–2, Spalten B–D**
+(Positionsindex 1–3) – vollständig innerhalb des Fibonacci-Felds A, mittig
+oben. Vorteile: keine Trennstege im Block, das dunkle Umfeld rahmt die
+Matrix sauber.
 
-| Zeile \ Spalte | 1             | 2            | 3           |
-|----------------|---------------|--------------|-------------|
-| Zeile 0        | LED 1 · **48** | LED 2 · **12** | LED 3 · **3** |
-| Zeile 1        | LED 6 · **32** | LED 7 · **8**  | LED 8 · **2** |
-| Zeile 2        | LED 11 · **16** | LED 12 · **4** | LED 13 · **1** |
+| Zeile \ Spalte | B (1)          | C (2)          | D (3)          |
+|----------------|----------------|----------------|----------------|
+| Zeile 0        | LED 8 · **48** | LED 16 · **12** | LED 24 · **3** |
+| Zeile 1        | LED 9 · **32** | LED 17 · **8**  | LED 25 · **2** |
+| Zeile 2        | LED 10 · **16** | LED 18 · **4** | LED 26 · **1** |
 
-- LED-Indizes nach derselben Formel: `Zeile × 5 + Spalte`
+- LED-Indizes nach derselben Formel: `Spalte × 8 + Zeile`
 - Werte identisch zur 9-Bälle-Ping-Pong-Uhr (Schwesterprojekt)
 - Der Block überlappt kein Fibonacci-Feld mehrfach bewusst: alle 9 Bälle
   gehören im Fibonacci-Modus zu Feld A – die beiden Modi stören sich nicht
@@ -504,31 +532,32 @@ NTP_SYNC_INTERVAL_MIN = 30    # alle 30 min NTP neu synchronisieren
 ```python
 """Mapping: 40 physische LEDs → 5 logische Fibonacci-Felder (Schnecke)."""
 
-# Schlangenlinie: LED-Index = Zeile × 5 + Spalte
-# Raster hochkant: 5 Spalten (0–4) × 8 Zeilen (0–7)
-# Schnecke: D/E (Zeile 5) -> C (Zeilen 6–7) -> B (Zeilen 5–7) -> A (Zeilen 0–4)
+# Spaltenweise Kette (wie die reale Tafel): LED-Index = Spalte × 8 + Zeile
+# IN an A0 (oben links): A0–A7 → B0–B7 → C0–C7 → D0–D7 → E0–E7
+# Raster hochkant: 5 Spalten (A–E) × 8 Zeilen (0–7)
+# Schnecke: D/E (Zeile 5, Spalten A/B) -> C (darunter) -> B (rechts) -> A (oben)
 
 FELDER = [
     # (Wert, [LED-Indizes])
-    (5, [r * 5 + c for r in range(5) for c in range(5)]),          # A: 25 LEDs (oben)
-    (3, [r * 5 + c for r in range(5, 8) for c in range(3)]),       # B:  9 LEDs (unten links)
-    (2, [r * 5 + c for r in range(6, 8) for c in range(3, 5)]),   # C:  4 LEDs (unten rechts)
-    (1, [5 * 5 + 3]),                                              # D:  1 LED (LED 28)
-    (1, [5 * 5 + 4]),                                              # E:  1 LED (LED 29)
+    (5, [s * 8 + z for s in range(5) for z in range(5)]),          # A: 25 LEDs (Spalten A–E, Zeilen 0–4)
+    (3, [s * 8 + z for s in range(2, 5) for z in range(5, 8)]),    # B:  9 LEDs (Spalten C–E, Zeilen 5–7)
+    (2, [s * 8 + z for s in range(0, 2) for z in range(6, 8)]),   # C:  4 LEDs (Spalten A–B, Zeilen 6–7)
+    (1, [0 * 8 + 5]),                                              # D:  1 LED (A5 = LED 5)
+    (1, [1 * 8 + 5]),                                              # E:  1 LED (B5 = LED 13)
 ]
 
 # Verifikation beim Import
 assert sum(len(f[1]) for f in FELDER) == 40, "LED-Anzahl stimmt nicht!"
 assert sum(f[0] for f in FELDER) == 12, "Fibonacci-Summe stimmt nicht!"
 
-# Base4-Matrix (2. Anzeige-Modus): 3x3-Block in Zeilen 0-2, Spalten 1-3
-# (innerhalb von Feld A). Werte identisch zur 9-Baelle-Ping-Pong-Uhr.
-# LED-Index = Zeile*5 + Spalte
+# Base4-Matrix (2. Anzeige-Modus): 3x3-Block in Zeilen 0-2, Spalten B-D
+# (Positionsindex 1-3, innerhalb von Feld A). Werte identisch zur
+# 9-Baelle-Ping-Pong-Uhr. LED-Index = Spalte*8 + Zeile
 BASE4_MATRIX = [
     # (Wert, LED-Index)
-    (48, 0 * 5 + 1), (12, 0 * 5 + 2), ( 3, 0 * 5 + 3),
-    (32, 1 * 5 + 1), ( 8, 1 * 5 + 2), ( 2, 1 * 5 + 3),
-    (16, 2 * 5 + 1), ( 4, 2 * 5 + 2), ( 1, 2 * 5 + 3),
+    (48, 1 * 8 + 0), (12, 2 * 8 + 0), ( 3, 3 * 8 + 0),
+    (32, 1 * 8 + 1), ( 8, 2 * 8 + 1), ( 2, 3 * 8 + 1),
+    (16, 1 * 8 + 2), ( 4, 2 * 8 + 2), ( 1, 3 * 8 + 2),
 ]
 assert len(BASE4_MATRIX) == 9, "Base4-Matrix muss 9 Baelle haben!"
 assert [w for w, _ in BASE4_MATRIX] == [48, 12, 3, 32, 8, 2, 16, 4, 1], \
@@ -1059,7 +1088,7 @@ sudo python3 main.py
 | 8 | **Feld 5 dominant** | Großes Feld ggf. auf 70% dimmen (separate Helligkeit) | mittel |
 | 9 | **TM1637 6-stellig Library** | `raspberrypi-tm1637` unterstützt 6 Ziffern; ältere Libs nur 4 | hoch |
 | 10 | **Sommer-/Winterzeit** | `timedatectl set-timezone Europe/Zurich` → automatisch | hoch |
-| 11 | **LED-Verdrahtung ≠ Raster** | Schlangenlinie → einfache Formel `row*5+col` (5 Spalten!) | hoch |
+| 11 | **LED-Verdrahtung ≠ Raster** | Kette läuft spaltenweise (IN an A0) → einfache Formel `spalte*8+zeile` (8 Zeilen je Spalte!) | hoch |
 | 12 | **Ball-Qualität** | Matte, weiß-transluzente Bälle, keine opaken/weißen Trainingsbälle | hoch |
 | 13 | **Taster prellen** | `bounce_time` (gpiozero) bzw. `BTN_BOUNCE_SEC` setzen, sonst Doppelereignisse | hoch |
 | 14 | **Feld-Modus zeigt keine Uhrzeit** | Gewollt: erst mit Taster 2–5 (Zeitmodus) oder Taster 5 (Normalbetrieb) kehrt die Zeit-Anzeige zurück | hoch |
@@ -1187,6 +1216,7 @@ sudo python3 main.py
 - [x] Level-Shifter: 74AHCT125 fest verbaut in der Anzeigebox (OE→GND, 1A←GPIO 18, 1Y→[330 Ω]→DIN) – entschieden 21.10.2026
 - [x] Steckverbinder entschieden (21.10.2026): DC-Steckerbuchse 5,5×2,1 mm für die 5V-Zuleitung der Anzeigebox; GX12-Kupplungspaar 4-polig (Stecker/Dose) für das Verbindungskabel zur Steuerbox
 - [x] Base4-Modus von Beginn integriert (21.10.2026): Kippschalter an GPIO 26 (Pin 37, offen = Fibonacci / zu = Base4); 3×3-Matrix in Zeilen 0–2, Spalten 1–3 (innerhalb Feld A); Farben rot/grün/gelb; Auflösung 1 Minute; Wertemengen wie 9-Bälle-Uhr
+- [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
 - [ ] Ball-Orientierung: Naht-Äquator ausrichten?
@@ -1199,4 +1229,5 @@ sudo python3 main.py
 *Überarbeitet auf 5×8-Schnecken-Layout + 5 Taster von Paul Simmen mit Vibe (GLM-5-latest-short), 20.10.2026*
 *Überarbeitet: Stromversorgung 5V + Zwei-Gehäuse-Konzept (Steuerbox/Anzeigebox) von Paul Simmen mit Vibe (GLM-5-latest-short), 21.10.2026*
 *Base4-Modus mit Kippschalter (Fibonacci ↔ Base4) ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 21.10.2026*
+*Angepasst an die reale Anzeigetafel (PDF «Fibonacci Front») von Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
