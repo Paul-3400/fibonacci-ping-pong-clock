@@ -29,7 +29,7 @@ der realen Tafel; Spaltenbuchstaben ≠ Fibonacci-Felder).
 - **blau** = Feld zählt zu Stunde UND Minute
 - **aus** = Feld zählt nicht
 
-Über einen **Kippschalter** (GPIO 26) ist zusätzlich der **Base4-Modus** der
+Über einen **Modus-Taster** (T6, GPIO 26 – jeder Druck schaltet um) ist zusätzlich der **Base4-Modus** der
 9-Bälle-Ping-Pong-Uhr zuschaltbar: 9 Bälle als 3×3-Matrix (Zeilen 0–2,
 Spalten B–D) zeigen die Zeit **minutengenau** in rot/grün/**gelb** – Details
 in der Bauanleitung, Kapitel 1.6.
@@ -47,20 +47,20 @@ ist (Daten- und Stromkette: A0–A7 → B0–B7 → … → E0–E7).
 | Raspberry Pi Zero WH   | Steuerung, NTP, Farb-/Zeitlogik   |
 | 40× WS2812B NeoPixel   | 1 LED pro Ball (spaltenweise Kette im 5×8-Raster) |
 | TM1637 0,36″ 6-stellig | Klartext HH:MM:SS                 |
-| 5× Taster (GPIO 5/6/12/13/16) | Feld-Durchschaltung, Handbetrieb, Normalbetrieb |
-| Kippschalter (GPIO 26) | Modus-Umschalter Fibonacci ↔ Base4 |
+| 6× Taster (GPIO 5/6/12/13/16 + 26) | Feld-Durchschaltung, Handbetrieb, Normalbetrieb, Moduswechsel |
+| Modus-Taster T6 (GPIO 26) | Moduswechsel Fibonacci ↔ Base4 pro Druck |
 | 5V-Netzteil ≥3 A       | gemeinsame Versorgung beider Gehäuse |
 | Level-Shifter 74AHCT125| 3,3V→5V Datenpegel (in der Anzeigebox) |
 | GX12-Kupplungspaar 4-polig | Verbindungskabel Steuerbox ↔ Anzeigebox |
 | Lochplatte 200×320 mm  | Ball-Halterung, hochkant (5×8 Bälle à 40 mm) |
 
-Aufbau in zwei Gehäusen (Steuerbox: Pi, Taster, Kippschalter, TM1637;
+Aufbau in zwei Gehäusen (Steuerbox: Pi, 6 Taster, TM1637;
 Anzeigebox: Tafel, NeoPixel, Level-Shifter, 5V-DC-Buchse 5,5×2,1) – verbunden
 über das 4-adrige Kabel mit GX12-Kupplungspaar.
 
-Geschätzte Gesamtkosten: ~118 CHF.
+Geschätzte Gesamtkosten: ~115 CHF.
 
-## Die fünf Taster
+## Die sechs Taster
 
 | Taster | GPIO (Pi) | Funktion |
 |---|---|---|
@@ -69,11 +69,12 @@ Geschätzte Gesamtkosten: ~118 CHF.
 | T3 | 12 | Handbetrieb: +5 Minuten |
 | T4 | 13 | Handbetrieb: +1 Stunde |
 | T5 | 16 | Normalbetrieb (NTP-Zeit, Offset auf 0) |
+| T6 | 26 | Moduswechsel Fibonacci ↔ Base4 (Druck = umschalten, Start = Fibonacci) |
 
 ## Dokumentation
 
 - 📄 **[Bauanleitung & Entwurf](docs/Fibonacci_PingPong_Uhr_Bauanleitung.md)** –
-  5×8-Schnecken-Layout mit 5 Tastern: Funktionsprinzip, Hardware-Liste,
+  5×8-Schnecken-Layout mit 6 Tastern: Funktionsprinzip, Hardware-Liste,
   Verdrahtung, LED-Mapping, Code-Entwürfe (config, mapping, buttons, fibonacci,
   display, tm1637, ntp_time, main), systemd-Autostart, Fallstricke,
   Gehäuse-Konstruktion (200×320 mm hochkant), Fahrplan und offene Fragen.
@@ -114,6 +115,10 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    E = B5; Daten- und Stromkette spaltenweise → `LED = Spalte×8+Zeile`.
    Die Wokwi-Demos bleiben beim früheren Planungsstand (keine weitere
    Simulation) – massgeblich ist die Bauanleitung.
+
+✅ Modus-Umschalter auf Taster umgestellt (07.11.2026): T6 (GPIO 26) statt
+   Kippschalter – nur Momentary-Taster an Lager; gleiche Verdrahtung (Öffner
+   gegen GND), Software-Toggle pro Druck, Start nach Boot = Fibonacci.
 
 ## Lizenz
 
