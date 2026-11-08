@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -1046,13 +1046,16 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=root
-ExecStart=/home/pi/fibonacci-clock/venv/bin/python3 /home/pi/fibonacci-clock/main.py
+ExecStart=/home/paul-rppi/fibonacci-clock/venv/bin/python3 /home/paul-rppi/fibonacci-clock/main.py
 Restart=on-failure
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+> **Pfad:** `ExecStart` ist auf den Benutzer `paul-rppi` dieses Aufbaus
+> gesetzt – bei anderem Benutzernamen beide Pfade anpassen.
 
 Aktivieren:
 ```bash
@@ -1103,19 +1106,28 @@ sudo reboot
 sudo apt update
 sudo apt install -y build-essential python3-dev python3-venv python3-gpiozero
 
-# 5. Virtuelle Umgebung – Trixie/PEP 668: pip blockiert das System-Python!
-cd /home/pi/fibonacci-clock
+# 5. Projekt aus GitHub holen (Code-Module liegen im Repo)
+git clone https://github.com/Paul-3400/fibonacci-ping-pong-clock.git ~/fibonacci-clock
+cd ~/fibonacci-clock
+
+# 6. Virtuelle Umgebung – Trixie/PEP 668: pip blockiert das System-Python!
 python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip install rpi_ws281x raspberrypi-tm1637 ntplib
 # gpiozero bleibt System-Paket und ist dank --system-site-packages sichtbar
 
-# 6. Test
+# 7. Test
 sudo venv/bin/python3 main.py
 ```
 
+> **Pfade:** `~` = Home-Verzeichnis des angemeldeten Benutzers (bei diesem
+> Aufbau `paul-rppi` → `/home/paul-rppi`). Lag beim ersten Versuch eine venv
+> versehentlich direkt im Home (`~/venv`)? Dann: `deactivate && rm -rf ~/venv`
+> und ab Schritt 5 wiederholen – die venv gehört **in** den Projektordner.
+>
 > **Wichtig:** Der systemd-Service (7.10) startet die **venv-Python**
-> (`/home/pi/fibonacci-clock/venv/bin/python3`) – nicht `/usr/bin/python3`,
+> (`/home/paul-rppi/fibonacci-clock/venv/bin/python3`, absoluter Pfad –
+> systemd kennt kein `~`) – nicht `/usr/bin/python3`,
 > sonst fehlen rpi_ws281x & Co.
 
 ---
@@ -1126,7 +1138,7 @@ sudo venv/bin/python3 main.py
 |---|---------|--------|-------|
 | 1 | **GRB vs. RGB** | WS2812B sind meist GRB. `LED_STRIP_TYPE` auf `NEO_GRB` setzen, sonst ist Rot=Grün | hoch |
 | 2 | **rpi_ws281x braucht root** | `sudo python3` oder systemd als `User=root` | hoch |
-| 3 | **PWM kollidiert mit Audio** | `dtparam=audio=off` in `/boot/config.txt` | hoch |
+| 3 | **PWM kollidiert mit Audio** | `dtparam=audio=off` in `/boot/firmware/config.txt` | hoch |
 | 4 | **3,3V-Datenpegel** | Shifter 74AHCT125 (in Anzeigebox) hebt auf 5V – sauberer als direkt, da VIH der LEDs bei 5V-Versorgung ca. 3,5 V | hoch |
 | 5 | **Spannungsabfall am Ende** | Bei 40 LEDs ab einer Seite: ggf. zweite 5V-Einspeisung (von der 5V-Verteilklemme der Anzeigebox) | mittel |
 | 6 | **Farbstreuung LED zu LED** | Bälle sortieren oder Kalibrierungs-Array pro LED | mittel |
@@ -1148,6 +1160,7 @@ sudo venv/bin/python3 main.py
 | 22 | **Farb-Semantik je Modus unterschiedlich** | Fibonacci: blau = beides; Base4: gelb = beides. Beide Paletten im Gehäuse dokumentieren, sonst verwirrt die Uhr beim Umschalten | hoch |
 | 23 | **pip verweigert Installation** | PEP 668 auf Trixie/Bookworm («externally-managed-environment») → Pakete in die venv installieren (Kap. 8); systemd auf venv-Python zeigen lassen | hoch |
 | 24 | **config.txt nicht gefunden** | Seit Bookworm heisst der Pfad `/boot/firmware/config.txt` (nicht `/boot/config.txt`) – dort `dtparam=audio=off` setzen | hoch |
+| 25 | **«cd: fibonacci-clock: No such file or directory»** | Code zuerst holen: `git clone https://github.com/Paul-3400/fibonacci-ping-pong-clock.git ~/fibonacci-clock` (Kap. 8); die venv gehört in den Projektordner – versehentlich in `~` erstellte venv mit `rm -rf ~/venv` löschen | hoch |
 
 ---
 
@@ -1266,6 +1279,7 @@ sudo venv/bin/python3 main.py
 - [x] Base4-Modus von Beginn integriert (21.10.2026): Kippschalter an GPIO 26 (Pin 37, offen = Fibonacci / zu = Base4); 3×3-Matrix in Zeilen 0–2, Spalten 1–3 (innerhalb Feld A); Farben rot/grün/gelb; Auflösung 1 Minute; Wertemengen wie 9-Bälle-Uhr
 - [x] Modus-Umschalter auf Taster umgestellt (07.11.2026): 6. Taster T6 (Öffner) an GPIO 26 statt Kippschalter – nur Momentary-Taster an Lager; Software-Toggle pro Druck (when_pressed, entprellt), Start nach Boot = Fibonacci
 - [x] OS aktualisiert (08.11.2026): Raspberry Pi OS Trixie Lite 32-bit (Pi Zero WH/ARMv6 unterstützt kein 64-bit); pip-Pakete in venv (PEP 668); Audio-off über /boot/firmware/config.txt; systemd startet venv-Python
+- [x] Code-Module ins Repo eingecheckt (08.11.2026): config, mapping, buttons, fibonacci, base4, display, tm1637_display, ntp_time, main – Syntax geprüft, Logik verifiziert (288 Fibonacci- + 1440 Base4-Zerlegungen, 40 LEDs lückenlos); Setup via git clone (Kap. 8)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
@@ -1282,4 +1296,5 @@ sudo venv/bin/python3 main.py
 *Angepasst an die reale Anzeigetafel (PDF «Fibonacci Front») von Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026*
 *Modus-Umschalter als 6. Taster (T6) statt Kippschalter umgestellt von Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026*
 *OS-Kapitel auf Raspberry Pi OS Trixie Lite (32-bit) + venv umgestellt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
+*Code-Module (Kap. 7) ins Repo eingecheckt + Setup-Schritte korrigiert (git clone, Pfade ~/fibonacci-clock, Benutzer paul-rppi) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*

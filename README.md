@@ -71,6 +71,22 @@ Geschätzte Gesamtkosten: ~115 CHF.
 | T5 | 16 | Normalbetrieb (NTP-Zeit, Offset auf 0) |
 | T6 | 26 | Moduswechsel Fibonacci ↔ Base4 (Druck = umschalten, Start = Fibonacci) |
 
+## Software
+
+Die Module liegen einsatzbereit im Repo (aus der Bauanleitung, Kap. 7):
+`config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`,
+`display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Setup auf dem Pi
+(Raspberry Pi OS Lite 32-bit, Trixie):
+
+```bash
+git clone https://github.com/Paul-3400/fibonacci-ping-pong-clock.git ~/fibonacci-clock
+cd ~/fibonacci-clock
+python3 -m venv --system-site-packages venv   # Trixie: PEP 668 -> venv nötig
+source venv/bin/activate
+pip install rpi_ws281x raspberrypi-tm1637 ntplib
+sudo venv/bin/python3 main.py
+```
+
 ## Dokumentation
 
 - 📄 **[Bauanleitung & Entwurf](docs/Fibonacci_PingPong_Uhr_Bauanleitung.md)** –
@@ -120,6 +136,10 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    Kippschalter – nur Momentary-Taster an Lager; gleiche Verdrahtung (Öffner
    gegen GND), Software-Toggle pro Druck, Start nach Boot = Fibonacci.
 
+✅ Code-Module ins Repo eingecheckt und verifiziert (08.11.2026): Syntax- und
+   Logiktest bestanden (288 Fibonacci- + 1440 Base4-Zerlegungen, 40 LEDs
+   lückenlos) – Setup jetzt per git clone (siehe Software).
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
@@ -135,4 +155,4 @@ GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
 
 ---
 
-Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026
+Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026
