@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt)"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -855,37 +855,33 @@ from config import *
 display = tm1637.TM1637(clk=TM1637_CLK, dio=TM1637_DIO)
 display.brightness(TM1637_BRIGHTNESS)
 
+# Wichtig (08.11.2026, Library-Quellcode geprüft): raspberrypi-tm1637 ist
+# auf 4-stellige Module ausgelegt – show() nimmt Strings (Doku: max.
+# 4 Zeichen), und clear() existiert NICHT. Für 6 Stellen: write(segments, 0)
+# mit encode_digit()/encode_string() – write() schreibt bis 6 Segmente.
+
 def show_clock(hours, minutes, seconds):
-    """
-    Zeigt HH:MM:SS auf dem 6-stelligen TM1637.
-    Format: [H, H, M, M, S, S]
-    """
-    display.show([
-        hours   // 10, hours   % 10,
-        minutes // 10, minutes % 10,
-        seconds // 10, seconds % 10,
-    ])
-    # Doppelpunkte ein/aus je nach Sekunde (Blinker)
-    # Hinweis: tm1637-Library hat unterschiedliche Doppelpunkt-Steuerung
-    # bei 4- vs 6-stelligen Modulen. Bei 6-stellig ggf. manuell:
-    # display.show(val, colon=True) – Library-spezifisch prüfen!
+    """Zeigt HH:MM:SS auf dem 6-stelligen TM1637 (führende Nullen inkl.)."""
+    display.write([
+        display.encode_digit(hours   // 10), display.encode_digit(hours   % 10),
+        display.encode_digit(minutes // 10), display.encode_digit(minutes % 10),
+        display.encode_digit(seconds // 10), display.encode_digit(seconds % 10),
+    ], 0)
+    # Doppelpunkte/Dezimalpunkte stecken im MSB je Segment – deren Lage ist
+    # modulabhängig; für HH:MM:SS reicht die 6-Ziffern-Anzeige ohne
+    # Colon-Steuerung (die Doppelpunkte des Moduls bleiben aus).
 
 def show_text(text):
     """Zeigt kurzen Text (max. 6 Zeichen)."""
-    display.show(text[:6])
+    display.write(display.encode_string(str(text)[:6]), 0)
 
 def show_field_text(field_idx, value):
-    """
-    Zeigt im Feld-Durchschalt-Modus z.B. 'C 2' auf dem Display
-    (Buchstabe A–E + Wertigkeit des Feldes).
-    Hinweis: Buchstaben-Support ist Library-abhängig – bei Problemen
-    stattdessen Ziffern verwenden (z.B. '3 2' für Feldindex + Wert).
-    """
-    letter = "AbCdE"[field_idx]  # Gross-/Kleinschreibung je Segmentfont prüfen
-    display.show(f"{letter} {value}")
+    """Zeigt im Feld-Durchschalt-Modus z.B. 'A 5' (Buchstabe + Wertigkeit)."""
+    letter = "AbCdE"[field_idx]
+    display.write(display.encode_string(f"{letter} {value}"[:6]), 0)
 
 def clear_display():
-    display.clear()
+    display.write([0, 0, 0, 0, 0, 0], 0)
 ```
 
 ### 7.8 Zeit-Verwaltung (`ntp_time.py`)
@@ -1130,6 +1126,16 @@ sudo venv/bin/python3 main.py
 > systemd kennt kein `~`) – nicht `/usr/bin/python3`,
 > sonst fehlen rpi_ws281x & Co.
 
+**Steuerbox-Selbsttest (`steuerbox_test.py`):** Vor dem ersten Start von
+`main.py` lässt sich die Steuerbox allein prüfen: Das Skript zeigt die Uhrzeit
+als HH:MM:SS auf dem TM1637, und jeder Tastendruck blendet 2 s lang «TEST n»
+ein (n = Tasten-Nummer 1–6); Strg+C beendet und listet die geprüften Tasten
+auf. Kein sudo nötig (keine NeoPixels im Spiel):
+
+```bash
+venv/bin/python3 steuerbox_test.py
+```
+
 ---
 
 ## 9. Fallstricke & Tipps
@@ -1144,7 +1150,7 @@ sudo venv/bin/python3 main.py
 | 6 | **Farbstreuung LED zu LED** | Bälle sortieren oder Kalibrierungs-Array pro LED | mittel |
 | 7 | **Hotspot im Ball** | LED in den Ball hinein (Loch schneiden) oder ~5 mm Abstand | mittel |
 | 8 | **Feld 5 dominant** | Großes Feld ggf. auf 70% dimmen (separate Helligkeit) | mittel |
-| 9 | **TM1637 6-stellig Library** | `raspberrypi-tm1637` unterstützt 6 Ziffern; ältere Libs nur 4 | hoch |
+| 9 | **TM1637: show()/clear() versagen** | `raspberrypi-tm1637` ist 4-stellig ausgelegt: 6 Stellen nur via `write(segments, 0)` + `encode_digit()/encode_string()`; `clear()` existiert nicht → `write([0]*6, 0)` (Library-Quellcode geprüft 08.11.2026) | hoch |
 | 10 | **Sommer-/Winterzeit** | `timedatectl set-timezone Europe/Zurich` → automatisch | hoch |
 | 11 | **LED-Verdrahtung ≠ Raster** | Kette läuft spaltenweise (IN an A0) → einfache Formel `spalte*8+zeile` (8 Zeilen je Spalte!) | hoch |
 | 12 | **Ball-Qualität** | Matte, weiß-transluzente Bälle, keine opaken/weißen Trainingsbälle | hoch |
@@ -1260,7 +1266,7 @@ sudo venv/bin/python3 main.py
 - Nerdiy Fibonacci Clock: https://www.nerdiy.de/fibonacciClock
 - Basbrun (Inspiration): http://basbrun.com/
 - rpi_ws281x Bibliothek: https://github.com/jgarff/rpi_ws281x
-- TM1637 Python Library: https://github.com/timofurrer/raspberrypi-tm1637
+- TM1637 Python Library: https://github.com/depklyon/raspberrypi-tm1637
 - Raspberry Pi Pinout: https://pinout.xyz/
 
 **Datenblätter (im Repo unter `docs/`):**
@@ -1280,6 +1286,7 @@ sudo venv/bin/python3 main.py
 - [x] Modus-Umschalter auf Taster umgestellt (07.11.2026): 6. Taster T6 (Öffner) an GPIO 26 statt Kippschalter – nur Momentary-Taster an Lager; Software-Toggle pro Druck (when_pressed, entprellt), Start nach Boot = Fibonacci
 - [x] OS aktualisiert (08.11.2026): Raspberry Pi OS Trixie Lite 32-bit (Pi Zero WH/ARMv6 unterstützt kein 64-bit); pip-Pakete in venv (PEP 668); Audio-off über /boot/firmware/config.txt; systemd startet venv-Python
 - [x] Code-Module ins Repo eingecheckt (08.11.2026): config, mapping, buttons, fibonacci, base4, display, tm1637_display, ntp_time, main – Syntax geprüft, Logik verifiziert (288 Fibonacci- + 1440 Base4-Zerlegungen, 40 LEDs lückenlos); Setup via git clone (Kap. 8)
+- [x] Steuerbox-Selbsttest ergänzt + tm1637_display korrigiert (08.11.2026): Library ist 4-stellig ausgelegt (show() max. 4 Zeichen, kein clear()) → 6 Stellen via write()/encode_digit(); steuerbox_test.py (Uhr HH:MM:SS + Tasten-Prüfung) im Repo, mit Stub-Tests verifiziert
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
@@ -1297,4 +1304,5 @@ sudo venv/bin/python3 main.py
 *Modus-Umschalter als 6. Taster (T6) statt Kippschalter umgestellt von Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026*
 *OS-Kapitel auf Raspberry Pi OS Trixie Lite (32-bit) + venv umgestellt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Code-Module (Kap. 7) ins Repo eingecheckt + Setup-Schritte korrigiert (git clone, Pfade ~/fibonacci-clock, Benutzer paul-rppi) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
+*Steuerbox-Selbsttest (steuerbox_test.py) ergänzt + tm1637_display auf write()/encode umgestellt (Library 4-stellig, kein clear()) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
