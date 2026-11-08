@@ -147,6 +147,10 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    HH:MM:SS, alle 6 Tasten T1–T6 geprüft – Steuerbox funktionsfähig
    (Anzeigebox noch im Bau).
 
+✅ Pi-Setup komplett (08.11.2026): git installiert, Clone + venv + alle
+   Pakete (rpi_ws281x, raspberrypi-tm1637, ntplib aus piwheels) – bereit für
+   den Regelbetrieb, sobald die Anzeigebox fertig ist.
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
