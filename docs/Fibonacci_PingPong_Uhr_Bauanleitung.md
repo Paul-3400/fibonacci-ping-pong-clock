@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -188,7 +188,7 @@ graph TD
 | # | Teil                          | Zweck                          | Richtpreis CHF | Konf. |
 |---|-------------------------------|--------------------------------|----------------|-------|
 | 1 | Raspberry Pi Zero WH          | Steuerung + WLAN/NTP           | 25.–           | hoch  |
-| 2 | MicroSD 8–16 GB               | OS (Bookworm Lite)             | 8.–            | hoch  |
+| 2 | MicroSD 8–16 GB               | OS (Raspberry Pi OS Trixie Lite, 32-bit)             | 8.–            | hoch  |
 | 3 | 40× WS2812B NeoPixel          | 1 LED pro Ball                 | 15.–           | hoch  |
 | 4 | TM1637 0,36″ 6-stellig        | Klartext HH:MM:SS              | 5.–            | hoch  |
 | 5 | 5V-Netzteil ≥3 A              | gemeinsame Versorgung beider Boxen (Einspeisung in Anzeigebox) | 20.– | hoch |
@@ -474,13 +474,18 @@ graph TD
 
 | Bibliothek     | Zweck                        | Installation                     |
 |----------------|------------------------------|----------------------------------|
-| `rpi_ws281x`   | NeoPixel-Ansteuerung (PWM)   | `pip install rpi_ws281x`         |
-| `tm1637`      | TM1637-Display-Ansteuerung   | `pip install raspberrypi-tm1637` |
-| `gpiozero`    | Taster (Pull-Up, Entprellung) | vorinstalliert auf Raspberry Pi OS |
-| `ntplib`      | NTP-Zeitabfrage              | `pip install ntplib`            |
+| `rpi_ws281x`   | NeoPixel-Ansteuerung (PWM)   | `pip install rpi_ws281x` **im venv** |
+| `tm1637`      | TM1637-Display-Ansteuerung   | `pip install raspberrypi-tm1637` **im venv** |
+| `gpiozero`    | Taster (Pull-Up, Entprellung) | vorinstalliert / `sudo apt install python3-gpiozero` |
+| `ntplib`      | NTP-Zeitabfrage              | `pip install ntplib` **im venv** |
 | `datetime`    | Zeit-Verarbeitung            | Python Standardbibliothek       |
 | `time`        | sleep, Zeit-Funktionen       | Python Standardbibliothek       |
 | `random`      | Zufallsauswahl setBits       | Python Standardbibliothek       |
+
+**Hinweis (Trixie):** `pip` installiert seit Bookworm/Trixie nicht mehr ins
+System-Python (PEP 668, «externally-managed-environment»). Die pip-Pakete
+gehören in eine virtuelle Umgebung – siehe Kapitel 8. Mit
+`--system-site-packages` bleibt gpiozero aus dem System sichtbar.
 
 ---
 
@@ -1041,7 +1046,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /home/pi/fibonacci-clock/main.py
+ExecStart=/home/pi/fibonacci-clock/venv/bin/python3 /home/pi/fibonacci-clock/main.py
 Restart=on-failure
 RestartSec=10
 
@@ -1059,33 +1064,59 @@ sudo systemctl status fibonacci-clock
 
 > **Wieso root?** `rpi_ws281x` braucht Zugriff auf PWM/DMA → root-Rechte.
 > Alternative: udev-Regel für nicht-root (fortgeschritten).
+>
+> **venv-Python:** `ExecStart` zeigt auf die venv-Python aus Kap. 8 – dort
+> liegen rpi_ws281x/tm1637/ntplib; gpiozero kommt über
+> `--system-site-packages` aus dem System.
 
 ---
 
-## 8. OS-Konfiguration (Raspberry Pi OS)
+## 8. OS-Konfiguration (Raspberry Pi OS Trixie Lite, 32-bit)
+
+**Empfehlung (08.11.2026):** **Raspberry Pi OS Lite (32-bit)** auf Basis von
+Debian 13 «Trixie» – die aktuelle Raspberry-Pi-OS-Generation (seit Okt. 2025).
+Der Pi Zero WH (ARMv6) unterstützt **kein 64-bit** – im Imager unbedingt die
+32-bit-Variante wählen. Lite genügt: Die Uhr läuft headless per SSH, ein
+Desktop würde nur RAM und SD-Karte belasten.
 
 ```bash
-# 1. Audio abschalten (PWM-Konflikt!)
-sudo nano /boot/config.txt
+# 0. Flash mit Raspberry Pi Imager:
+#    OS: «Raspberry Pi OS (other)» → «Raspberry Pi OS Lite (32-bit)»
+#    Zahnrad/Einstellungen: Hostname, SSH aktivieren, Benutzer + Passwort,
+#    WLAN eintragen (Zero WH), Zeitzone Europe/Zurich, Land CH
+#    → alles vorab konfiguriert, kein Monitor nötig
+
+# 1. Audio abschalten (PWM-Konflikt mit rpi_ws281x!)
+#    Seit Bookworm liegt die Datei unter /boot/firmware/config.txt:
+sudo nano /boot/firmware/config.txt
 # Einfügen / sicherstellen:
 #   dtparam=audio=off
 
-# 2. Zeitzone setzen
+# 2. Zeitzone + NTP
 sudo timedatectl set-timezone Europe/Zurich
-
-# 3. NTP aktivieren
 sudo timedatectl set-ntp true
 
-# 4. Neustart
+# 3. Neustart
 sudo reboot
 
-# 5. Bibliotheken installieren
-pip3 install rpi_ws281x raspberrypi-tm1637 ntplib
-# gpiozero ist auf Raspberry Pi OS vorinstalliert (Taster-Steuerung)
+# 4. Build-Werkzeuge + gpiozero (rpi_ws281x kompiliert eine C-Erweiterung)
+sudo apt update
+sudo apt install -y build-essential python3-dev python3-venv python3-gpiozero
+
+# 5. Virtuelle Umgebung – Trixie/PEP 668: pip blockiert das System-Python!
+cd /home/pi/fibonacci-clock
+python3 -m venv --system-site-packages venv
+source venv/bin/activate
+pip install rpi_ws281x raspberrypi-tm1637 ntplib
+# gpiozero bleibt System-Paket und ist dank --system-site-packages sichtbar
 
 # 6. Test
-sudo python3 main.py
+sudo venv/bin/python3 main.py
 ```
+
+> **Wichtig:** Der systemd-Service (7.10) startet die **venv-Python**
+> (`/home/pi/fibonacci-clock/venv/bin/python3`) – nicht `/usr/bin/python3`,
+> sonst fehlen rpi_ws281x & Co.
 
 ---
 
@@ -1115,6 +1146,8 @@ sudo python3 main.py
 | 20 | **T6 prellt / zählt doppelt** | `bounce_time` am Modus-Taster setzen; gpiozero löst `when_pressed` pro Druck nur einmal aus → robust gegen Prellen | hoch |
 | 21 | **Base4-Werte nicht geometrisch ablesbar** | Die 9 Matrix-Werte (48…1) folgen nicht der Schnecken-Logik – Wertekarte ins Gehäuse legen (wie bei der 9-Bälle-Uhr) | hoch |
 | 22 | **Farb-Semantik je Modus unterschiedlich** | Fibonacci: blau = beides; Base4: gelb = beides. Beide Paletten im Gehäuse dokumentieren, sonst verwirrt die Uhr beim Umschalten | hoch |
+| 23 | **pip verweigert Installation** | PEP 668 auf Trixie/Bookworm («externally-managed-environment») → Pakete in die venv installieren (Kap. 8); systemd auf venv-Python zeigen lassen | hoch |
+| 24 | **config.txt nicht gefunden** | Seit Bookworm heisst der Pfad `/boot/firmware/config.txt` (nicht `/boot/config.txt`) – dort `dtparam=audio=off` setzen | hoch |
 
 ---
 
@@ -1196,7 +1229,7 @@ sudo python3 main.py
 ## 12. Fahrplan
 
 1. [x] Konzept und Anzeigeprinzip (diese Bauanleitung)
-2. [ ] OS einrichten (Bookworm Lite, Audio off, Zeitzone, NTP)
+2. [ ] OS einrichten (Trixie Lite 32-bit, Audio off, Zeitzone, NTP, venv)
 3. [ ] Hardware beschaffen (siehe Bauteilliste)
 4. [ ] LED-Kette verlegen + Mapping-Tabelle verifizieren
 5. [ ] Lochplatte bohren + Bälle einpassen (200×320 hochkant)
@@ -1232,6 +1265,7 @@ sudo python3 main.py
 - [x] Steckverbinder entschieden (21.10.2026): DC-Steckerbuchse 5,5×2,1 mm für die 5V-Zuleitung der Anzeigebox; GX12-Kupplungspaar 4-polig (Stecker/Dose) für das Verbindungskabel zur Steuerbox
 - [x] Base4-Modus von Beginn integriert (21.10.2026): Kippschalter an GPIO 26 (Pin 37, offen = Fibonacci / zu = Base4); 3×3-Matrix in Zeilen 0–2, Spalten 1–3 (innerhalb Feld A); Farben rot/grün/gelb; Auflösung 1 Minute; Wertemengen wie 9-Bälle-Uhr
 - [x] Modus-Umschalter auf Taster umgestellt (07.11.2026): 6. Taster T6 (Öffner) an GPIO 26 statt Kippschalter – nur Momentary-Taster an Lager; Software-Toggle pro Druck (when_pressed, entprellt), Start nach Boot = Fibonacci
+- [x] OS aktualisiert (08.11.2026): Raspberry Pi OS Trixie Lite 32-bit (Pi Zero WH/ARMv6 unterstützt kein 64-bit); pip-Pakete in venv (PEP 668); Audio-off über /boot/firmware/config.txt; systemd startet venv-Python
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
@@ -1247,4 +1281,5 @@ sudo python3 main.py
 *Base4-Modus mit Kippschalter (Fibonacci ↔ Base4) ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 21.10.2026*
 *Angepasst an die reale Anzeigetafel (PDF «Fibonacci Front») von Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026*
 *Modus-Umschalter als 6. Taster (T6) statt Kippschalter umgestellt von Paul Simmen mit Vibe (GLM-5-latest-short), 07.11.2026*
+*OS-Kapitel auf Raspberry Pi OS Trixie Lite (32-bit) + venv umgestellt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
