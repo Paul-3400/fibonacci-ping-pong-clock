@@ -81,6 +81,7 @@ Setup auf dem Pi
 (Raspberry Pi OS Lite 32-bit, Trixie):
 
 ```bash
+sudo apt update && sudo apt install -y git   # Raspberry Pi OS Lite enthält kein git
 git clone https://github.com/Paul-3400/fibonacci-ping-pong-clock.git ~/fibonacci-clock
 cd ~/fibonacci-clock
 python3 -m venv --system-site-packages venv   # Trixie: PEP 668 -> venv nötig
@@ -142,6 +143,10 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    Logiktest bestanden (288 Fibonacci- + 1440 Base4-Zerlegungen, 40 LEDs
    lückenlos) – Setup jetzt per git clone (siehe Software).
 
+✅ Steuerbox-Selbsttest auf dem Pi bestanden (08.11.2026): TM1637 zeigte
+   HH:MM:SS, alle 6 Tasten T1–T6 geprüft – Steuerbox funktionsfähig
+   (Anzeigebox noch im Bau).
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
@@ -152,7 +157,7 @@ GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
 - Original Fibonacci Clock Firmware: <https://github.com/pchretien/fibo>
 - Nerdiy Fibonacci Clock: <https://www.nerdiy.de/fibonacciClock>
 - rpi_ws281x: <https://github.com/jgarff/rpi_ws281x>
-- raspberrypi-tm1637: <https://github.com/timofurrer/raspberrypi-tm1637>
+- raspberrypi-tm1637: <https://github.com/depklyon/raspberrypi-tm1637>
 - Raspberry Pi Pinout: <https://pinout.xyz/>
 
 ---
