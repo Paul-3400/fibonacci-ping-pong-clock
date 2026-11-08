@@ -1145,7 +1145,7 @@ venv/bin/python3 steuerbox_test.py
 
 | # | Problem | Lösung | Konf. |
 |---|---------|--------|-------|
-| 1 | **GRB vs. RGB** | WS2812B sind meist GRB. `LED_STRIP_TYPE` auf `NEO_GRB` setzen, sonst ist Rot=Grün | hoch |
+| 1 | **GRB vs. RGB** | WS2812B sind meist GRB: `LED_STRIP_TYPE = 0x00081000` (= ws.WS2811_STRIP_GRB) in config.py – NICHT den Arduino-Namen `NEO_GRB` (existiert in rpi_ws281x nicht). Bei vertauschten Farben alternativ `0x00100800` (WS2811_STRIP_RGB) testen | hoch |
 | 2 | **rpi_ws281x braucht root** | `sudo python3` oder systemd als `User=root` | hoch |
 | 3 | **PWM kollidiert mit Audio** | `dtparam=audio=off` in `/boot/firmware/config.txt` | hoch |
 | 4 | **3,3V-Datenpegel** | Shifter 74AHCT125 (in Anzeigebox) hebt auf 5V – sauberer als direkt, da VIH der LEDs bei 5V-Versorgung ca. 3,5 V | hoch |
