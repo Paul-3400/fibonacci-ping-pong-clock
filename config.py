@@ -8,10 +8,10 @@ LED_PIN        = 18          # GPIO 18 (PWM0)
 LED_COUNT      = 40          # 5×8 Bälle
 LED_FREQ_HZ    = 800000      # WS2812-Standard
 LED_DMA        = 10          # DMA-Kanal
-LED_BRIGHTNESS = 0.4         # 0.0–1.0 (40 Bälle: nicht zu hell!)
+LED_BRIGHTNESS = 102         # int 0-255 (rpi_ws281x: uint8_t, KEIN Float!); 102 entspricht ca. 40 % Helligkeit
 LED_INVERT     = False
 LED_CHANNEL    = 0
-LED_STRIP_TYPE = 0x00081008  # NEO_GRB + NEO_KHZ800 (PRÜFEN!)
+LED_STRIP_TYPE = 0x00081000  # ws.WS2811_STRIP_GRB (WS2812-Standard, GRB) - NICHT der Arduino-Wert!
 
 # --- TM1637 ---
 TM1637_CLK     = 23          # GPIO 23
