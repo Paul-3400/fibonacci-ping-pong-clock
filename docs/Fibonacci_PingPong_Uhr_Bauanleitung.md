@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -859,33 +859,47 @@ from config import *
 display = tm1637.TM1637(clk=TM1637_CLK, dio=TM1637_DIO)
 display.brightness(TM1637_BRIGHTNESS)
 
-# Wichtig (08.11.2026, Library-Quellcode geprüft): raspberrypi-tm1637 ist
-# auf 4-stellige Module ausgelegt – show() nimmt Strings (Doku: max.
-# 4 Zeichen), und clear() existiert NICHT. Für 6 Stellen: write(segments, 0)
-# mit encode_digit()/encode_string() – write() schreibt bis 6 Segmente.
+# Wichtig (08.11.2026, Library-Quellcode geprueft): raspberrypi-tm1637 ist
+# auf 4-stellige Module ausgelegt - show() nimmt Strings (4 Zeichen laut
+# Doku), und clear() existiert NICHT. Fuer 6 Stellen: write(segments, 0)
+# mit encode_digit()/encode_string() - write() schreibt bis 6 Segmente.
+
+# Fix 09.11.2026 (Fallstrick 31): Das 6-stellige Modul vertauscht die
+# ersten beiden Ziffernpaare - Grid 0/1 liegen physisch auf den Positionen
+# 2/3, Grid 2/3 auf 0/1 (Positionen 4/5 stimmen). Unkorrigiert zeigte das
+# Modul die Zeit deshalb als MM:HH:SS statt HH:MM:SS (beobachtet 09.11.:
+# «33:13:50» statt 13:33:50, «04:14:45» statt 14:04:45). _modul_segments()
+# sortiert die Segmentliste so um, dass der Text physisch richtig erscheint.
+
+def _modul_segments(segments):
+    """Passt die Segmentreihenfolge an das Modul an (Paare 1 und 2 tauschen)."""
+    s = list(segments[:6]) + [0] * (6 - len(segments))
+    return [s[2], s[3], s[0], s[1], s[4], s[5]]
 
 def show_clock(hours, minutes, seconds):
-    """Zeigt HH:MM:SS auf dem 6-stelligen TM1637 (führende Nullen inkl.)."""
-    display.write([
+    """Zeigt HH:MM:SS auf dem 6-stelligen TM1637 (fuehrende Nullen inkl.)."""
+    segs = [
         display.encode_digit(hours   // 10), display.encode_digit(hours   % 10),
         display.encode_digit(minutes // 10), display.encode_digit(minutes % 10),
         display.encode_digit(seconds // 10), display.encode_digit(seconds % 10),
-    ], 0)
-    # Doppelpunkte/Dezimalpunkte stecken im MSB je Segment – deren Lage ist
-    # modulabhängig; für HH:MM:SS reicht die 6-Ziffern-Anzeige ohne
+    ]
+    display.write(_modul_segments(segs), 0)
+    # Doppelpunkte/Dezimalpunkte stecken im MSB je Segment - deren Lage ist
+    # modulabhaengig; fuer HH:MM:SS reicht die 6-Ziffern-Anzeige ohne
     # Colon-Steuerung (die Doppelpunkte des Moduls bleiben aus).
 
 def show_text(text):
     """Zeigt kurzen Text (max. 6 Zeichen)."""
-    display.write(display.encode_string(str(text)[:6]), 0)
+    display.write(_modul_segments(display.encode_string(str(text)[:6])), 0)
 
 def show_field_text(field_idx, value):
     """Zeigt im Feld-Durchschalt-Modus z.B. 'A 5' (Buchstabe + Wertigkeit)."""
     letter = "AbCdE"[field_idx]
-    display.write(display.encode_string(f"{letter} {value}"[:6]), 0)
+    display.write(_modul_segments(display.encode_string(f"{letter} {value}"[:6])), 0)
 
 def clear_display():
     display.write([0, 0, 0, 0, 0, 0], 0)
+
 ```
 
 ### 7.8 Zeit-Verwaltung (`ntp_time.py`)
@@ -1229,6 +1243,7 @@ sudo venv/bin/python3 anzeige_test.py
 | 28 | **Falsches Feld leuchtet (z. B. große Blöcke statt Einzelbälle)** | Index-Konventionen unterschieden sich: fibonacci.py nummerierte 0–4 = Werte [1,1,2,3,5], mapping.FELDER aber 0–4 = A–E = [5,3,2,1,1] – display.show_time() beleuchtete deshalb die falschen Felder. Fix: COMBINATIONS auf FELDER-Indizes umgestellt (08.11.2026), jetzt ist überall Index = A–E | hoch |
 | 29 | **Pi stürzt ab, sobald die Uhr startet (v. a. bei Minuten 0–4: sofort alle 40 LEDs an)** | Pi und Tafel am selben Netzteil → Volllast-Schlag zieht die 5-V-Schiene ein (Brownout). Fix: (1) getrennte Netzteile – Tafel ≥3 A an der DC-Buchse, Pi am eigenen USB-Netzteil, gemeinsame Masse (Kap. 5); (2) Soft-Start in main.py: Helligkeit startet bei 20 (SOFTSTART_BRIGHTNESS) und fährt in ~40 s auf LED_BRIGHTNESS hoch | mittel–hoch |
 | 30 | **Uhr zeigt nach frischem SD-Flash eine falsche Zeit, obwohl der NTP-Sync «erfolgreich» meldet** | ntp_time.sync_ntp() warf die NTP-Antwort weg – die Uhr lief still auf der Systemzeit, die nach dem Neuanfang oft noch nicht synchron ist (bis systemd-timesyncd greift). Fix (09.11.2026): get_local_time() rechnet ab dem ersten Sync ausschliesslich aus der NTP-Referenz (resp.tx_time + time.monotonic(), Europe/Zurich inkl. Sommerzeit), vorher Fallback Systemzeit; NTP-Timeout 2 s gegen Loop-Blockade | hoch |
+| 31 | **TM1637 zeigt die Zeit als «MM:HH:SS» statt «HH:MM:SS» (z. B. «33:13:50» um 13:33:50)** | Das 6-stellige Modul vertauscht die ersten beiden Ziffernpaare: Grid 0/1 liegen physisch auf den Positionen 2/3, Grid 2/3 auf 0/1 (Positionen 4/5 = Sekunden stimmen). Fix (09.11.2026): _modul_segments() in tm1637_display.py bzw. modul_segments() in steuerbox_test.py sortiert die Segmente vor write() um – auch «TEST n» erscheint seither korrekt (vorher «STTE n») | hoch |
 
 ---
 
@@ -1354,7 +1369,7 @@ sudo venv/bin/python3 anzeige_test.py
 - [x] Soft-Start-Rampe gegen Last-Spitzen ergänzt (09.11.2026): Helligkeit 20 → LED_BRIGHTNESS in ~40 s (Fallstrick 29; Absturz um 10:04, da Minuten 0–4 = sofort alle 40 LEDs und Pi + Tafel am selben Netzteil)
 - [x] **Stromversorgung umgebaut (09.11.2026)** – getrennte Netzteile: Pi 5V/3A über Micro-USB, Tafel 5V/4A an der DC-Buchse, GND beider Netzteile verbunden (Fallstrick 29)
 - [x] NTP-Bug behoben (09.11.2026): sync_ntp() verwendete die NTP-Antwort nicht – get_local_time() rechnet jetzt aus der NTP-Referenz (Fallstrick 30)
-- [ ] **Offen: Anzeige-Diagnose (09.11.2026)** – main.py zeigte TM1637 «33:13:50» (Stunde 33 ist softwareseitig unmöglich) und unerwartete Feldfarben (Feld A blau, A5 gelb); nach dem NTP-Fix neu beobachten
+- [x] **Anzeige-Diagnose abgeschlossen (09.11.2026)** – Fibonacci-Anzeige war korrekt (13:32 → A grün + D blau, 14:05 → C rot + E grün, fotoverifiziert); TM1637 zeigte die richtige Zeit, aber als MM:HH:SS: Modul vertauscht die Ziffernpaare 1/2 (Fallstrick 31, Fix per _modul_segments())
 - [x] Index-Konventions-Bug behoben + Anzeige-Test (08.11.2026): fibonacci.py-COMBINATIONS auf mapping.FELDER-Indizes (0–4 = A–E) umgestellt – vorher 0–4 = [1,1,2,3,5] → falsche Felder beleuchtet (Fallstrick 28); anzeige_test.py ergänzt (T6 = Anzeige ein/aus, 5 Felder in Farben, T1–T5 Einzelfelder)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
@@ -1379,4 +1394,5 @@ sudo venv/bin/python3 anzeige_test.py
 *Index-Konventions-Bug fibonacci.py↔mapping.py behoben + anzeige_test.py ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Soft-Start-Rampe gegen Last-Spitzen nach Brownout-Absturz von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *NTP-Auswertung behoben (sync_ntp() verwendete die Server-Antwort nicht, Fallstrick 30) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
+*TM1637-Ziffernpaare-Fix (Fallstrick 31) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*

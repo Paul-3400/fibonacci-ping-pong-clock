@@ -14,6 +14,10 @@ vorhanden). Kein sudo noetig - nur Taster-Eingaenge und das TM1637.
 Technik-Hinweis: Die tm1637-Library ist auf 4-stellige Module ausgelegt
 (show() = max. 4 Zeichen, clear() existiert nicht). Fuer 6 Stellen:
 write(segments, 0) mit encode_digit() - write() schreibt bis 6 Segmente.
+
+Modul-Hinweis (09.11.2026, Fallstrick 31): Das verwendete 6-stellige Modul
+vertauscht die ersten beiden Ziffernpaare (Grid 0/1 physisch auf Position
+2/3). modul_segments() sortiert die Segmente deshalb vor write() um.
 """
 import time
 import tm1637
@@ -39,6 +43,13 @@ geprueft = set()
 _letzte_ziffern = None
 
 
+def modul_segments(segments):
+    """6-stelliges Modul: Ziffernpaare 1/2 physisch vertauscht (Fallstrick
+    31) - Reihenfolge anpassen, damit der Text richtig erscheint."""
+    s = list(segments[:6]) + [0] * (6 - len(segments))
+    return [s[2], s[3], s[0], s[1], s[4], s[5]]
+
+
 def zeige_uhr():
     """HH:MM:SS mit fuehrenden Nullen; schreibt nur bei Sekundenwechsel."""
     global _letzte_ziffern
@@ -47,14 +58,14 @@ def zeige_uhr():
                t.tm_min // 10, t.tm_min % 10,
                t.tm_sec // 10, t.tm_sec % 10)
     if ziffern != _letzte_ziffern:
-        display.write([display.encode_digit(z) for z in ziffern], 0)
+        display.write(modul_segments([display.encode_digit(z) for z in ziffern]), 0)
         _letzte_ziffern = ziffern
 
 
 def zeige_test(nr):
     """'TEST n' (6 Zeichen) anzeigen."""
     global _letzte_ziffern
-    display.write(display.encode_string("TEST " + str(nr)), 0)
+    display.write(modul_segments(display.encode_string("TEST " + str(nr))), 0)
     _letzte_ziffern = None
 
 

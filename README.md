@@ -167,6 +167,12 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    falschen) Systemzeit. get_local_time() rechnet jetzt aus der
    NTP-Referenz (Europe/Zurich inkl. Sommerzeit).
 
+🔧 TM1637-Fix (09.11.2026, Fallstrick 31): Das 6-stellige Modul vertauscht
+   die ersten beiden Ziffernpaare – die Zeit erschien als MM:HH:SS
+   («33:13:50» um 13:33:50). _modul_segments() korrigiert die Reihenfolge
+   in tm1637_display.py und steuerbox_test.py. Fibonacci-Anzeige verifiziert
+   korrekt (14:05 → Feld C rot + E grün).
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
