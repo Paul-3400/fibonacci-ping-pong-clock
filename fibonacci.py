@@ -4,31 +4,34 @@
 """Fibonacci-Zerlegung mit Zufallsauswahl (portiert von Arduino setBits)."""
 import random
 
-FIB_VALUES = [1, 1, 2, 3, 5]  # Die fünf Fibonacci-Feldwerte
+FIB_VALUES = [1, 1, 2, 3, 5]  # die fünf Fibonacci-Werte (reine Doku)
 
 # Alle gültigen Kombinationen für Werte 1–12
 # Jede Kombination ist eine Liste von Feld-Indizes (0–4)
-# Feld 0 = Wert 1, Feld 1 = Wert 1, Feld 2 = Wert 2, Feld 3 = Wert 3, Feld 4 = Wert 5
+# WICHTIG (08.11.2026, Bugfix Fallstrick 28): Feld-Index = mapping.FELDER-Index
+#   0 = A (Wert 5), 1 = B (Wert 3), 2 = C (Wert 2), 3 = D (Wert 1), 4 = E (Wert 1)
+# Vorher nummerierte diese Tabelle 0–4 = [1,1,2,3,5] - das passte nicht zu
+# mapping.FELDER, deshalb leuchteten die falschen Felder (Fallstrick 28).
 COMBINATIONS = {
-    1:  [[0], [1]],
-    2:  [[2], [0, 1]],
-    3:  [[3], [0, 2], [1, 2]],
-    4:  [[0, 3], [1, 3], [0, 1, 2]],
-    5:  [[4], [2, 3], [0, 1, 3]],
-    6:  [[0, 4], [1, 4], [0, 2, 3], [1, 2, 3]],
-    7:  [[2, 4], [0, 1, 4], [0, 1, 2, 3]],
-    8:  [[3, 4], [0, 2, 4], [1, 2, 4]],
-    9:  [[0, 3, 4], [1, 3, 4]],
-    10: [[2, 3, 4], [0, 1, 3, 4]],
-    11: [[0, 2, 3, 4], [1, 2, 3, 4]],
-    12: [[0, 1, 2, 3, 4]],
+    1:  [[3], [4]],
+    2:  [[2], [3, 4]],
+    3:  [[1], [3, 2], [4, 2]],
+    4:  [[3, 1], [4, 1], [3, 4, 2]],
+    5:  [[0], [2, 1], [3, 4, 1]],
+    6:  [[3, 0], [4, 0], [3, 2, 1], [4, 2, 1]],
+    7:  [[2, 0], [3, 4, 0], [3, 4, 2, 1]],
+    8:  [[1, 0], [3, 2, 0], [4, 2, 0]],
+    9:  [[3, 1, 0], [4, 1, 0]],
+    10: [[2, 1, 0], [3, 4, 1, 0]],
+    11: [[3, 2, 1, 0], [4, 2, 1, 0]],
+    12: [[3, 4, 2, 1, 0]],
 }
 
 def set_bits(value, offset):
     """
     Wählt per Zufall eine gültige Fibonacci-Kombination für value (1–12).
-    Setzt das offset-Bit (0x01=Stunde, 0x02=Minute) in bits[].
-    Gibt die Liste der gesetzten Feld-Indizes zurück.
+    (offset ist historisch aus dem Arduino-Port und wird nicht benutzt.)
+    Gibt die Liste der gesetzten Feld-Indizes zurück (0–4 = A–E).
     """
     value = max(1, min(12, value))
     combo = random.choice(COMBINATIONS[value])
@@ -39,6 +42,8 @@ def get_field_assignment(hours, minutes):
     Bestimmt für Stunde (1–12) und Minute (0–59) welche Felder
     leuchten und mit welcher Bedeutung.
     Gibt ein Dict zurück: {feld_index: 'hours'|'minutes'|'both'|'off'}
+    feld_index = mapping.FELDER-Index (0–4 = A–E), konsistent mit
+    display.show_time()/show_field() und dem Konsole-Log.
     """
     hours_12 = hours % 12
     if hours_12 == 0:

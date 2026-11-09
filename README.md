@@ -77,6 +77,7 @@ Die Module liegen einsatzbereit im Repo (aus der Bauanleitung, Kap. 7):
 `config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`,
 `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
 der Steuerbox (Uhrzeit + Tasten, ohne Anzeigebox): `steuerbox_test.py`.
+Zum Test der Anzeige-Tafel (T6 = Anzeige ein/aus, T1–T5 = Felder einzeln): `anzeige_test.py`.
 Setup auf dem Pi
 (Raspberry Pi OS Lite 32-bit, Trixie):
 

@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27)"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -670,27 +670,29 @@ FIB_VALUES = [1, 1, 2, 3, 5]  # Die fünf Fibonacci-Feldwerte
 
 # Alle gültigen Kombinationen für Werte 1–12
 # Jede Kombination ist eine Liste von Feld-Indizes (0–4)
-# Feld 0 = Wert 1, Feld 1 = Wert 1, Feld 2 = Wert 2, Feld 3 = Wert 3, Feld 4 = Wert 5
+# WICHTIG (08.11.2026, Bugfix Fallstrick 28): Feld-Index = mapping.FELDER-Index
+#   0 = A (Wert 5), 1 = B (Wert 3), 2 = C (Wert 2), 3 = D (Wert 1), 4 = E (Wert 1)
+# Vorher nummerierte diese Tabelle 0–4 = [1,1,2,3,5] - das passte nicht zu mapping.FELDER.
 COMBINATIONS = {
-    1:  [[0], [1]],
-    2:  [[2], [0, 1]],
-    3:  [[3], [0, 2], [1, 2]],
-    4:  [[0, 3], [1, 3], [0, 1, 2]],
-    5:  [[4], [2, 3], [0, 1, 3]],
-    6:  [[0, 4], [1, 4], [0, 2, 3], [1, 2, 3]],
-    7:  [[2, 4], [0, 1, 4], [0, 1, 2, 3]],
-    8:  [[3, 4], [0, 2, 4], [1, 2, 4]],
-    9:  [[0, 3, 4], [1, 3, 4]],
-    10: [[2, 3, 4], [0, 1, 3, 4]],
-    11: [[0, 2, 3, 4], [1, 2, 3, 4]],
-    12: [[0, 1, 2, 3, 4]],
+    1:  [[3], [4]],
+    2:  [[2], [3, 4]],
+    3:  [[1], [3, 2], [4, 2]],
+    4:  [[3, 1], [4, 1], [3, 4, 2]],
+    5:  [[0], [2, 1], [3, 4, 1]],
+    6:  [[3, 0], [4, 0], [3, 2, 1], [4, 2, 1]],
+    7:  [[2, 0], [3, 4, 0], [3, 4, 2, 1]],
+    8:  [[1, 0], [3, 2, 0], [4, 2, 0]],
+    9:  [[3, 1, 0], [4, 1, 0]],
+    10: [[2, 1, 0], [3, 4, 1, 0]],
+    11: [[3, 2, 1, 0], [4, 2, 1, 0]],
+    12: [[3, 4, 2, 1, 0]],
 }
 
 def set_bits(value, offset):
     """
     Wählt per Zufall eine gültige Fibonacci-Kombination für value (1–12).
-    Setzt das offset-Bit (0x01=Stunde, 0x02=Minute) in bits[].
-    Gibt die Liste der gesetzten Feld-Indizes zurück.
+    (offset ist historisch aus dem Arduino-Port und wird nicht benutzt.)
+    Gibt die Liste der gesetzten Feld-Indizes zurück (0–4 = A–E).
     """
     value = max(1, min(12, value))
     combo = random.choice(COMBINATIONS[value])
@@ -700,7 +702,7 @@ def get_field_assignment(hours, minutes):
     """
     Bestimmt für Stunde (1–12) und Minute (0–59) welche Felder
     leuchten und mit welcher Bedeutung.
-    Gibt ein Dict zurück: {feld_index: 'hours'|'minutes'|'both'|'off'}
+    Gibt ein Dict zurück: {feld_index: 'hours'|'minutes'|'both'|'off'} — feld_index = mapping.FELDER-Index (0–4 = A–E)
     """
     hours_12 = hours % 12
     if hours_12 == 0:
@@ -1139,6 +1141,12 @@ auf. Kein sudo nötig (keine NeoPixels im Spiel):
 venv/bin/python3 steuerbox_test.py
 ```
 
+Anzeige-Test (nach dem Anschluss der Tafel; T6 = Anzeige ein/aus, alle 5 Felder in Farben, T1–T5 = Einzelfelder):
+
+```bash
+sudo venv/bin/python3 anzeige_test.py
+```
+
 ---
 
 ## 9. Fallstricke & Tipps
@@ -1172,6 +1180,7 @@ venv/bin/python3 steuerbox_test.py
 | 25 | **«cd: fibonacci-clock: No such file or directory»** | Code zuerst holen: `git clone https://github.com/Paul-3400/fibonacci-ping-pong-clock.git ~/fibonacci-clock` (Kap. 8); die venv gehört in den Projektordner – versehentlich in `~` erstellte venv mit `rm -rf ~/venv` löschen | hoch |
 | 26 | **git fehlt («bash: git: command not found»)** | Raspberry Pi OS Lite liefert git nicht mit: `sudo apt update && sudo apt install -y git` (Kap. 8, Schritt 4) – dann Clone wiederholen; abgebrochene venv-Reste in `~` mit `rm -rf ~/venv` entfernen | hoch |
 | 27 | **TypeError: ... argument 2 of type 'uint8_t' beim Start von main.py** | Zwei Ursachen in config.py: (1) `LED_BRIGHTNESS` war ein Float (0.4 – CircuitPython-Skala 0.0–1.0), rpi_ws281x/SWIG erwartet aber int 0–255 (102 ≈ 40 %); (2) `LED_STRIP_TYPE = 0x00081008` ist ein Arduino/Adafruit-Wert – rpi_ws281x nutzt `ws.WS2811_STRIP_GRB = 0x00081000`, sonst stimmt die Farbzuordnung nicht | hoch |
+| 28 | **Falsches Feld leuchtet (z. B. große Blöcke statt Einzelbälle)** | Index-Konventionen unterschieden sich: fibonacci.py nummerierte 0–4 = Werte [1,1,2,3,5], mapping.FELDER aber 0–4 = A–E = [5,3,2,1,1] – display.show_time() beleuchtete deshalb die falschen Felder. Fix: COMBINATIONS auf FELDER-Indizes umgestellt (08.11.2026), jetzt ist überall Index = A–E | hoch |
 
 ---
 
@@ -1294,6 +1303,7 @@ venv/bin/python3 steuerbox_test.py
 - [x] Steuerbox-Selbsttest ergänzt + tm1637_display korrigiert (08.11.2026): Library ist 4-stellig ausgelegt (show() max. 4 Zeichen, kein clear()) → 6 Stellen via write()/encode_digit(); steuerbox_test.py (Uhr HH:MM:SS + Tasten-Prüfung) im Repo, mit Stub-Tests verifiziert
 - [x] Selbsttest auf dem Pi bestanden (08.11.2026): TM1637 zeigte HH:MM:SS, alle 6 Tasten T1–T6 geprüft – Steuerbox funktionsfähig; git unter Trixie Lite nachinstallieren (Fallstrick 26)
 - [x] Start-Bug behoben (08.11.2026): LED_BRIGHTNESS Float 0.4 → int 102 (SWIG uint8_t lehnt Floats ab, TypeError); LED_STRIP_TYPE 0x00081008 (Arduino-Wert) → ws.WS2811_STRIP_GRB 0x00081000 (Fallstrick 27)
+- [x] Index-Konventions-Bug behoben + Anzeige-Test (08.11.2026): fibonacci.py-COMBINATIONS auf mapping.FELDER-Indizes (0–4 = A–E) umgestellt – vorher 0–4 = [1,1,2,3,5] → falsche Felder beleuchtet (Fallstrick 28); anzeige_test.py ergänzt (T6 = Anzeige ein/aus, 5 Felder in Farben, T1–T5 Einzelfelder)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
 - [ ] Zweite 5V-Einspeisung nötig? (am Aufbau messen)
@@ -1314,4 +1324,5 @@ venv/bin/python3 steuerbox_test.py
 *Steuerbox-Selbsttest (steuerbox_test.py) ergänzt + tm1637_display auf write()/encode umgestellt (Library 4-stellig, kein clear()) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6); git-/venv-Hinweise für Trixie Lite ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Start-Bugs behoben (LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
+*Index-Konventions-Bug fibonacci.py↔mapping.py behoben + anzeige_test.py ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
