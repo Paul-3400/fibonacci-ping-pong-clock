@@ -152,6 +152,9 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    Pakete (rpi_ws281x, raspberrypi-tm1637, ntplib aus piwheels) – bereit für
    den Regelbetrieb, sobald die Anzeigebox fertig ist.
 
+✅ Anzeige-Test bestanden (08.11.2026): alle 5 Felder korrekt
+   (Farben/Positionen/Wertigkeiten), T1–T6 geprüft – Uhr startklar.
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
