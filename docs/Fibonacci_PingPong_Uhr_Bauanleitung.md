@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil)"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -505,6 +505,8 @@ LED_BRIGHTNESS = 102         # int 0-255 (rpi_ws281x: uint8_t, KEIN Float!); 102
 LED_INVERT     = False
 LED_CHANNEL    = 0
 LED_STRIP_TYPE = 0x00081000  # ws.WS2811_STRIP_GRB (WS2812-Standard, GRB) - NICHT der Arduino-Wert!
+SOFTSTART_BRIGHTNESS = 20    # Soft-Start: Start-Helligkeit (Schutz vor Last-Spitzen, Fallstrick 29)
+SOFTSTART_STEP = 2           # Soft-Start: +2 pro Sekunde bis LED_BRIGHTNESS
 
 # --- TM1637 ---
 TM1637_CLK     = 23          # GPIO 23
@@ -982,7 +984,19 @@ def main():
     last_display_time = ""
     last_raster = None  # was zuletzt im Raster stand
 
+    # Soft-Start: Helligkeit langsam hochfahren - bei Minuten 0-4 gehen
+    # sofort alle 40 LEDs an; mit Rampe kein Last-Schlag beim Start
+    # (wichtig, wenn Pi und Tafel am selben Netzteil haengen - Fallstrick 29)
+    brightness = SOFTSTART_BRIGHTNESS
+    strip.setBrightness(brightness)
+
     while running:
+        # Soft-Start: Helligkeit stufenweise hochfahren
+        if brightness < LED_BRIGHTNESS:
+            brightness = min(LED_BRIGHTNESS, brightness + SOFTSTART_STEP)
+            strip.setBrightness(brightness)
+            strip.show()
+
         # NTP gelegentlich resynchronisieren
         if needs_resync(NTP_SYNC_INTERVAL_MIN):
             sync_ntp()
@@ -1181,6 +1195,7 @@ sudo venv/bin/python3 anzeige_test.py
 | 26 | **git fehlt («bash: git: command not found»)** | Raspberry Pi OS Lite liefert git nicht mit: `sudo apt update && sudo apt install -y git` (Kap. 8, Schritt 4) – dann Clone wiederholen; abgebrochene venv-Reste in `~` mit `rm -rf ~/venv` entfernen | hoch |
 | 27 | **TypeError: ... argument 2 of type 'uint8_t' beim Start von main.py** | Zwei Ursachen in config.py: (1) `LED_BRIGHTNESS` war ein Float (0.4 – CircuitPython-Skala 0.0–1.0), rpi_ws281x/SWIG erwartet aber int 0–255 (102 ≈ 40 %); (2) `LED_STRIP_TYPE = 0x00081008` ist ein Arduino/Adafruit-Wert – rpi_ws281x nutzt `ws.WS2811_STRIP_GRB = 0x00081000`, sonst stimmt die Farbzuordnung nicht | hoch |
 | 28 | **Falsches Feld leuchtet (z. B. große Blöcke statt Einzelbälle)** | Index-Konventionen unterschieden sich: fibonacci.py nummerierte 0–4 = Werte [1,1,2,3,5], mapping.FELDER aber 0–4 = A–E = [5,3,2,1,1] – display.show_time() beleuchtete deshalb die falschen Felder. Fix: COMBINATIONS auf FELDER-Indizes umgestellt (08.11.2026), jetzt ist überall Index = A–E | hoch |
+| 29 | **Pi stürzt ab, sobald die Uhr startet (v. a. bei Minuten 0–4: sofort alle 40 LEDs an)** | Pi und Tafel am selben Netzteil → Volllast-Schlag zieht die 5-V-Schiene ein (Brownout). Fix: (1) getrennte Netzteile – Tafel ≥3 A an der DC-Buchse, Pi am eigenen USB-Netzteil, gemeinsame Masse (Kap. 5); (2) Soft-Start in main.py: Helligkeit startet bei 20 (SOFTSTART_BRIGHTNESS) und fährt in ~40 s auf LED_BRIGHTNESS hoch | mittel–hoch |
 
 ---
 
@@ -1303,6 +1318,8 @@ sudo venv/bin/python3 anzeige_test.py
 - [x] Steuerbox-Selbsttest ergänzt + tm1637_display korrigiert (08.11.2026): Library ist 4-stellig ausgelegt (show() max. 4 Zeichen, kein clear()) → 6 Stellen via write()/encode_digit(); steuerbox_test.py (Uhr HH:MM:SS + Tasten-Prüfung) im Repo, mit Stub-Tests verifiziert
 - [x] Selbsttest auf dem Pi bestanden (08.11.2026): TM1637 zeigte HH:MM:SS, alle 6 Tasten T1–T6 geprüft – Steuerbox funktionsfähig; git unter Trixie Lite nachinstallieren (Fallstrick 26)
 - [x] Start-Bug behoben (08.11.2026): LED_BRIGHTNESS Float 0.4 → int 102 (SWIG uint8_t lehnt Floats ab, TypeError); LED_STRIP_TYPE 0x00081008 (Arduino-Wert) → ws.WS2811_STRIP_GRB 0x00081000 (Fallstrick 27)
+- [x] Soft-Start-Rampe gegen Last-Spitzen ergänzt (09.11.2026): Helligkeit 20 → LED_BRIGHTNESS in ~40 s (Fallstrick 29; Absturz um 10:04, da Minuten 0–4 = sofort alle 40 LEDs und Pi + Tafel am selben Netzteil)
+- [ ] **Offen: Stromversorgung umbauen** – getrennte Netzteile für Tafel und Pi (Fallstrick 29)
 - [x] Index-Konventions-Bug behoben + Anzeige-Test (08.11.2026): fibonacci.py-COMBINATIONS auf mapping.FELDER-Indizes (0–4 = A–E) umgestellt – vorher 0–4 = [1,1,2,3,5] → falsche Felder beleuchtet (Fallstrick 28); anzeige_test.py ergänzt (T6 = Anzeige ein/aus, 5 Felder in Farben, T1–T5 Einzelfelder)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
@@ -1325,4 +1342,5 @@ sudo venv/bin/python3 anzeige_test.py
 *Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6); git-/venv-Hinweise für Trixie Lite ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Start-Bugs behoben (LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Index-Konventions-Bug fibonacci.py↔mapping.py behoben + anzeige_test.py ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
+*Soft-Start-Rampe gegen Last-Spitzen nach Brownout-Absturz von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*

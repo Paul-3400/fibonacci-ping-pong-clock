@@ -155,6 +155,11 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
 ✅ Anzeige-Test bestanden (08.11.2026): alle 5 Felder korrekt
    (Farben/Positionen/Wertigkeiten), T1–T6 geprüft – Uhr startklar.
 
+⚠️ Achtung (09.11.2026): Absturz beim Start um 10:04 – Pi und Tafel hingen
+   am selben Netzteil; bei Minuten 0–4 gehen sofort alle 40 LEDs an
+   (Volllast-Schlag). Soft-Start-Rampe ergänzt (Fallstrick 29);
+   Stromversorgung gem. Kap. 5 auf getrennte Netzteile umbauen!
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr

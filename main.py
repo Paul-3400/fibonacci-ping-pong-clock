@@ -51,7 +51,19 @@ def main():
     last_display_time = ""
     last_raster = None  # was zuletzt im Raster stand
 
+    # Soft-Start: Helligkeit langsam hochfahren - bei Minuten 0-4 gehen
+    # sofort alle 40 LEDs an; mit Rampe kein Last-Schlag beim Start
+    # (wichtig, wenn Pi und Tafel am selben Netzteil haengen - Fallstrick 29)
+    brightness = SOFTSTART_BRIGHTNESS
+    strip.setBrightness(brightness)
+
     while running:
+        # Soft-Start: Helligkeit stufenweise hochfahren
+        if brightness < LED_BRIGHTNESS:
+            brightness = min(LED_BRIGHTNESS, brightness + SOFTSTART_STEP)
+            strip.setBrightness(brightness)
+            strip.show()
+
         # NTP gelegentlich resynchronisieren
         if needs_resync(NTP_SYNC_INTERVAL_MIN):
             sync_ntp()
