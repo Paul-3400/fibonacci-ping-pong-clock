@@ -158,7 +158,14 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
 ⚠️ Achtung (09.11.2026): Absturz beim Start um 10:04 – Pi und Tafel hingen
    am selben Netzteil; bei Minuten 0–4 gehen sofort alle 40 LEDs an
    (Volllast-Schlag). Soft-Start-Rampe ergänzt (Fallstrick 29);
-   Stromversorgung gem. Kap. 5 auf getrennte Netzteile umbauen!
+   Stromversorgung gem. Kap. 5 auf getrennte Netzteile umbauen –
+   ✅ erledigt 09.11.2026: Pi am 5V/3A-Netzteil (Micro-USB), Tafel am
+   5V/4A-Netzteil, GND beider Netzteile verbunden.
+
+🔧 NTP-Bug behoben (09.11.2026, Fallstrick 30): sync_ntp() verwendete die
+   NTP-Antwort nicht – die Uhr lief still auf der (nach SD-Neuflash oft
+   falschen) Systemzeit. get_local_time() rechnet jetzt aus der
+   NTP-Referenz (Europe/Zurich inkl. Sommerzeit).
 
 ## Lizenz
 

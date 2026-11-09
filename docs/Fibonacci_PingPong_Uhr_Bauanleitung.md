@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil)"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -891,21 +891,41 @@ def clear_display():
 ### 7.8 Zeit-Verwaltung (`ntp_time.py`)
 
 ```python
-"""NTP-Zeitsynchronisation und lokale Zeit."""
-import ntplib
-import datetime
+"""NTP-Zeitsynchronisation und lokale Zeit.
+
+Fix 09.11.2026 (Fallstrick 30): sync_ntp() wertet die NTP-Antwort jetzt
+selbst aus. Vorher wurde die Serverzeit abgefragt und verworfen - die Uhr
+lief unbemerkt auf der Systemzeit, die nach einem frischen SD-Flash oft
+noch nicht synchronisiert ist (bis systemd-timesyncd greift).
+"""
 import time as time_module
+from datetime import datetime, timedelta, timezone
+import ntplib
 from config import NTP_SERVER, TIMEZONE
 
+try:
+    from zoneinfo import ZoneInfo
+    _tz = ZoneInfo(TIMEZONE)          # Europe/Zurich inkl. Sommerzeit
+except Exception:
+    _tz = None                        # Fallback: Systemzeitzone
+
 _ntp_client = ntplib.NTPClient()
-_last_sync = None
+_last_sync = None      # time.monotonic() des letzten erfolgreichen Syncs
+_ntp_epoch = None      # NTP-Epoch (resp.tx_time) zu diesem Moment
 
 def sync_ntp():
-    """Synchronisiert Zeit über NTP. Gibt True bei Erfolg zurück."""
-    global _last_sync
+    """Synchronisiert die Uhrzeit ueber NTP. Gibt True bei Erfolg zurueck.
+
+    Speichert die Serverzeit als Referenz-Epoch; get_local_time() rechnet
+    ab da mit time.monotonic() weiter. monotonic() kann nicht springen -
+    auch dann nicht, wenn systemd-timesyncd die Systemzeit unterdessen
+    umstellen sollte.
+    """
+    global _last_sync, _ntp_epoch
     try:
-        resp = _ntp_client.request(NTP_SERVER, version=3)
-        _last_sync = time_module.time()
+        resp = _ntp_client.request(NTP_SERVER, version=3, timeout=2)
+        _ntp_epoch = resp.tx_time
+        _last_sync = time_module.monotonic()
         return True
     except Exception as e:
         print(f"NTP-Fehler: {e}")
@@ -913,22 +933,34 @@ def sync_ntp():
 
 def get_local_time(offset_sec=0):
     """
-    Gibt lokale Zeit als (hour, minute, second) zurück.
-    offset_sec: Handbetrieb-Offset in Sekunden (Taster 2–4),
+    Gibt lokale Zeit als (hour, minute, second) zurueck.
+    offset_sec: Handbetrieb-Offset in Sekunden (Taster 2-4),
     0 = Normalbetrieb mit NTP-Zeit.
+
+    Nach dem ersten erfolgreichen NTP-Sync laeuft die Uhr ausschliesslich
+    auf der NTP-Referenz (unabhaengig von der Systemzeit). Vor dem ersten
+    Sync: Fallback auf Systemzeit.
     """
-    # Europe/Zurich: UTC+1 (Winter) oder UTC+2 (Sommer)
-    # Python datetime nutzt System-Zeitzone (muss konfiguriert sein)
-    now = datetime.datetime.now() + datetime.timedelta(seconds=offset_sec)
+    if _ntp_epoch is not None and _last_sync is not None:
+        epoch = _ntp_epoch + (time_module.monotonic() - _last_sync) \
+                + offset_sec
+        jetzt = datetime.fromtimestamp(epoch, tz=timezone.utc)
+        if _tz is not None:
+            jetzt = jetzt.astimezone(_tz)
+        else:
+            jetzt = jetzt.astimezone()   # Systemzeitzone
+        return jetzt.hour, jetzt.minute, jetzt.second
+    # Fallback vor dem ersten Sync: Systemzeit
+    now = datetime.now() + timedelta(seconds=offset_sec)
     return now.hour, now.minute, now.second
 
 def needs_resync(interval_min=30):
-    """Prüft, ob eine NTP-Resynchronisation fällig ist."""
-    global _last_sync
+    """Prueft, ob eine NTP-Resynchronisation faellig ist."""
     if _last_sync is None:
         return True
-    elapsed_min = (time_module.time() - _last_sync) / 60
+    elapsed_min = (time_module.monotonic() - _last_sync) / 60
     return elapsed_min >= interval_min
+
 ```
 
 ### 7.9 Hauptprogramm (`main.py`)
@@ -1196,6 +1228,7 @@ sudo venv/bin/python3 anzeige_test.py
 | 27 | **TypeError: ... argument 2 of type 'uint8_t' beim Start von main.py** | Zwei Ursachen in config.py: (1) `LED_BRIGHTNESS` war ein Float (0.4 – CircuitPython-Skala 0.0–1.0), rpi_ws281x/SWIG erwartet aber int 0–255 (102 ≈ 40 %); (2) `LED_STRIP_TYPE = 0x00081008` ist ein Arduino/Adafruit-Wert – rpi_ws281x nutzt `ws.WS2811_STRIP_GRB = 0x00081000`, sonst stimmt die Farbzuordnung nicht | hoch |
 | 28 | **Falsches Feld leuchtet (z. B. große Blöcke statt Einzelbälle)** | Index-Konventionen unterschieden sich: fibonacci.py nummerierte 0–4 = Werte [1,1,2,3,5], mapping.FELDER aber 0–4 = A–E = [5,3,2,1,1] – display.show_time() beleuchtete deshalb die falschen Felder. Fix: COMBINATIONS auf FELDER-Indizes umgestellt (08.11.2026), jetzt ist überall Index = A–E | hoch |
 | 29 | **Pi stürzt ab, sobald die Uhr startet (v. a. bei Minuten 0–4: sofort alle 40 LEDs an)** | Pi und Tafel am selben Netzteil → Volllast-Schlag zieht die 5-V-Schiene ein (Brownout). Fix: (1) getrennte Netzteile – Tafel ≥3 A an der DC-Buchse, Pi am eigenen USB-Netzteil, gemeinsame Masse (Kap. 5); (2) Soft-Start in main.py: Helligkeit startet bei 20 (SOFTSTART_BRIGHTNESS) und fährt in ~40 s auf LED_BRIGHTNESS hoch | mittel–hoch |
+| 30 | **Uhr zeigt nach frischem SD-Flash eine falsche Zeit, obwohl der NTP-Sync «erfolgreich» meldet** | ntp_time.sync_ntp() warf die NTP-Antwort weg – die Uhr lief still auf der Systemzeit, die nach dem Neuanfang oft noch nicht synchron ist (bis systemd-timesyncd greift). Fix (09.11.2026): get_local_time() rechnet ab dem ersten Sync ausschliesslich aus der NTP-Referenz (resp.tx_time + time.monotonic(), Europe/Zurich inkl. Sommerzeit), vorher Fallback Systemzeit; NTP-Timeout 2 s gegen Loop-Blockade | hoch |
 
 ---
 
@@ -1319,7 +1352,9 @@ sudo venv/bin/python3 anzeige_test.py
 - [x] Selbsttest auf dem Pi bestanden (08.11.2026): TM1637 zeigte HH:MM:SS, alle 6 Tasten T1–T6 geprüft – Steuerbox funktionsfähig; git unter Trixie Lite nachinstallieren (Fallstrick 26)
 - [x] Start-Bug behoben (08.11.2026): LED_BRIGHTNESS Float 0.4 → int 102 (SWIG uint8_t lehnt Floats ab, TypeError); LED_STRIP_TYPE 0x00081008 (Arduino-Wert) → ws.WS2811_STRIP_GRB 0x00081000 (Fallstrick 27)
 - [x] Soft-Start-Rampe gegen Last-Spitzen ergänzt (09.11.2026): Helligkeit 20 → LED_BRIGHTNESS in ~40 s (Fallstrick 29; Absturz um 10:04, da Minuten 0–4 = sofort alle 40 LEDs und Pi + Tafel am selben Netzteil)
-- [ ] **Offen: Stromversorgung umbauen** – getrennte Netzteile für Tafel und Pi (Fallstrick 29)
+- [x] **Stromversorgung umgebaut (09.11.2026)** – getrennte Netzteile: Pi 5V/3A über Micro-USB, Tafel 5V/4A an der DC-Buchse, GND beider Netzteile verbunden (Fallstrick 29)
+- [x] NTP-Bug behoben (09.11.2026): sync_ntp() verwendete die NTP-Antwort nicht – get_local_time() rechnet jetzt aus der NTP-Referenz (Fallstrick 30)
+- [ ] **Offen: Anzeige-Diagnose (09.11.2026)** – main.py zeigte TM1637 «33:13:50» (Stunde 33 ist softwareseitig unmöglich) und unerwartete Feldfarben (Feld A blau, A5 gelb); nach dem NTP-Fix neu beobachten
 - [x] Index-Konventions-Bug behoben + Anzeige-Test (08.11.2026): fibonacci.py-COMBINATIONS auf mapping.FELDER-Indizes (0–4 = A–E) umgestellt – vorher 0–4 = [1,1,2,3,5] → falsche Felder beleuchtet (Fallstrick 28); anzeige_test.py ergänzt (T6 = Anzeige ein/aus, 5 Felder in Farben, T1–T5 Einzelfelder)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
@@ -1343,4 +1378,5 @@ sudo venv/bin/python3 anzeige_test.py
 *Start-Bugs behoben (LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB) von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Index-Konventions-Bug fibonacci.py↔mapping.py behoben + anzeige_test.py ergänzt von Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026*
 *Soft-Start-Rampe gegen Last-Spitzen nach Brownout-Absturz von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
+*NTP-Auswertung behoben (sync_ntp() verwendete die Server-Antwort nicht, Fallstrick 30) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
