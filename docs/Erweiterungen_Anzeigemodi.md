@@ -289,7 +289,8 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 
 **Noch offen:**
 
-- Funktionstest am Gerät: Dienst stoppen (docs/Betriebsbefehle.md), dann venv/bin/python3 main.py – Feedback-Texte auf dem TM1637 live prüfen, Shift-Timeout fühlen, Langdruck-Schwelle (1 s) bewerten.
+- Funktionstest am Gerät: Dienst stoppen (docs/Betriebsbefehle.md), dann sudo venv/bin/python3 main.py – Feedback-Texte auf dem TM1637 live prüfen, Shift-Timeout fühlen, Langdruck-Schwelle (1 s) bewerten.
+- **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
 - Bauanleitung Kap. 7 nachziehen, sobald Stufe 1 am Gerät bestätigt ist.
 - Danach Stufe 2: Modus 3 (drei Binärzähler) und Modus 4 (grosse Ziffern) mit font5x7.py.
 
