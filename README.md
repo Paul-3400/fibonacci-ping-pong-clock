@@ -99,6 +99,10 @@ sudo venv/bin/python3 main.py
   display, tm1637, ntp_time, main), systemd-Autostart, Fallstricke,
   Gehäuse-Konstruktion (200×320 mm hochkant), Fahrplan und offene Fragen.
 
+- ⌨️ **[Betriebsbefehle](docs/Betriebsbefehle.md)** – Kurzreferenz für den
+  Betrieb auf dem Pi: systemd-Steuerung, Logs (journalctl), manuelle Tests,
+  NTP-Kontrolle, Software-Update, System-Überwachung, Notfall-Anker.
+
 - 🧪 **[Wokwi-Prototyp](wokwi/)** – vollständige Simulation der Uhr mit dem
   **Seeed XIAO ESP32-S3** statt dem Raspberry Pi Zero WH (Wokwi kennt den Pi nicht):
   40 NeoPixel im 5×8-Schnecken-Raster hochkant, NTP-Zeitsync, TM1637, Self-Test –
