@@ -38,9 +38,10 @@ siehe [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
 Anzeige bewusst 5-Minuten-genau (wie im Original von Philippe Chretien);
 die Zerlegung wird pro Zeitstempel per Zufall aus allen gültigen
-Fibonacci-Summen gewählt. Mapping: `LED-Index = Spalte*8 + Zeile` – die
-Datenkette läuft spaltenweise (IN an A0), genau wie die reale Tafel verkabelt
-ist (Daten- und Stromkette: A0–A7 → B0–B7 → … → E0–E7).
+Fibonacci-Summen gewählt. Mapping: `LED-Index = Spalte*8 + Zeile` (logische Konvention, Spalte A =
+links). **Achtung Fallstrick 33 (10.11.2026):** Die reale Datenkette beginnt
+physisch bei Spalte E – `display.py` spiegelt die Spalte beim Schreiben
+zentral (`_PHYS_LED`-Tabelle); alle Module rechnen logisch unverändert.
 
 ## Hardware (Kurzfassung)
 
@@ -189,9 +190,9 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    Hälfte vor write() um (tm1637_display.py + steuerbox_test.py).
    Fibonacci-Anzeige verifiziert korrekt (14:05 → Feld C rot + E grün).
 
-✅ Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 am Gerät bestätigt (Tasten inkl. Shift); Stufe 2 umgesetzt: Modus 3 (Binärzähler h/m/s, T3) und Modus 4 (grosse Ziffern, T4) mit font5x7.py; Platz 5–10 folgen in Stufe 3–4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
+✅ Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 und Stufe 2 am Gerät bestätigt: Modus 3 (Binärzähler h/m/s, T3) und Modus 4 (grosse Ziffern, T4) mit font5x7.py; Platz 5–10 folgen in Stufe 3–4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
-🔧 Fallstrick 33 behoben (10.11.2026): Der Modus-4-Gerätetest zeigte die
+✅ Fallstrick 33 behoben (10.11.2026, am Gerät bestätigt): Der Modus-4-Gerätetest zeigte die
    grossen Ziffern spiegelverkehrt (Fotos IMG_8947–8950) – die Tafel hängt
    spaltenweise gespiegelt an der Datenkette: Die Kette beginnt real bei
    Spalte E (rechts), nicht wie geplant bei A. Wie beim TM1637 (Fallstrick 31)
@@ -200,8 +201,9 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    Module rechnen logisch unverändert weiter. Betroffen waren neben Modus 4 auch
    Base4 (Wertepositionen seitenverkehrt) und Modus 3 (Stunden-Spalte rechts
    statt links) – die Fibonacci-Uhr las sich trotzdem immer richtig, weil ihre
-   Felder beim Spiegeln die Werte mitnehmen. 22 Stub-Checks bestanden;
-   Verifikation am Gerät ausstehend. Details:
+   Felder beim Spiegeln die Werte mitnehmen. 22 Stub-Checks bestanden; am
+   Gerät bestätigt (10.11.2026, Paul: «Jetzt ist die gesamte Anzeige
+   kohärent!»). Details:
    [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) (Kap. 10).
 
 ## Lizenz

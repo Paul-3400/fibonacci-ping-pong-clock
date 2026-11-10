@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Umsetzung läuft** (Stufe 2, 10.11.2026). Entscheidungen vom 10.11.2026: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Stufe 1 (Moduswahl, Shift, Langdruck) am Gerät bestätigt. Stufe 2 implementiert; Gerätetest läuft: Modus 3 läuft am Gerät, Modus 4 zeigte spiegelverkehrte Ziffern → Fix Fallstrick 33 (display.py), Verifikation ausstehend. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py; Platz 5–10 folgen in Stufe 3–4. Details: Kap. 10.
+Status: **Stufe 1 + 2 abgeschlossen und am Gerät bestätigt** (10.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 5–10 folgen in Stufe 3–4. Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -132,7 +132,7 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 (rot: A4, A5, A6 → 14; grün: C2, C6, C7 → 35; gelb: E2, E3, E7 → 49)
 
-**Bewertung:** Auflösung 1 s – die lebendigste Alltags-Anzeige (Sekunden laufen sichtbar). Aufwand klein. LED-Last gering (maximal 17 von 40). Lesbarkeit nach kurzer Übung gut. **Status:** ✅ umgesetzt (Stufe 2, 10.11.2026).
+**Bewertung:** Auflösung 1 s – die lebendigste Alltags-Anzeige (Sekunden laufen sichtbar). Aufwand klein. LED-Last gering (maximal 17 von 40). Lesbarkeit nach kurzer Übung gut. **Status:** ✅ umgesetzt (Stufe 2, 10.11.2026), am Gerät bestätigt.
 
 ### Modus 4 (T4) – Grosse Ziffern, statisch [Idee «grosse Zahlen», Variante A]
 
@@ -142,7 +142,7 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 **Beispiel 14:35:** erst grosse «1», dann «4», dann «3», dann «5» – voller Zyklus 8 s.
 
-**Bewertung:** Beste Lesbarkeit für Besucher – keine Übungszeit nötig. Aufwand klein (Font-Tabelle für 0–9). LED-Last gering (ca. 10–20 LEDs je Ziffer). **Status:** ✅ umgesetzt (Stufe 2, 10.11.2026).
+**Bewertung:** Beste Lesbarkeit für Besucher – keine Übungszeit nötig. Aufwand klein (Font-Tabelle für 0–9). LED-Last gering (ca. 10–20 LEDs je Ziffer). **Status:** ✅ umgesetzt (Stufe 2, 10.11.2026), am Gerät bestätigt.
 
 ### Modus 5 (T5) – Tagesfortschritt-Balken [Vibe-Vorschlag]
 
@@ -270,7 +270,7 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 |---|---|
 | 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) – ✅ erledigt 10.11.2026 |
 | 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
-| 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt 10.11.2026 |
+| 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt + am Gerät bestätigt 10.11.2026 |
 | 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine) |
 | 4 | Modus 7 (Laufschrift), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
 
@@ -304,10 +304,10 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 - **Warum es bisher nicht auffiel:** Die Fibonacci-Anzeige ist spiegelinvariant lesbar – Feld B (3×3) und C (2×2) tauschen zwar die Seiten, aber die Werte wandern mit; die abgelesene Zeit blieb immer richtig. Base4 (Wertepositionen 48/3 seitenverkehrt) und Modus 3 (Stunden-Spalte rechts statt links) waren dagegen ebenfalls falsch herum – nach dem Fix mitkontrollieren.
 - **Fix (10.11.2026):** display.py spiegelt die Spalte beim Schreiben zentral (_PHYS_LED-Tabelle: physische LED = (4 − Spalte) × 8 + Zeile); alle Module rechnen logisch unverändert weiter (LED-Index = Spalte × 8 + Zeile, Spalte A = links). anzeige_test.py (Direktschreib-Routine render()) nachgezogen; Kommentar in mapping.py korrigiert.
 - **Verifikation (Stub-Test, 10.11.2026):** 22 Checks bestanden – Spiegel-Tabelle als Bijektion (A0 → physisch Segment E), Ziffern 1/4/5/7 aufrecht in Panel-Sicht, Sekundenpunkt unten Mitte (nur bei gerader Sekunde), Fibonacci-Feld C unten links, Base4-Wert 48 links in der Matrix, Modus-3-Spalten rot links / grün Mitte / gelb rechts, clear_all/show_frame-Randfälle, logische Frame-Regression unveraendert.
+- **Fix am Gerät BESTÄTIGT (10.11.2026, Paul):** «Jetzt ist die gesamte Anzeige kohärent!» – Modus 4 aufrecht, Modus 3 Stunden-Spalte rot links, Base4 seitenrichtig, Fibonacci unverändert. Stufe 2 damit vollständig am Gerät bestätigt.
 
 **Noch offen:**
 
-- Fix Fallstrick 33 am Gerät verifizieren: Dienst stoppen (docs/Betriebsbefehle.md), dann sudo venv/bin/python3 main.py – T4: Ziffern nun aufrecht (Ziffernwechsel 2 s, Sekundenpunkt blinkt); T3: Stunden-Spalte nun LINKS rot (vor dem Fix rechts); T2: Base4-Wert 48 links in der Matrix; T1: Kontrollblick Fibonacci.
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
-- Bauanleitung Kap. 7 nachziehen (Stufe 1 + 2; inkl. Fallstrick 32: main.py zwingend mit sudo starten, und Fallstrick 33: Datenkette beginnt real bei Spalte E – siehe oben).
+- Bauanleitung: ✅ nachgezogen 10.11.2026 – Kap. 7.11 (Erweiterung Stufe 1 + 2), Fallstricke 32 + 33, Taster-Kap. 1.6/4.4, Verdrahtungs-Warnung Kap. 5.1, Intro + Revision-Log.
 - Danach Stufe 3: Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine).
