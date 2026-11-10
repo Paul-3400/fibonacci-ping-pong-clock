@@ -119,7 +119,7 @@ sudo venv/bin/python3 main.py
 
 ## Status
 
-Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitung.
+Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in der Bauanleitung.
 
 ✅ Layout-Entscheidung gefallen: 5×8-Schnecke hochkant (bessere Lesbarkeit,
    Anordnung wie bei der [Nerdiy-Fibonacci-Uhr](https://www.nerdiy.de/fibonacciClock)).
@@ -167,10 +167,15 @@ Projekt in der Entwurfs-/Beschaffungsphase – siehe Fahrplan in der Bauanleitun
    falschen) Systemzeit. get_local_time() rechnet jetzt aus der
    NTP-Referenz (Europe/Zurich inkl. Sommerzeit).
 
-🔧 TM1637-Fix (09.11.2026, Fallstrick 31): Das 6-stellige Modul vertauscht
-   die ersten beiden Ziffernpaare – die Zeit erschien als MM:HH:SS
-   («33:13:50» um 13:33:50). _modul_segments() korrigiert die Reihenfolge
-   in tm1637_display.py und steuerbox_test.py. Fibonacci-Anzeige verifiziert
+✅ systemd-Autostart in Betrieb (10.11.2026): fibonacci-clock.service
+   (Bauanleitung Kap. 7.10), Reboot-Test bestanden – die Uhr startet nach
+   dem Einschalten autonom.
+
+⚠️ TM1637-Anzeige-Bug OFFEN (Stand 10.11.2026, Fallstrick 31): Das
+   6-stellige Modul zeigt die Ziffern weiterhin durcheinander – der
+   Paarvertausch-Fix von 09.11.2026 (_modul_segments()) brachte mit
+   bestätigt aktuellem Code keine Änderung. Diagnose geplant (tatsächliche
+   Grid-Zuordnung per Roh-Befehl ablesen). Fibonacci-Anzeige verifiziert
    korrekt (14:05 → Feld C rot + E grün).
 
 ## Lizenz
@@ -188,4 +193,4 @@ GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
 
 ---
 
-Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026
+Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026

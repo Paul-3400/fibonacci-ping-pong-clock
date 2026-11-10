@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py; 10.11.2026 – systemd-Autostart in Betrieb (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick 31: Paarvertausch-Fix ohne Wirkung, TM1637-Anzeige-Bug offen (Diagnose per Grid-Map-Ablesung geplant)"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -1093,6 +1093,9 @@ if __name__ == "__main__":
 
 ### 7.10 Autostart (systemd-Service)
 
+> **Status (10.11.2026): eingerichtet und in Betrieb – Reboot-Test bestanden.**
+> Die Uhr startet nach dem Einschalten autonom.
+
 Datei: `/etc/systemd/system/fibonacci-clock.service`
 
 ```ini
@@ -1129,6 +1132,9 @@ sudo systemctl status fibonacci-clock
 > **venv-Python:** `ExecStart` zeigt auf die venv-Python aus Kap. 8 – dort
 > liegen rpi_ws281x/tm1637/ntplib; gpiozero kommt über
 > `--system-site-packages` aus dem System.
+>
+> **Log beobachten:** `journalctl -u fibonacci-clock -f` (beenden mit q) – dort
+> erscheinen die «Zeit: … – Felder: …»-Zeilen des Hauptprogramms.
 
 ---
 
@@ -1243,7 +1249,7 @@ sudo venv/bin/python3 anzeige_test.py
 | 28 | **Falsches Feld leuchtet (z. B. große Blöcke statt Einzelbälle)** | Index-Konventionen unterschieden sich: fibonacci.py nummerierte 0–4 = Werte [1,1,2,3,5], mapping.FELDER aber 0–4 = A–E = [5,3,2,1,1] – display.show_time() beleuchtete deshalb die falschen Felder. Fix: COMBINATIONS auf FELDER-Indizes umgestellt (08.11.2026), jetzt ist überall Index = A–E | hoch |
 | 29 | **Pi stürzt ab, sobald die Uhr startet (v. a. bei Minuten 0–4: sofort alle 40 LEDs an)** | Pi und Tafel am selben Netzteil → Volllast-Schlag zieht die 5-V-Schiene ein (Brownout). Fix: (1) getrennte Netzteile – Tafel ≥3 A an der DC-Buchse, Pi am eigenen USB-Netzteil, gemeinsame Masse (Kap. 5); (2) Soft-Start in main.py: Helligkeit startet bei 20 (SOFTSTART_BRIGHTNESS) und fährt in ~40 s auf LED_BRIGHTNESS hoch | mittel–hoch |
 | 30 | **Uhr zeigt nach frischem SD-Flash eine falsche Zeit, obwohl der NTP-Sync «erfolgreich» meldet** | ntp_time.sync_ntp() warf die NTP-Antwort weg – die Uhr lief still auf der Systemzeit, die nach dem Neuanfang oft noch nicht synchron ist (bis systemd-timesyncd greift). Fix (09.11.2026): get_local_time() rechnet ab dem ersten Sync ausschliesslich aus der NTP-Referenz (resp.tx_time + time.monotonic(), Europe/Zurich inkl. Sommerzeit), vorher Fallback Systemzeit; NTP-Timeout 2 s gegen Loop-Blockade | hoch |
-| 31 | **TM1637 zeigt die Zeit als «MM:HH:SS» statt «HH:MM:SS» (z. B. «33:13:50» um 13:33:50)** | Das 6-stellige Modul vertauscht die ersten beiden Ziffernpaare: Grid 0/1 liegen physisch auf den Positionen 2/3, Grid 2/3 auf 0/1 (Positionen 4/5 = Sekunden stimmen). Fix (09.11.2026): _modul_segments() in tm1637_display.py bzw. modul_segments() in steuerbox_test.py sortiert die Segmente vor write() um – auch «TEST n» erscheint seither korrekt (vorher «STTE n») | hoch |
+| 31 | **TM1637 zeigt die Ziffern durcheinander statt «HH:MM:SS» (z. B. «33:13:50» um 13:33:50; auch nach dem Fix von 09.11. weiterhin MischMasch)** | Erste These (09.11.): Modul vertauscht die Ziffernpaare 1/2 → Fix per _modul_segments()-Reorder in tm1637_display.py/steuerbox_test.py (Commit a89a5a4). Am 10.11.2026 mit bestätigt aktuellem Code getestet: KEINE Wirkung – die Paarvertausch-These ist damit widerlegt bzw. unvollständig; die tatsächliche Grid-Zuordnung des 6-stelligen Moduls ist unbekannt (Bug offen). Nächster Schritt: Grid-Map per Roh-Befehl `write(encode_string('123456'), 0)` ablesen – was steht wirklich am Modul? | niedrig |
 
 ---
 
@@ -1325,13 +1331,13 @@ sudo venv/bin/python3 anzeige_test.py
 ## 12. Fahrplan
 
 1. [x] Konzept und Anzeigeprinzip (diese Bauanleitung)
-2. [ ] OS einrichten (Trixie Lite 32-bit, Audio off, Zeitzone, NTP, venv)
-3. [ ] Hardware beschaffen (siehe Bauteilliste)
-4. [ ] LED-Kette verlegen + Mapping-Tabelle verifizieren
-5. [ ] Lochplatte bohren + Bälle einpassen (200×320 hochkant)
-6. [ ] Software testen (NeoPixel-Test, TM1637-Test, NTP-Test, Taster-Test inkl. T6, Base4-Test)
-7. [ ] `main.py` integrieren und testen
-8. [ ] systemd-Service einrichten
+2. [x] OS eingerichtet (08.11.2026; nach SD-Neuflash am 09.11.2026 wiederholt)
+3. [x] Hardware beschafft und aufgebaut (Steuerbox + Anzeigetafel)
+4. [x] LED-Kette verlegt + Mapping-Tabelle verifiziert (07.11.2026 real vermessen)
+5. [x] Lochplatte gebaut + Bälle eingepasst (200×320 hochkant)
+6. [x] Software getestet (Selbsttests 08.11., anzeige_test bestanden, NTP-Fix 09.11.)
+7. [x] `main.py` integriert und im Regelbetrieb getestet (09.11.2026)
+8. [x] systemd-Service eingerichtet (10.11.2026, Reboot-Test bestanden)
 9. [ ] Gehäuse fertigstellen (Steuerbox + Anzeigebox, Verbindungskabel, Zugentlastung)
 10. [ ] In Core-Framework integrieren (gemeinsam mit Base4-Uhr)
 
@@ -1369,7 +1375,9 @@ sudo venv/bin/python3 anzeige_test.py
 - [x] Soft-Start-Rampe gegen Last-Spitzen ergänzt (09.11.2026): Helligkeit 20 → LED_BRIGHTNESS in ~40 s (Fallstrick 29; Absturz um 10:04, da Minuten 0–4 = sofort alle 40 LEDs und Pi + Tafel am selben Netzteil)
 - [x] **Stromversorgung umgebaut (09.11.2026)** – getrennte Netzteile: Pi 5V/3A über Micro-USB, Tafel 5V/4A an der DC-Buchse, GND beider Netzteile verbunden (Fallstrick 29)
 - [x] NTP-Bug behoben (09.11.2026): sync_ntp() verwendete die NTP-Antwort nicht – get_local_time() rechnet jetzt aus der NTP-Referenz (Fallstrick 30)
-- [x] **Anzeige-Diagnose abgeschlossen (09.11.2026)** – Fibonacci-Anzeige war korrekt (13:32 → A grün + D blau, 14:05 → C rot + E grün, fotoverifiziert); TM1637 zeigte die richtige Zeit, aber als MM:HH:SS: Modul vertauscht die Ziffernpaare 1/2 (Fallstrick 31, Fix per _modul_segments())
+- [x] **Fibonacci-Anzeige-Diagnose abgeschlossen (09.11.2026)** – Fibonacci-Anzeige war korrekt (13:32 → A grün + D blau, 14:05 → C rot + E grün, fotoverifiziert); Systemzeit laut timedatectl die ganze Zeit korrekt synchronisiert
+- [ ] **TM1637 zeigt weiterhin MischMasch (Bug offen, Stand 10.11.2026)** – Paarvertausch-Fix (Fallstrick 31, Commit a89a5a4) brachte mit bestätigt aktuellem Code keine Änderung; die Grid-Zuordnung des 6-stelligen Moduls ist unbekannt – Diagnose per Roh-Befehl `write(encode_string('123456'), 0)` + Foto geplant
+- [x] **systemd-Autostart eingerichtet (10.11.2026)** – fibonacci-clock.service nach Kap. 7.10 (User=root, venv-Python, Restart=on-failure); Service läuft, Reboot-Test bestanden – die Uhr startet autonom
 - [x] Index-Konventions-Bug behoben + Anzeige-Test (08.11.2026): fibonacci.py-COMBINATIONS auf mapping.FELDER-Indizes (0–4 = A–E) umgestellt – vorher 0–4 = [1,1,2,3,5] → falsche Felder beleuchtet (Fallstrick 28); anzeige_test.py ergänzt (T6 = Anzeige ein/aus, 5 Felder in Farben, T1–T5 Einzelfelder)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
 - [ ] Kabellänge Steuerbox ↔ Anzeigebox (Data-Ader bis ~2 m unkritisch)?
@@ -1395,4 +1403,5 @@ sudo venv/bin/python3 anzeige_test.py
 *Soft-Start-Rampe gegen Last-Spitzen nach Brownout-Absturz von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *NTP-Auswertung behoben (sync_ntp() verwendete die Server-Antwort nicht, Fallstrick 30) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *TM1637-Ziffernpaare-Fix (Fallstrick 31) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
+*Autostart (systemd-Service) in Betrieb genommen (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick-31-Fix ohne Wirkung – TM1637-Anzeige-Bug offen von Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*
