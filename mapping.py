@@ -3,9 +3,12 @@
 # Projekt fibonacci-ping-pong-clock - Code-Entwurf aus der Bauanleitung Kap. 7
 """Mapping: 40 physische LEDs → 5 logische Fibonacci-Felder (Schnecke)."""
 
-# Spaltenweise Kette (wie die reale Tafel): LED-Index = Spalte × 8 + Zeile
-# IN an A0 (oben links): A0–A7 → B0–B7 → C0–C7 → D0–D7 → E0–E7
+# Spaltenweise Kette, LOGISCH: LED-Index = Spalte × 8 + Zeile (Spalte A = links)
+# Logische Reihenfolge: A0–A7 → B0–B7 → C0–C7 → D0–D7 → E0–E7
 # Raster hochkant: 5 Spalten (A–E) × 8 Zeilen (0–7)
+# Achtung Fallstrick 33 (10.11.2026, am Gerät gemessen): Die physische
+# Datenkette beginnt REAL bei Spalte E (rechts), nicht bei A – display.py
+# spiegelt die Spalte beim Schreiben zentral (_PHYS_LED-Tabelle).
 # Schnecke: D/E (Zeile 5, Spalten A/B) -> C (darunter) -> B (rechts) -> A (oben)
 
 FELDER = [

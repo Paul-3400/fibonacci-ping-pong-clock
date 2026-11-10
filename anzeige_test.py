@@ -50,7 +50,8 @@ def render():
         farbe = (FELD_FARBE[i] if (zustand["demo"] or zustand["feld"][i])
                  else Color(0, 0, 0))
         for led in leds:
-            display.strip.setPixelColor(led, farbe)
+            # Fallstrick 33: logische LED -> physische LED spiegeln
+            display.strip.setPixelColor(display._PHYS_LED[led], farbe)
     display.strip.show()
     if zustand["demo"]:
         summe = 12

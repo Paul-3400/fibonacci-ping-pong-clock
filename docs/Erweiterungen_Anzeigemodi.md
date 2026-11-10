@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Umsetzung läuft** (Stufe 2, 10.11.2026). Entscheidungen vom 10.11.2026: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Stufe 1 (Moduswahl, Shift, Langdruck) am Gerät bestätigt. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py; Platz 5–10 folgen in Stufe 3–4. Details: Kap. 10.
+Status: **Umsetzung läuft** (Stufe 2, 10.11.2026). Entscheidungen vom 10.11.2026: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Stufe 1 (Moduswahl, Shift, Langdruck) am Gerät bestätigt. Stufe 2 implementiert; Gerätetest läuft: Modus 3 läuft am Gerät, Modus 4 zeigte spiegelverkehrte Ziffern → Fix Fallstrick 33 (display.py), Verifikation ausstehend. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py; Platz 5–10 folgen in Stufe 3–4. Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -296,9 +296,18 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 - **Software:** neues Modul font5x7.py (klassischer gemeinfreier 5×7-Punktmatrix-Font im Adafruit/glcdf-Stil; Spaltenbytes, Bit 0 = oben; `glyph()` mit leerem Fallback für unbekannte Zeichen), modes.py um `_binary_frame()`/`_big_digit_frame()` ergänzt, config.py um `ZIFFERN_WECHSEL_SEC` ergänzt, main.py-Log gedrosselt (max. 1 Logzeile pro Minute und Modus, da Modus 3/4 sekündlich rendern).
 - **Verifikation (Stub-Tests, 10.11.2026):** 16 Testgruppen bestanden – u. a. Binärzähler über 24 h gegen Referenzlogik, font5x7 (alle 10 Ziffern eindeutig), Ziffernfolge/Farbwahl/Sekundenpunkt von Modus 4 über den Tag, plus komplette Stufe-1-Regression (Fibonacci, Base4, Tasten inkl. «M 3»/«M 4» und «- 5» … «- 10», Langdruck).
 
+**Gerätetest Stufe 2 + Fallstrick 33 (10.11.2026, Paul, Fotos IMG_8947–8950):**
+
+- **Modus 3 (T3) läuft am Gerät** – Paul: «T3 ist OK!».
+- **Modus 4 (T4) zeigte die Ziffern spiegelverkehrt** (links/rechts vertauscht) – «Zahlen müssen gewendet werden».
+- **Ursache (Fallstrick 33):** Die reale Tafel hängt spaltenweise gespiegelt an der Datenkette: Die Kette beginnt real bei Spalte E (rechts), nicht wie in der Bauanleitung dokumentiert bei Spalte A (Kettensegment LED 0–7 = physische Spalte E usw.). Wie beim TM1637-Fallstrick 31 liegt die Spiegelung in der Verdrahtung des Panels, nicht in der Library.
+- **Warum es bisher nicht auffiel:** Die Fibonacci-Anzeige ist spiegelinvariant lesbar – Feld B (3×3) und C (2×2) tauschen zwar die Seiten, aber die Werte wandern mit; die abgelesene Zeit blieb immer richtig. Base4 (Wertepositionen 48/3 seitenverkehrt) und Modus 3 (Stunden-Spalte rechts statt links) waren dagegen ebenfalls falsch herum – nach dem Fix mitkontrollieren.
+- **Fix (10.11.2026):** display.py spiegelt die Spalte beim Schreiben zentral (_PHYS_LED-Tabelle: physische LED = (4 − Spalte) × 8 + Zeile); alle Module rechnen logisch unverändert weiter (LED-Index = Spalte × 8 + Zeile, Spalte A = links). anzeige_test.py (Direktschreib-Routine render()) nachgezogen; Kommentar in mapping.py korrigiert.
+- **Verifikation (Stub-Test, 10.11.2026):** 22 Checks bestanden – Spiegel-Tabelle als Bijektion (A0 → physisch Segment E), Ziffern 1/4/5/7 aufrecht in Panel-Sicht, Sekundenpunkt unten Mitte (nur bei gerader Sekunde), Fibonacci-Feld C unten links, Base4-Wert 48 links in der Matrix, Modus-3-Spalten rot links / grün Mitte / gelb rechts, clear_all/show_frame-Randfälle, logische Frame-Regression unveraendert.
+
 **Noch offen:**
 
-- Funktionstest Stufe 2 am Gerät: Dienst stoppen (docs/Betriebsbefehle.md), dann sudo venv/bin/python3 main.py – T3 (Binärzähler) und T4 (grosse Ziffern) live prüfen: Ziffernwechsel alle 2 s, Sekundenpunkt blinkt, Lesbarkeit der Binär-Spalten.
+- Fix Fallstrick 33 am Gerät verifizieren: Dienst stoppen (docs/Betriebsbefehle.md), dann sudo venv/bin/python3 main.py – T4: Ziffern nun aufrecht (Ziffernwechsel 2 s, Sekundenpunkt blinkt); T3: Stunden-Spalte nun LINKS rot (vor dem Fix rechts); T2: Base4-Wert 48 links in der Matrix; T1: Kontrollblick Fibonacci.
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
-- Bauanleitung Kap. 7 nachziehen (Stufe 1 + 2; inkl. Fallstrick 32: main.py zwingend mit sudo starten, siehe unten).
+- Bauanleitung Kap. 7 nachziehen (Stufe 1 + 2; inkl. Fallstrick 32: main.py zwingend mit sudo starten, und Fallstrick 33: Datenkette beginnt real bei Spalte E – siehe oben).
 - Danach Stufe 3: Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine).

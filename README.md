@@ -191,6 +191,19 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
 
 ✅ Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 am Gerät bestätigt (Tasten inkl. Shift); Stufe 2 umgesetzt: Modus 3 (Binärzähler h/m/s, T3) und Modus 4 (grosse Ziffern, T4) mit font5x7.py; Platz 5–10 folgen in Stufe 3–4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
+🔧 Fallstrick 33 behoben (10.11.2026): Der Modus-4-Gerätetest zeigte die
+   grossen Ziffern spiegelverkehrt (Fotos IMG_8947–8950) – die Tafel hängt
+   spaltenweise gespiegelt an der Datenkette: Die Kette beginnt real bei
+   Spalte E (rechts), nicht wie geplant bei A. Wie beim TM1637 (Fallstrick 31)
+   liegt die Spiegelung in der Verdrahtung. Fix: display.py spiegelt die Spalte
+   zentral beim Schreiben (_PHYS_LED-Tabelle), anzeige_test.py nachgezogen; alle
+   Module rechnen logisch unverändert weiter. Betroffen waren neben Modus 4 auch
+   Base4 (Wertepositionen seitenverkehrt) und Modus 3 (Stunden-Spalte rechts
+   statt links) – die Fibonacci-Uhr las sich trotzdem immer richtig, weil ihre
+   Felder beim Spiegeln die Werte mitnehmen. 22 Stub-Checks bestanden;
+   Verifikation am Gerät ausstehend. Details:
+   [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) (Kap. 10).
+
 ## Lizenz
 
 GNU GPL (Version 2 oder später) – abgeleitet von der Arduino-Fibonacci-Uhr
