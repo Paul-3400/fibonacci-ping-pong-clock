@@ -103,6 +103,8 @@ sudo venv/bin/python3 main.py
   Betrieb auf dem Pi: systemd-Steuerung, Logs (journalctl), manuelle Tests,
   NTP-Kontrolle, Software-Update, System-Überwachung, Notfall-Anker.
 
+- 🧭 **[Erweiterungen: Anzeige-Modi](docs/Erweiterungen_Anzeigemodi.md)** – Planung (10.11.2026): zehn Zeitdarstellungen auf dem 5×8-Raster, gewählt mit T1–T5 direkt und T6 als Shift + T1–T5. Behandelt: Shift-Varianten, Konflikt mit den heutigen Taster-Funktionen, Modus-Beschreibungen mit Beispielen, Software-Skizze, offene Fragen und Fahrplan.
+
 - 🧪 **[Wokwi-Prototyp](wokwi/)** – vollständige Simulation der Uhr mit dem
   **Seeed XIAO ESP32-S3** statt dem Raspberry Pi Zero WH (Wokwi kennt den Pi nicht):
   40 NeoPixel im 5×8-Schnecken-Raster hochkant, NTP-Zeitsync, TM1637, Self-Test –
@@ -180,6 +182,8 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    '123456' zeigte «321654». Fix: _modul_segments() kehrt jede 3-Zeichen-
    Hälfte vor write() um (tm1637_display.py + steuerbox_test.py).
    Fibonacci-Anzeige verifiziert korrekt (14:05 → Feld C rot + E grün).
+
+🔧 Planung Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5 – Fibonacci und Base4 behalten zwei Plätze, acht Modi kommen neu dazu (u. a. drei Binärzähler h/m/s, grosse Ziffern, Laufschrift, Tagesfortschritt, Pong). Überlegungen und offene Entscheidungen: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) – noch ohne Code.
 
 ## Lizenz
 
