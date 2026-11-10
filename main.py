@@ -62,6 +62,7 @@ def main():
 
     last_display_time = ""
     last_raster = None    # was zuletzt auf der Tafel stand: (modus, tick)
+    last_log = None       # (modus, h, m) - Log max. 1 Zeile pro Minute
     feedback_until = 0.0  # bis dahin steht Feedback auf dem TM1637
 
     # Soft-Start: Helligkeit langsam hochfahren - bei Minuten 0-4 gehen
@@ -105,8 +106,11 @@ def main():
             if frame is not None:
                 show_frame(frame)
                 last_raster = (state["mode"], tick)
-                print(f"Modus {state['mode']} ({MODES[state['mode']]['name']}): "
-                      f"{h:02d}:{m:02d}:{s:02d}")
+                log_key = (state["mode"], h, m)
+                if log_key != last_log:   # Modus 3/4 rendern sekündlich, Log nur je Minute
+                    print(f"Modus {state['mode']} ({MODES[state['mode']]['name']}): "
+                          f"{h:02d}:{m:02d}:{s:02d}")
+                    last_log = log_key
 
         # Kurze Pause
         time.sleep(UPDATE_INTERVAL_SEC)

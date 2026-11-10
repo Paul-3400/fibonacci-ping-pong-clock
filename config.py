@@ -49,6 +49,9 @@ COLOR_BOTH   = (0,   0, 255)   # blau (Fibonacci: Stunde + Minute)
 COLOR_FIELD  = (255, 255, 255) # weiss (Feld-Durchschaltung)
 COLOR_BASE4_BOTH = (255, 255, 0) # gelb (Base4: Stunde + Minute)
 
+# --- Anzeige-Modi: grosse Ziffern (Modus 4, Stufe 2) ---
+ZIFFERN_WECHSEL_SEC = 2   # Anzeigedauer je Ziffer (H-Zehner/H-Einer/M-Zehner/M-Einer)
+
 # --- NTP ---
 NTP_SERVER   = "ch.pool.ntp.org"
 TIMEZONE     = "Europe/Zurich"

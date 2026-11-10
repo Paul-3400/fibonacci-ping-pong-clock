@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Umsetzung läuft** (Stufe 1, 10.11.2026). Entscheidungen vom 10.11.2026: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1 (Fibonacci) und 2 (Base4) laufen durch die neue Schnittstelle (modes.py); Platz 3–10 folgen in Stufe 2–4. Details: Kap. 10.
+Status: **Umsetzung läuft** (Stufe 2, 10.11.2026). Entscheidungen vom 10.11.2026: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Stufe 1 (Moduswahl, Shift, Langdruck) am Gerät bestätigt. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py; Platz 5–10 folgen in Stufe 3–4. Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -132,7 +132,7 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 (rot: A4, A5, A6 → 14; grün: C2, C6, C7 → 35; gelb: E2, E3, E7 → 49)
 
-**Bewertung:** Auflösung 1 s – die lebendigste Alltags-Anzeige (Sekunden laufen sichtbar). Aufwand klein. LED-Last gering (maximal 17 von 40). Lesbarkeit nach kurzer Übung gut.
+**Bewertung:** Auflösung 1 s – die lebendigste Alltags-Anzeige (Sekunden laufen sichtbar). Aufwand klein. LED-Last gering (maximal 17 von 40). Lesbarkeit nach kurzer Übung gut. **Status:** ✅ umgesetzt (Stufe 2, 10.11.2026).
 
 ### Modus 4 (T4) – Grosse Ziffern, statisch [Idee «grosse Zahlen», Variante A]
 
@@ -142,7 +142,7 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 **Beispiel 14:35:** erst grosse «1», dann «4», dann «3», dann «5» – voller Zyklus 8 s.
 
-**Bewertung:** Beste Lesbarkeit für Besucher – keine Übungszeit nötig. Aufwand klein (Font-Tabelle für 0–9). LED-Last gering (ca. 10–20 LEDs je Ziffer).
+**Bewertung:** Beste Lesbarkeit für Besucher – keine Übungszeit nötig. Aufwand klein (Font-Tabelle für 0–9). LED-Last gering (ca. 10–20 LEDs je Ziffer). **Status:** ✅ umgesetzt (Stufe 2, 10.11.2026).
 
 ### Modus 5 (T5) – Tagesfortschritt-Balken [Vibe-Vorschlag]
 
@@ -270,13 +270,15 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 |---|---|
 | 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) – ✅ erledigt 10.11.2026 |
 | 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
-| 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand |
+| 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt 10.11.2026 |
 | 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine) |
 | 4 | Modus 7 (Laufschrift), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
 
 Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehen.
 
-## 10. Umsetzungs-Stand: Stufe 1 (10.11.2026)
+## 10. Umsetzungs-Stand (10.11.2026)
+
+**Stufe 1 am Gerät bestätigt (10.11.2026):** Tastensteuerung inkl. Taste 6 = Shift funktioniert – Moduswahl T1–T5, Shift-Toggle mit 10-s-Timeout, Langdruck-Zeitverstellung und TM1637-Feedback live geprüft.
 
 **Entschieden (Stufe 0) und umgesetzt (Stufe 1):**
 
@@ -287,10 +289,16 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 - **Boot-Verhalten:** Modus 1 (Fibonacci), Shift aus, Offset 0 – wie bisher.
 - **Verifikation (Stub-Tests, 10.11.2026):** 16 Testgruppen bestanden – Registry, Fibonacci-Frame (inkl. Live-Fall 13:32 = A grün + D blau), Base4-Frame über 24 h, Rendertakt, Moduswahl/Shift/Timeout/Langdruck, show_frame, TM1637-Zeichensatz, main-Zustand. anzeige_test.py und steuerbox_test.py bleiben unberührt (eigene Taster-Abfragen, keine gemeinsamen Konstanten).
 
+**Umgesetzt (Stufe 2, 10.11.2026):**
+
+- **Modus 3 (T3) – drei Binärzähler h/m/s:** Spalte A = Stunden 0–23 (5 bit, rot), Spalte C = Minuten 0–59 (6 bit, grün), Spalte E = Sekunden 0–59 (6 bit, gelb); LSB unten (Zeile 7), Spalten B/D dunkel als Trenner. Rendertakt 1 s. Beispiel 14:35:49 → rot A4/A5/A6, grün C2/C6/C7, gelb E2/E3/E7 – exakt wie die Tabelle in Kap. 3.
+- **Modus 4 (T4) – grosse statische Ziffern:** eine Ziffer füllt die Tafel (font5x7, Zeilen 0–6); Ziffernfolge H-Zehner → H-Einer → M-Zehner → M-Einer, Wechsel alle `ZIFFERN_WECHSEL_SEC` = 2 s, minutenorientiert (H-Zehner bei Sekunde 0, voller Zyklus 8 s); Stunden rot, Minuten grün; weisser Sekundenpunkt auf LED 23 (Spalte C, Zeile 7), an bei gerader Sekunde. Rendertakt 1 s.
+- **Software:** neues Modul font5x7.py (klassischer gemeinfreier 5×7-Punktmatrix-Font im Adafruit/glcdf-Stil; Spaltenbytes, Bit 0 = oben; `glyph()` mit leerem Fallback für unbekannte Zeichen), modes.py um `_binary_frame()`/`_big_digit_frame()` ergänzt, config.py um `ZIFFERN_WECHSEL_SEC` ergänzt, main.py-Log gedrosselt (max. 1 Logzeile pro Minute und Modus, da Modus 3/4 sekündlich rendern).
+- **Verifikation (Stub-Tests, 10.11.2026):** 16 Testgruppen bestanden – u. a. Binärzähler über 24 h gegen Referenzlogik, font5x7 (alle 10 Ziffern eindeutig), Ziffernfolge/Farbwahl/Sekundenpunkt von Modus 4 über den Tag, plus komplette Stufe-1-Regression (Fibonacci, Base4, Tasten inkl. «M 3»/«M 4» und «- 5» … «- 10», Langdruck).
+
 **Noch offen:**
 
-- Funktionstest am Gerät: Dienst stoppen (docs/Betriebsbefehle.md), dann sudo venv/bin/python3 main.py – Feedback-Texte auf dem TM1637 live prüfen, Shift-Timeout fühlen, Langdruck-Schwelle (1 s) bewerten.
+- Funktionstest Stufe 2 am Gerät: Dienst stoppen (docs/Betriebsbefehle.md), dann sudo venv/bin/python3 main.py – T3 (Binärzähler) und T4 (grosse Ziffern) live prüfen: Ziffernwechsel alle 2 s, Sekundenpunkt blinkt, Lesbarkeit der Binär-Spalten.
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
-- Bauanleitung Kap. 7 nachziehen, sobald Stufe 1 am Gerät bestätigt ist.
-- Danach Stufe 2: Modus 3 (drei Binärzähler) und Modus 4 (grosse Ziffern) mit font5x7.py.
-
+- Bauanleitung Kap. 7 nachziehen (Stufe 1 + 2; inkl. Fallstrick 32: main.py zwingend mit sudo starten, siehe unten).
+- Danach Stufe 3: Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine).

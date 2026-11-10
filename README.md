@@ -68,8 +68,8 @@ Geschätzte Gesamtkosten: ~115 CHF.
 |---|---|---|
 | T1 | 5  | Anzeige-Modus 1 (Fibonacci) wählen |
 | T2 | 6  | Modus 2 (Base4) wählen; **lang**: +1 Minute |
-| T3 | 12 | Modus 3 (reserviert); **lang**: +5 Minuten |
-| T4 | 13 | Modus 4 (reserviert); **lang**: +1 Stunde |
+| T3 | 12 | Modus 3 (Binärzähler h/m/s) wählen; **lang**: +5 Minuten |
+| T4 | 13 | Modus 4 (grosse Ziffern) wählen; **lang**: +1 Stunde |
 | T5 | 16 | Modus 5 (reserviert); **lang**: Normalbetrieb (Offset auf 0) |
 | T6 | 26 | **Shift** für die Modi 6–10 (Toggle; nach 10 s automatisch aus) |
 
@@ -81,7 +81,7 @@ Nach dem Boot: Modus 1 (Fibonacci), Shift aus, Offset 0.
 
 Die Module liegen einsatzbereit im Repo (aus der Bauanleitung, Kap. 7):
 `config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`, `modes.py` (Registry der Anzeige-Modi),
-`display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
+`font5x7.py` (5×7-Ziffernfont für Modus 4), `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
 der Steuerbox (Uhrzeit + Tasten, ohne Anzeigebox): `steuerbox_test.py`.
 Zum Test der Anzeige-Tafel (T6 = Anzeige ein/aus, T1–T5 = Felder einzeln): `anzeige_test.py`.
 Setup auf dem Pi
@@ -189,7 +189,7 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    Hälfte vor write() um (tm1637_display.py + steuerbox_test.py).
    Fibonacci-Anzeige verifiziert korrekt (14:05 → Feld C rot + E grün).
 
-🔧 Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 umgesetzt: Moduswahl, Shift, Langdruck, modes.py + display.show_frame – Fibonacci (T1) und Base4 (T2) laufen durch die neue Schnittstelle; Platz 3–10 folgen in Stufe 2–4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
+✅ Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 am Gerät bestätigt (Tasten inkl. Shift); Stufe 2 umgesetzt: Modus 3 (Binärzähler h/m/s, T3) und Modus 4 (grosse Ziffern, T4) mit font5x7.py; Platz 5–10 folgen in Stufe 3–4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
 ## Lizenz
 
