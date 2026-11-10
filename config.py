@@ -21,21 +21,31 @@ TM1637_DIO     = 24          # GPIO 24
 TM1637_BRIGHTNESS = 4        # 0–7
 
 # --- Taster (gpiozero, gegen GND, interner Pull-Up) ---
-BTN_FIELD_PIN = 5            # T1: Felder A–E durchschalten
-BTN_MIN_PIN   = 6            # T2: Handbetrieb +1 Minute
-BTN_MIN5_PIN  = 12           # T3: Handbetrieb +5 Minuten
-BTN_HOUR_PIN  = 13           # T4: Handbetrieb +1 Stunde
-BTN_NORM_PIN  = 16           # T5: Normalbetrieb (Offset zurücksetzen)
+# Erweiterung Anzeige-Modi (10.11.2026, docs/Erweiterungen_Anzeigemodi.md):
+# T1-T5 KURZ = Anzeige-Modus 1-5 waehlen (mit Shift T6: Platz 6-10);
+# T2-T5 LANGDRUCK = Zeitverstellung. Die alte Belegung (Feld-Durchschaltung,
+# Handbetrieb kurz, Normalbetrieb kurz) ist damit abgeloest.
+BTN_FIELD_PIN = 5            # T1: Modus 1 (Fibonacci) waehlen; Langdruck ohne Funktion
+BTN_MIN_PIN   = 6            # T2: Modus 2 (Base4) waehlen; Langdruck +1 Minute
+BTN_MIN5_PIN  = 12           # T3: Modus 3 (reserviert); Langdruck +5 Minuten
+BTN_HOUR_PIN  = 13           # T4: Modus 4 (reserviert); Langdruck +1 Stunde
+BTN_NORM_PIN  = 16           # T5: Modus 5 (reserviert); Langdruck = Normalbetrieb (Offset 0)
 BTN_BOUNCE_SEC = 0.05        # Prellen abfangen
+BTN_HOLD_SEC  = 1.0          # Langdruck-Schwelle (gpiozero hold_time); gehaltene Taste wiederholt
+SHIFT_TIMEOUT_SEC = 10       # Shift (T6) schaltet nach 10 s automatisch aus
+TM1637_FEEDBACK_SEC = 2      # so lange steht Modus-/Shift-Feedback auf dem TM1637
 
-# --- Modus-Taster (T6: Fibonacci <-> Base4, Toggle pro Druck) ---
-BTN_MODE_PIN = 26          # GPIO 26 (Pin 37), gegen GND; jeder Druck = umschalten
+# --- Shift-Taster (T6: Shift an/aus, Toggle pro Druck) ---
+# Erweiterung 10.11.2026: T6 war der Moduswechsel Fibonacci <-> Base4 -
+# diese Auswahl laeuft jetzt ueber T2 (Modus 2); T6 ist der Shift fuer
+# die Plaetze 6-10 (Erweiterung docs/Erweiterungen_Anzeigemodi.md, Kap. 3.2).
+BTN_MODE_PIN = 26          # GPIO 26 (Pin 37), gegen GND; Shift-Toggle mit Timeout
 
 # --- Farben (R, G, B) ---
 COLOR_OFF    = (0,   0,   0)
 COLOR_HOURS  = (255, 0,   0)   # rot
 COLOR_MIN    = (0,   255, 0)   # grün
-COLOR_BOTH   = (0,   0,   255) # blau (Fibonacci: Stunde + Minute)
+COLOR_BOTH   = (0,   0, 255)   # blau (Fibonacci: Stunde + Minute)
 COLOR_FIELD  = (255, 255, 255) # weiss (Feld-Durchschaltung)
 COLOR_BASE4_BOTH = (255, 255, 0) # gelb (Base4: Stunde + Minute)
 

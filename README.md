@@ -29,10 +29,12 @@ der realen Tafel; Spaltenbuchstaben ≠ Fibonacci-Felder).
 - **blau** = Feld zählt zu Stunde UND Minute
 - **aus** = Feld zählt nicht
 
-Über einen **Modus-Taster** (T6, GPIO 26 – jeder Druck schaltet um) ist zusätzlich der **Base4-Modus** der
-9-Bälle-Ping-Pong-Uhr zuschaltbar: 9 Bälle als 3×3-Matrix (Zeilen 0–2,
-Spalten B–D) zeigen die Zeit **minutengenau** in rot/grün/**gelb** – Details
-in der Bauanleitung, Kapitel 1.6.
+Zusätzlich ist der **Base4-Modus** der 9-Bälle-Ping-Pong-Uhr wählbar:
+9 Bälle als 3×3-Matrix (Zeilen 0–2, Spalten B–D) zeigen die Zeit **minutengenau**
+in rot/grün/**gelb** – wählbar über Taster T2 (Anzeige-Modus 2); Details in der
+Bauanleitung, Kapitel 1.6. Mit der Erweiterung «Anzeige-Modi» (10.11.2026) wählen
+T1–T5 die Anzeige-Modi 1–5, T6 wirkt als Shift für die Platz 6–10 –
+siehe [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
 Anzeige bewusst 5-Minuten-genau (wie im Original von Philippe Chretien);
 die Zerlegung wird pro Zeitstempel per Zufall aus allen gültigen
@@ -47,8 +49,8 @@ ist (Daten- und Stromkette: A0–A7 → B0–B7 → … → E0–E7).
 | Raspberry Pi Zero WH   | Steuerung, NTP, Farb-/Zeitlogik   |
 | 40× WS2812B NeoPixel   | 1 LED pro Ball (spaltenweise Kette im 5×8-Raster) |
 | TM1637 0,36″ 6-stellig | Klartext HH:MM:SS                 |
-| 6× Taster (GPIO 5/6/12/13/16 + 26) | Feld-Durchschaltung, Handbetrieb, Normalbetrieb, Moduswechsel |
-| Modus-Taster T6 (GPIO 26) | Moduswechsel Fibonacci ↔ Base4 pro Druck |
+| 6× Taster (GPIO 5/6/12/13/16 + 26) | Anzeige-Modi 1–5 (T1–T5), Shift (T6), Langdruck-Zeitverstellung |
+| Shift-Taster T6 (GPIO 26) | Shift für Anzeige-Modi 6–10 (Toggle, Timeout 10 s) |
 | 5V-Netzteil ≥3 A       | gemeinsame Versorgung beider Gehäuse |
 | Level-Shifter 74AHCT125| 3,3V→5V Datenpegel (in der Anzeigebox) |
 | GX12-Kupplungspaar 4-polig | Verbindungskabel Steuerbox ↔ Anzeigebox |
@@ -62,19 +64,23 @@ Geschätzte Gesamtkosten: ~115 CHF.
 
 ## Die sechs Taster
 
-| Taster | GPIO (Pi) | Funktion |
+| Taster | GPIO (Pi) | Funktion (Erweiterung Anzeige-Modi, 10.11.2026) |
 |---|---|---|
-| T1 | 5  | Felder A–E durchschalten (weiss) |
-| T2 | 6  | Handbetrieb: +1 Minute |
-| T3 | 12 | Handbetrieb: +5 Minuten |
-| T4 | 13 | Handbetrieb: +1 Stunde |
-| T5 | 16 | Normalbetrieb (NTP-Zeit, Offset auf 0) |
-| T6 | 26 | Moduswechsel Fibonacci ↔ Base4 (Druck = umschalten, Start = Fibonacci) |
+| T1 | 5  | Anzeige-Modus 1 (Fibonacci) wählen |
+| T2 | 6  | Modus 2 (Base4) wählen; **lang**: +1 Minute |
+| T3 | 12 | Modus 3 (reserviert); **lang**: +5 Minuten |
+| T4 | 13 | Modus 4 (reserviert); **lang**: +1 Stunde |
+| T5 | 16 | Modus 5 (reserviert); **lang**: Normalbetrieb (Offset auf 0) |
+| T6 | 26 | **Shift** für die Modi 6–10 (Toggle; nach 10 s automatisch aus) |
+
+Kurzer Druck = Moduswahl (TM1637 zeigt kurz «M n»; reservierte Plätze «- n»),
+langer Druck (≥ 1 s) = Zeitverstellung (wiederholend bei gehaltener Taste).
+Nach dem Boot: Modus 1 (Fibonacci), Shift aus, Offset 0.
 
 ## Software
 
 Die Module liegen einsatzbereit im Repo (aus der Bauanleitung, Kap. 7):
-`config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`,
+`config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`, `modes.py` (Registry der Anzeige-Modi),
 `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
 der Steuerbox (Uhrzeit + Tasten, ohne Anzeigebox): `steuerbox_test.py`.
 Zum Test der Anzeige-Tafel (T6 = Anzeige ein/aus, T1–T5 = Felder einzeln): `anzeige_test.py`.
@@ -103,7 +109,7 @@ sudo venv/bin/python3 main.py
   Betrieb auf dem Pi: systemd-Steuerung, Logs (journalctl), manuelle Tests,
   NTP-Kontrolle, Software-Update, System-Überwachung, Notfall-Anker.
 
-- 🧭 **[Erweiterungen: Anzeige-Modi](docs/Erweiterungen_Anzeigemodi.md)** – Planung (10.11.2026): zehn Zeitdarstellungen auf dem 5×8-Raster, gewählt mit T1–T5 direkt und T6 als Shift + T1–T5. Behandelt: Shift-Varianten, Konflikt mit den heutigen Taster-Funktionen, Modus-Beschreibungen mit Beispielen, Software-Skizze, offene Fragen und Fahrplan.
+- 🧭 **[Erweiterungen: Anzeige-Modi](docs/Erweiterungen_Anzeigemodi.md)** – Planung + Umsetzung Stufe 1 (10.11.2026): zehn Zeitdarstellungen auf dem 5×8-Raster, gewählt mit T1–T5 direkt und T6 als Shift + T1–T5. Behandelt: Shift-Varianten (entschieden: Toggle mit 10-s-Timeout), Taster-Konflikt (entschieden: Langdruck), Modus-Beschreibungen mit Beispielen, Software-Skizze, Umsetzungs-Stand, offene Fragen und Fahrplan.
 
 - 🧪 **[Wokwi-Prototyp](wokwi/)** – vollständige Simulation der Uhr mit dem
   **Seeed XIAO ESP32-S3** statt dem Raspberry Pi Zero WH (Wokwi kennt den Pi nicht):
@@ -183,7 +189,7 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    Hälfte vor write() um (tm1637_display.py + steuerbox_test.py).
    Fibonacci-Anzeige verifiziert korrekt (14:05 → Feld C rot + E grün).
 
-🔧 Planung Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5 – Fibonacci und Base4 behalten zwei Plätze, acht Modi kommen neu dazu (u. a. drei Binärzähler h/m/s, grosse Ziffern, Laufschrift, Tagesfortschritt, Pong). Überlegungen und offene Entscheidungen: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) – noch ohne Code.
+🔧 Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 umgesetzt: Moduswahl, Shift, Langdruck, modes.py + display.show_frame – Fibonacci (T1) und Base4 (T2) laufen durch die neue Schnittstelle; Platz 3–10 folgen in Stufe 2–4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
 ## Lizenz
 

@@ -1,7 +1,14 @@
 # Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026
 # Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
 # Projekt fibonacci-ping-pong-clock - Code-Entwurf aus der Bauanleitung Kap. 7
-"""NeoPixel-Ansteuerung für 40 LEDs im 5×8-Schnecken-Raster."""
+"""NeoPixel-Ansteuerung für 40 LEDs im 5×8-Schnecken-Raster.
+
+Erweiterung Anzeige-Modi (10.11.2026, Stufe 1): show_frame() ist die
+generische Schnittstelle für die Modus-Registry (modes.py) - sie setzt
+alle 40 LEDs direkt aus einer Liste von (R, G, B)-Tupeln. Die älteren
+Feld-Funktionen (show_time/show_field/show_base4) bleiben für
+anzeige_test.py und die Bauanleitung erhalten.
+"""
 from rpi_ws281x import PixelStrip, Color
 from config import *
 from mapping import FELDER
@@ -58,6 +65,21 @@ def show_base4(ball_states):
         strip.setPixelColor(i, COLOR_MAP['off'])
     for led, role in ball_states.items():
         strip.setPixelColor(led, COLOR_MAP[role_color[role]])
+    strip.show()
+
+def show_frame(frame):
+    """
+    Generische Schnittstelle der Erweiterung Anzeige-Modi (10.11.2026):
+    setzt alle 40 LEDs direkt aus einer Liste von 40 (R, G, B)-Tupeln.
+    Index = LED-Index = Spalte × 8 + Zeile. Liefert modes.get_frame().
+    """
+    if len(frame) != LED_COUNT:
+        raise ValueError(
+            "show_frame erwartet {} Farben, erhalten: {}".format(
+                LED_COUNT, len(frame)))
+    for led in range(LED_COUNT):
+        r, g, b = frame[led]
+        strip.setPixelColor(led, Color(r, g, b))
     strip.show()
 
 def clear_all():

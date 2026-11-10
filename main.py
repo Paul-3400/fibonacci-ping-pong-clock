@@ -3,28 +3,39 @@
 # Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
 # Projekt fibonacci-ping-pong-clock - Code-Entwurf aus der Bauanleitung Kap. 7
 """Fibonacci Ping-Pong-Ball-Uhr – Hauptprogramm
-(5×8 Schnecke, 6 Taster, Modus-Taster T6: Fibonacci <-> Base4)."""
+(5×8 Schnecke, 6 Taster).
+
+Erweiterung Anzeige-Modi (10.11.2026, Stufe 1 –
+docs/Erweiterungen_Anzeigemodi.md):
+- Moduswahl über T1–T5 (Shift T6 = Platz 6–10); Registry in modes.py.
+  Platz 1 (Fibonacci) und 2 (Base4) laufen durch die neue Schnittstelle
+  (modes.get_frame -> display.show_frame); Platz 3–10 folgen in Stufe 2–4.
+- Langdruck T2–T5 = Zeitverstellung (buttons.py, gpiozero hold_time).
+- TM1637: kurzes Feedback bei Modus/Shift/Zeitverstellung
+  ("M n", "- n", "SHIFT", "1MIN", "5MIN", "1STD", "NORM"), sonst HH:MM:SS.
+- Shift (T6) endet automatisch nach SHIFT_TIMEOUT_SEC (buttons.poll()).
+"""
 import time
 import signal
 import sys
 
 from config import *
-from mapping import FELDER
-from fibonacci import get_field_assignment
-from base4 import get_ball_states
-from buttons import ButtonController, MODE_NORMAL, MODE_MANUAL, MODE_FIELD
-from display import strip, show_time, show_field, show_base4, clear_all
-from tm1637_display import show_clock, show_field_text, clear_display
+from modes import MODES, get_frame, get_tick
+from buttons import ButtonController
+from display import strip, show_frame, clear_all
+from tm1637_display import show_clock, show_text, clear_display
 from ntp_time import sync_ntp, get_local_time, needs_resync
 
 running = True
-state = {"mode": MODE_NORMAL, "field": 0, "offset": 0}
+state = {"mode": 1, "shift": False, "offset": 0, "feedback": None}
 
-def on_event(mode, field_idx, offset_sec):
+def on_event(mode_id, shift, offset_sec, feedback):
     """Callback des ButtonControllers – aktualisiert den Zustand."""
-    state["mode"] = mode
-    state["field"] = field_idx
+    state["mode"] = mode_id
+    state["shift"] = shift
     state["offset"] = offset_sec
+    if feedback is not None:
+        state["feedback"] = feedback
 
 def signal_handler(sig, frame):
     global running
@@ -39,8 +50,9 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 def main():
     print("Fibonacci Ping-Pong-Ball-Uhr startet...")
+    print("Anzeige-Modus 1: " + MODES[1]["name"] + " (Start nach Boot)")
 
-    # Taster + Modus-Schalter
+    # Taster: Moduswahl T1-T5, Shift T6, Langdruck-Zeitverstellung
     buttons = ButtonController(on_event)
 
     # Erste NTP-Synchronisation
@@ -49,7 +61,8 @@ def main():
         print("WARNUNG: NTP-Sync fehlgeschlagen – laufe mit Systemzeit.")
 
     last_display_time = ""
-    last_raster = None  # was zuletzt im Raster stand
+    last_raster = None    # was zuletzt auf der Tafel stand: (modus, tick)
+    feedback_until = 0.0  # bis dahin steht Feedback auf dem TM1637
 
     # Soft-Start: Helligkeit langsam hochfahren - bei Minuten 0-4 gehen
     # sofort alle 40 LEDs an; mit Rampe kein Last-Schlag beim Start
@@ -58,6 +71,9 @@ def main():
     strip.setBrightness(brightness)
 
     while running:
+        # Shift-Timeout pruefen (T6 schaltet nach SHIFT_TIMEOUT_SEC aus)
+        buttons.poll()
+
         # Soft-Start: Helligkeit stufenweise hochfahren
         if brightness < LED_BRIGHTNESS:
             brightness = min(LED_BRIGHTNESS, brightness + SOFTSTART_STEP)
@@ -68,42 +84,29 @@ def main():
         if needs_resync(NTP_SYNC_INTERVAL_MIN):
             sync_ntp()
 
-        # Feld-Modus ist eine Fibonacci-Funktion: bei Base4-Anzeige
-        # (T6 umgeschaltet) automatisch verlassen
-        if state["mode"] == MODE_FIELD and buttons.is_base4():
-            state["mode"] = MODE_NORMAL
+        h, m, s = get_local_time(state["offset"])
 
-        if state["mode"] == MODE_FIELD:
-            # --- Feld-Durchschaltung (Taster 1): Feld weiss zeigen ---
-            if last_raster != ("field", state["field"]):
-                wert, leds = FELDER[state["field"]]
-                show_field(state["field"])
-                show_field_text(state["field"], wert)
-                last_raster = ("field", state["field"])
-                print(f"Feldmodus: {'ABCDE'[state['field']]} (Wert {wert})")
-        else:
-            h, m, s = get_local_time(state["offset"])
+        # --- TM1637: Feedback (Modus/Shift/Zeit) hat kurz Vorrang ---
+        if state["feedback"] is not None:
+            show_text(state["feedback"])
+            feedback_until = time.monotonic() + TM1637_FEEDBACK_SEC
+            state["feedback"] = None
+        current_display = f"{h:02d}{m:02d}{s:02d}"
+        if time.monotonic() < feedback_until:
+            last_display_time = ""   # nach Feedback sofort wieder Uhrzeit zeigen
+        elif current_display != last_display_time:
+            show_clock(h, m, s)
+            last_display_time = current_display
 
-            # --- TM1637: jede Sekunde aktualisieren ---
-            current_display = f"{h:02d}{m:02d}{s:02d}"
-            if current_display != last_display_time:
-                show_clock(h, m, s)
-                last_display_time = current_display
-
-            if buttons.is_base4():
-                # --- Base4-Modus: Update jede Minute ---
-                if last_raster != ("base4", (h, m)):
-                    show_base4(get_ball_states(h, m))
-                    last_raster = ("base4", (h, m))
-                    print(f"Base4: {h:02d}:{m:02d}")
-            else:
-                # --- Fibonacci-Modus: Update alle 5 Minuten ---
-                slot = (h, m // 5)
-                if last_raster != ("fib", slot):
-                    assignment = get_field_assignment(h, m)
-                    show_time(assignment)
-                    last_raster = ("fib", slot)
-                    print(f"Zeit: {h:02d}:{m:02d} – Felder: {assignment}")
+        # --- Tafel: nur neu zeichnen, wenn sich Modus oder Takt aendert ---
+        tick = get_tick(state["mode"], h, m, s)
+        if tick is not None and last_raster != (state["mode"], tick):
+            frame = get_frame(state["mode"], h, m, s)
+            if frame is not None:
+                show_frame(frame)
+                last_raster = (state["mode"], tick)
+                print(f"Modus {state['mode']} ({MODES[state['mode']]['name']}): "
+                      f"{h:02d}:{m:02d}:{s:02d}")
 
         # Kurze Pause
         time.sleep(UPDATE_INTERVAL_SEC)

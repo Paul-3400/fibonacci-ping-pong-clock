@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Planung / Überlegungen** (10.11.2026) – noch kein Code; alle Belegungen sind Vorschläge, bis wir sie einzeln abnicken.
+Status: **Umsetzung läuft** (Stufe 1, 10.11.2026). Entscheidungen vom 10.11.2026: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1 (Fibonacci) und 2 (Base4) laufen durch die neue Schnittstelle (modes.py); Platz 3–10 folgen in Stufe 2–4. Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -71,7 +71,7 @@ Die Zuordnung der acht Neuen auf die Tasten ist ein Vorschlag – nach den erste
 | gpiozero-Umsetzung | trivial (Software-Flag wie heute bei is_base4) | machbar (when_held + Zustandsabfrage), etwas mehr Logik |
 | Nähe zum heutigen Verhalten | T6 ist heute ein Toggle (Fibonacci ↔ Base4) | neuartig |
 
-**Empfehlung (Konfidenz mittel):** Toggle mit 10-s-Timeout und TM1637-Feedback. Begründung: Einhandbedienung, Konsistenz mit dem heutigen T6-Verhalten, und der Timeout schliesst den einzigen Nachteil (vergessener Shift) weitgehend.
+**Entschieden (10.11.2026):** Toggle mit 10-s-Timeout (SHIFT_TIMEOUT_SEC) und TM1637-Feedback («SHIFT», nach dem Timeout Modusnummer). Begründung: Einhandbedienung, Konsistenz mit dem bisherigen T6-Verhalten, und der Timeout schliesst den einzigen Nachteil (vergessener Shift) weitgehend.
 
 **Boot-Verhalten (Vorschlag):** Shift aus, Modus = Fibonacci (Platz 1) – die Uhr startet also künftig genau wie heute. Alternativ könnte der letzte Modus in einer Datei gemerkt werden (offene Frage 6 in Kap. 8).
 
@@ -89,7 +89,7 @@ T1–T5 haben heute Bedienfunktionen (Feld-Durchschaltung, Handbetrieb, Normalbe
 | B: Langdruck | T2/T3/T4 kurz = Modus, lang gedrückt (über 1 s) = +1/+5 min/+1 h; T5 lang = Normalbetrieb | Alles bleibt erhalten; gpiozero kann das (hold_time, when_held, hold_repeat für schnelles Verstellen). Nachteil: Doppelbelegung, versehentliche Auslösung möglich. |
 | C: Setup-Modus | z. B. T6 beim Boot gedrückt halten = Setup-Modus mit alter Belegung | Sauber getrennt; Nachteil: nur beim Boot erreichbar, versteckt. |
 
-**Empfehlung (Konfidenz mittel):** Variante B für die Zeitverstellung – der Handbetrieb ist seit dem NTP-Fix nur noch Reserve, aber genau in Reservesituationen (kein Netz) braucht man ihn. Die **Feld-Durchschaltung (T1)** entfällt als Betriebsmodus: ihre Erklär- und Prüffunktion deckt anzeige_test.py bereits ab.
+**Entschieden (10.11.2026):** Variante B (Langdruck) für die Zeitverstellung – gpiozero hold_time 1 s, wiederholend (hold_repeat): T2 lang = +1 min, T3 lang = +5 min, T4 lang = +1 h, T5 lang = Normalbetrieb. Der Handbetrieb ist seit dem NTP-Fix nur noch Reserve, aber genau in Reservesituationen (kein Netz) braucht man ihn. Die **Feld-Durchschaltung (früher T1)** entfällt als Betriebsmodus: ihre Erklär- und Prüffunktion deckt anzeige_test.py bereits ab.
 
 ## 5. Die zehn Modi im Detail
 
@@ -256,8 +256,8 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 
 ## 8. Offene Fragen (Entscheidliste)
 
-1. **Shift-Mechanik:** Toggle mit Timeout (Empfehlung, Kap. 3.2) oder Halten? – zu entscheiden.
-2. **Zeitverstellung:** Langdruck (Empfehlung, Kap. 4), Wegfallen oder Setup-Modus beim Boot? – zu entscheiden.
+1. **Shift-Mechanik:** ✅ entschieden (10.11.2026): Toggle mit 10-s-Timeout.
+2. **Zeitverstellung:** ✅ entschieden (10.11.2026): Langdruck (T2–T5).
 3. **Modus 9 (Analog):** erst am Gerät testen; bei ungenügender Lesbarkeit Platz an eine Reserve-Idee vergeben.
 4. **Tasten-Zuordnung** der acht Neuen: Vorschlag in Kap. 3.1 – nach den ersten Demos festzurren.
 5. **Grosse Ziffern:** 5×7-Standardfont (Zeile 7 frei für Sekundenpunkt, Empfehlung) oder eigener 5×8-Font?
@@ -268,10 +268,28 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 
 | Stufe | Inhalt |
 |---|---|
-| 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) |
-| 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – die zwei bestehenden Modi laufen unverändert durch die neue Schnittstelle |
+| 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) – ✅ erledigt 10.11.2026 |
+| 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
 | 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand |
 | 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine) |
 | 4 | Modus 7 (Laufschrift), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
 
 Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehen.
+
+## 10. Umsetzungs-Stand: Stufe 1 (10.11.2026)
+
+**Entschieden (Stufe 0) und umgesetzt (Stufe 1):**
+
+- **Shift (T6):** Toggle an/aus; schaltet sich nach 10 s (SHIFT_TIMEOUT_SEC) automatisch ab. TM1637 zeigt kurz «SHIFT», danach wieder HH:MM:SS.
+- **Moduswahl:** T1 = Platz 1 (Fibonacci), T2 = Platz 2 (Base4). Reservierte Plätze (T3–T5, Shift+T1–T5) quittieren mit «- n», ohne die Anzeige zu ändern.
+- **Zeitverstellung:** Langdruck T2–T5 (gpiozero hold_time 1 s, wiederholend) = +1 min / +5 min / +1 h / Normalbetrieb; Feedback «1MIN», «5MIN», «1STD», «NORM».
+- **Software:** neues Modul modes.py (Modus-Registry mit Rendertakt; Fibonacci und Base4 als Wrapper auf die bestehenden Funktionen, kein Code-Duplikat), display.show_frame() als generische Schnittstelle, buttons.py neu (Moduswahl/Shift/Langdruck; Langdruck-Kennzeichnung verhindert den Moduswechsel beim Loslassen), main.py auf (Modus, Takt)-gesteuertes Rendering umgestellt, tm1637_display.show_text() zeichensatz-sicher (Library-Zeichensatz im Quellcode geprüft: 0–9, a–z, A–Z, Leerzeichen, «-», «*»).
+- **Boot-Verhalten:** Modus 1 (Fibonacci), Shift aus, Offset 0 – wie bisher.
+- **Verifikation (Stub-Tests, 10.11.2026):** 16 Testgruppen bestanden – Registry, Fibonacci-Frame (inkl. Live-Fall 13:32 = A grün + D blau), Base4-Frame über 24 h, Rendertakt, Moduswahl/Shift/Timeout/Langdruck, show_frame, TM1637-Zeichensatz, main-Zustand. anzeige_test.py und steuerbox_test.py bleiben unberührt (eigene Taster-Abfragen, keine gemeinsamen Konstanten).
+
+**Noch offen:**
+
+- Funktionstest am Gerät: Dienst stoppen (docs/Betriebsbefehle.md), dann venv/bin/python3 main.py – Feedback-Texte auf dem TM1637 live prüfen, Shift-Timeout fühlen, Langdruck-Schwelle (1 s) bewerten.
+- Bauanleitung Kap. 7 nachziehen, sobald Stufe 1 am Gerät bestätigt ist.
+- Danach Stufe 2: Modus 3 (drei Binärzähler) und Modus 4 (grosse Ziffern) mit font5x7.py.
+

@@ -1,82 +1,116 @@
 # Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 08.11.2026
 # Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
 # Projekt fibonacci-ping-pong-clock - Code-Entwurf aus der Bauanleitung Kap. 7
-"""Taster-Steuerung: Feld-Modus, Handbetrieb (Offset), Normalbetrieb,
-Moduswechsel Fibonacci <-> Base4 (Modus-Taster T6, Toggle pro Druck)."""
-from gpiozero import Button
-from config import (BTN_FIELD_PIN, BTN_MIN_PIN, BTN_MIN5_PIN,
-                    BTN_HOUR_PIN, BTN_NORM_PIN, BTN_MODE_PIN, BTN_BOUNCE_SEC)
+"""Taster-Steuerung: Moduswahl T1-T5, Shift (T6), Langdruck-Zeitverstellung.
 
-MODE_NORMAL = "normal"   # NTP-Zeit, Fibonacci-Anzeige
-MODE_MANUAL = "manual"   # Zeitversatz (Offset), Uhr läuft weiter
-MODE_FIELD  = "field"    # Feld-Durchschaltung A-E
+Erweiterung Anzeige-Modi (10.11.2026, Stufe 1 - docs/Erweiterungen_Anzeigemodi.md):
+- T1-T5 kurz: Anzeige-Modus 1-5 waehlen; mit aktivem Shift (T6) die
+  Plaetze 6-10. Nicht implementierte Plaetze zeigen '- n' auf dem TM1637.
+- T6 kurz: Shift an/aus (Toggle); Shift endet automatisch nach
+  SHIFT_TIMEOUT_SEC (poll() im Haupt-Loop prueft das).
+- T2-T5 lang (laenger als BTN_HOLD_SEC): +1 Minute / +5 Minuten /
+  +1 Stunde / Normalbetrieb (Offset 0); gehaltene Taste wiederholt
+  (gpiozero hold_time + hold_repeat).
+- Die Feld-Durchschaltung (frueher T1) entfaellt als Betriebsmodus -
+  anzeige_test.py deckt diese Funktion ab.
+
+on_event(mode_id, shift, offset_sec, feedback) wird bei jeder Aenderung
+aufgerufen (gpiozero ruft die Callbacks in einem Hintergrund-Thread).
+feedback = kurzer Text fuer das TM1637 (None = nichts Neues). Zeichensatz
+der TM1637-Library (Quellcode geprueft 10.11.2026): 0-9, a-z, A-Z,
+Leerzeichen, '-' und '*'; alles andere wirft ValueError.
+"""
+from time import monotonic
+from gpiozero import Button
+from config import (BTN_FIELD_PIN, BTN_MIN_PIN, BTN_MIN5_PIN, BTN_HOUR_PIN,
+                    BTN_NORM_PIN, BTN_MODE_PIN, BTN_BOUNCE_SEC, BTN_HOLD_SEC,
+                    SHIFT_TIMEOUT_SEC)
+from modes import is_available
 
 class ButtonController:
     """
-    Fragt die Bedien-Taster T1–T5 und den Modus-Taster T6 ab (gpiozero,
-    interne Pull-Ups, softwareseitig entprellt).
-
-    Handbetrieb = Offset in Sekunden zur Systemzeit; Taster 5 setzt ihn auf 0.
-    on_event(mode, field_idx, offset_sec) wird bei jedem Tasterdruck aufgerufen
-    ( gpiozero ruft when_pressed in einem Hintergrund-Thread auf ).
-
-    Der Modus-Taster T6 (GPIO 26, gegen GND) wechselt bei jedem Druck die
-    Anzeige zwischen Fibonacci und Base4 (Software-Toggle, entprellt).
-    Der Zustand steht in der Software – nach dem Boot startet die Uhr im
-    Fibonacci-Modus. Abfrage im Hauptprogramm per is_base4().
+    Fragt T1-T6 ab und verwaltet Anzeige-Modus (1-10), Shift und Zeit-Offset.
+    Nach dem Boot: Modus 1 (Fibonacci), Shift aus, Offset 0.
     """
 
     def __init__(self, on_event):
         self._notify = on_event
-        self._mode = MODE_NORMAL
-        self._field = -1
+        self._mode = 1            # Modus 1 = Fibonacci (Start nach Boot)
+        self._shift = False
+        self._shift_since = None  # monotonic()-Zeit des Shift-Einschaltens
         self._offset_sec = 0
+        self._held = {}           # Taster-Nummer -> True (Langdruck aktiv)
 
-        taster = {
-            "field": Button(BTN_FIELD_PIN, bounce_time=BTN_BOUNCE_SEC),
-            "min":   Button(BTN_MIN_PIN,   bounce_time=BTN_BOUNCE_SEC),
-            "min5":  Button(BTN_MIN5_PIN,  bounce_time=BTN_BOUNCE_SEC),
-            "hour":  Button(BTN_HOUR_PIN,  bounce_time=BTN_BOUNCE_SEC),
-            "norm":  Button(BTN_NORM_PIN,  bounce_time=BTN_BOUNCE_SEC),
+        # T1-T5: kurzer Druck = Moduswahl (im Loslosen ohne Langdruck),
+        # langer Druck T2-T5 = Zeitverstellung (when_held, wiederholend)
+        self._taster = {
+            1: Button(BTN_FIELD_PIN, bounce_time=BTN_BOUNCE_SEC),
+            2: Button(BTN_MIN_PIN,  bounce_time=BTN_BOUNCE_SEC,
+                      hold_time=BTN_HOLD_SEC, hold_repeat=True),
+            3: Button(BTN_MIN5_PIN, bounce_time=BTN_BOUNCE_SEC,
+                      hold_time=BTN_HOLD_SEC, hold_repeat=True),
+            4: Button(BTN_HOUR_PIN, bounce_time=BTN_BOUNCE_SEC,
+                      hold_time=BTN_HOLD_SEC, hold_repeat=True),
+            5: Button(BTN_NORM_PIN, bounce_time=BTN_BOUNCE_SEC,
+                      hold_time=BTN_HOLD_SEC, hold_repeat=True),
         }
-        taster["field"].when_pressed = self._field_pressed
-        taster["min"].when_pressed   = lambda: self._manual_pressed(60)
-        taster["min5"].when_pressed  = lambda: self._manual_pressed(300)
-        taster["hour"].when_pressed  = lambda: self._manual_pressed(3600)
-        taster["norm"].when_pressed  = self._normal_pressed
+        self._taster[1].when_released = self._released(1)
+        for slot, delta, text in ((2, 60, "1MIN"), (3, 300, "5MIN"),
+                                  (4, 3600, "1STD")):
+            self._taster[slot].when_held = self._long_adjust(slot, delta, text)
+            self._taster[slot].when_released = self._released(slot)
+        self._taster[5].when_held = self._long_normal
+        self._taster[5].when_released = self._released(5)
 
-        # Modus-Taster T6: jeder Druck wechselt Fibonacci <-> Base4;
-        # Prellen über bounce_time abfangen (genau 1 Ereignis pro Druck)
-        self._base4 = False   # Start nach Boot: Fibonacci-Modus
-        self._mode_btn = Button(BTN_MODE_PIN, bounce_time=BTN_BOUNCE_SEC)
-        self._mode_btn.when_pressed = self._mode_pressed
+        # Shift-Taster T6: Toggle an/aus; Timeout prueft poll()
+        self._shift_btn = Button(BTN_MODE_PIN, bounce_time=BTN_BOUNCE_SEC)
+        self._shift_btn.when_pressed = self._shift_pressed
 
-    def is_base4(self):
-        """True = Base4-Anzeige aktiv (Software-Toggle via T6)."""
-        return self._base4
+    # --- Abfragen fuer den Haupt-Loop ---
+    def poll(self):
+        """Im Haupt-Loop aufrufen: beendet Shift nach SHIFT_TIMEOUT_SEC."""
+        if self._shift and self._shift_since is not None:
+            if monotonic() - self._shift_since >= SHIFT_TIMEOUT_SEC:
+                self._shift = False
+                self._shift_since = None
+                self._emit("M " + str(self._mode))
 
-    def _mode_pressed(self):
-        """T6: Anzeige-Modus umschalten (Fibonacci <-> Base4)."""
-        self._base4 = not self._base4
-        self._emit()   # Haupt-Loop rendert im neuen Modus
+    def _emit(self, feedback):
+        self._notify(self._mode, self._shift, self._offset_sec, feedback)
 
-    def _emit(self):
-        self._notify(self._mode, self._field, self._offset_sec)
+    # --- Kurzer Druck: Moduswahl ---
+    def _released(self, slot):
+        def handler():
+            if self._held.pop(slot, False):
+                return   # war ein Langdruck - Zeitverstellung lief ueber when_held
+            mode_id = slot + (5 if self._shift else 0)
+            if is_available(mode_id):
+                self._mode = mode_id
+                self._emit("M " + str(mode_id))
+            else:
+                self._emit("- " + str(mode_id))   # Platz reserviert (Stufe 2-4)
+        return handler
 
-    def _field_pressed(self):
-        """Taster 1: Felder A-E durchschalten (Fibonacci-Funktion)."""
-        self._mode = MODE_FIELD
-        self._field = (self._field + 1) % 5
-        self._emit()
+    # --- Langer Druck: Zeitverstellung ---
+    def _long_adjust(self, slot, delta, text):
+        def handler():
+            self._held[slot] = True
+            self._offset_sec += delta
+            self._emit(text)
+        return handler
 
-    def _manual_pressed(self, delta):
-        """Taster 2/3/4: +1 Minute / +5 Minuten / +1 Stunde."""
-        self._mode = MODE_MANUAL
-        self._offset_sec += delta
-        self._emit()
-
-    def _normal_pressed(self):
-        """Taster 5: Normalbetrieb – Offset auf 0."""
-        self._mode = MODE_NORMAL
+    def _long_normal(self):
+        """T5 lang: Normalbetrieb - Offset auf 0."""
+        self._held[5] = True
         self._offset_sec = 0
-        self._emit()
+        self._emit("NORM")
+
+    # --- Shift (T6) ---
+    def _shift_pressed(self):
+        self._shift = not self._shift
+        if self._shift:
+            self._shift_since = monotonic()
+            self._emit("SHIFT")
+        else:
+            self._shift_since = None
+            self._emit("M " + str(self._mode))

@@ -42,8 +42,22 @@ def show_clock(hours, minutes, seconds):
     # Colon-Steuerung (die Doppelpunkte des Moduls bleiben aus).
 
 def show_text(text):
-    """Zeigt kurzen Text (max. 6 Zeichen)."""
-    display.write(_modul_segments(display.encode_string(str(text)[:6])), 0)
+    """Zeigt kurzen Text (max. 6 Zeichen).
+
+    Erweiterung Anzeige-Modi (10.11.2026, Stufe 1): Zeichensatz der Library
+    ist 0-9, a-z, A-Z, Leerzeichen, '-' und '*' (encode_char im Quellcode
+    geprueft); alle anderen Zeichen werfen ValueError. Deshalb wird hier
+    zeichenweise kodiert - unzulaessige Zeichen erscheinen als leere
+    Stelle statt den Feedback-Callback zum Absturz zu bringen.
+    """
+    text = str(text)[:6].ljust(6)
+    segs = []
+    for ch in text:
+        try:
+            segs.append(display.encode_char(ch))
+        except ValueError:
+            segs.append(0)   # leere Stelle statt Absturz
+    display.write(_modul_segments(segs), 0)
 
 def show_field_text(field_idx, value):
     """Zeigt im Feld-Durchschalt-Modus z.B. 'A 5' (Buchstabe + Wertigkeit)."""
