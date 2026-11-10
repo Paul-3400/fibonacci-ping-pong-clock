@@ -15,9 +15,10 @@ Technik-Hinweis: Die tm1637-Library ist auf 4-stellige Module ausgelegt
 (show() = max. 4 Zeichen, clear() existiert nicht). Fuer 6 Stellen:
 write(segments, 0) mit encode_digit() - write() schreibt bis 6 Segmente.
 
-Modul-Hinweis (09.11.2026, Fallstrick 31): Das verwendete 6-stellige Modul
-vertauscht die ersten beiden Ziffernpaare (Grid 0/1 physisch auf Position
-2/3). modul_segments() sortiert die Segmente deshalb vor write() um.
+Modul-Hinweis (10.11.2026, Fallstrick 31, endgueltig): Das verwendete
+6-stellige Modul zeigt die an write() uebergebene Segmentliste spiegelt
+je Haelfte (Roh-Befehl '123456' zeigte «321654»). modul_segments()
+kehrt deshalb jede 3-Zeichen-Haelfte vor write() um.
 """
 import time
 import tm1637
@@ -44,10 +45,10 @@ _letzte_ziffern = None
 
 
 def modul_segments(segments):
-    """6-stelliges Modul: Ziffernpaare 1/2 physisch vertauscht (Fallstrick
-    31) - Reihenfolge anpassen, damit der Text richtig erscheint."""
+    """6-stelliges Modul: zeigt die Liste spiegelt je Haelfte (Fallstrick
+    31) - Haelften umkehren, damit der Text richtig erscheint."""
     s = list(segments[:6]) + [0] * (6 - len(segments))
-    return [s[2], s[3], s[0], s[1], s[4], s[5]]
+    return [s[2], s[1], s[0], s[5], s[4], s[3]]
 
 
 def zeige_uhr():

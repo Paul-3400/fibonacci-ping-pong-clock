@@ -171,12 +171,11 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    (Bauanleitung Kap. 7.10), Reboot-Test bestanden – die Uhr startet nach
    dem Einschalten autonom.
 
-⚠️ TM1637-Anzeige-Bug OFFEN (Stand 10.11.2026, Fallstrick 31): Das
-   6-stellige Modul zeigt die Ziffern weiterhin durcheinander – der
-   Paarvertausch-Fix von 09.11.2026 (_modul_segments()) brachte mit
-   bestätigt aktuellem Code keine Änderung. Diagnose geplant (tatsächliche
-   Grid-Zuordnung per Roh-Befehl ablesen). Fibonacci-Anzeige verifiziert
-   korrekt (14:05 → Feld C rot + E grün).
+✅ TM1637-Anzeige-Bug behoben (10.11.2026, Fallstrick 31 endgültig): Das
+   6-stellige Modul spiegelt die Segmentliste je Hälfte – Roh-Befehl
+   '123456' zeigte «321654». Fix: _modul_segments() kehrt jede 3-Zeichen-
+   Hälfte vor write() um (tm1637_display.py + steuerbox_test.py).
+   Fibonacci-Anzeige verifiziert korrekt (14:05 → Feld C rot + E grün).
 
 ## Lizenz
 

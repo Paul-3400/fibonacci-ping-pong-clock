@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py; 10.11.2026 – systemd-Autostart in Betrieb (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick 31: Paarvertausch-Fix ohne Wirkung, TM1637-Anzeige-Bug offen (Diagnose per Grid-Map-Ablesung geplant)"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py; 10.11.2026 – systemd-Autostart in Betrieb (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick 31: Paarvertausch-Fix ohne Wirkung, TM1637-Anzeige-Bug offen (Diagnose per Grid-Map-Ablesung geplant); 10.11.2026 – Fallstrick 31 endgültig gelöst: Modul zeigt die Segmentliste spiegelt je Hälfte (Roh-Befehl «123456» → «321654»), Fix = _modul_segments() kehrt jede 3er-Hälfte um"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -864,17 +864,21 @@ display.brightness(TM1637_BRIGHTNESS)
 # Doku), und clear() existiert NICHT. Fuer 6 Stellen: write(segments, 0)
 # mit encode_digit()/encode_string() - write() schreibt bis 6 Segmente.
 
-# Fix 09.11.2026 (Fallstrick 31): Das 6-stellige Modul vertauscht die
-# ersten beiden Ziffernpaare - Grid 0/1 liegen physisch auf den Positionen
-# 2/3, Grid 2/3 auf 0/1 (Positionen 4/5 stimmen). Unkorrigiert zeigte das
-# Modul die Zeit deshalb als MM:HH:SS statt HH:MM:SS (beobachtet 09.11.:
-# «33:13:50» statt 13:33:50, «04:14:45» statt 14:04:45). _modul_segments()
-# sortiert die Segmentliste so um, dass der Text physisch richtig erscheint.
+# Fix 10.11.2026 (Fallstrick 31, endgueltig): Das 6-stellige Modul zeigt
+# die an write() uebergebene Segmentliste SPIEGELVERKEHRT je Haelfte an:
+# Anzeige = [w2, w1, w0, w5, w4, w3]. Gemessen 10.11. mit dem Roh-Befehl
+# d.write(d.encode_string('123456'), 0): das Modul zeigte «321654».
+# Die Library schreibt die Segmente in Reihenfolge (Quellcode geprueft) -
+# die Spiegelung liegt komplett in der Grid-Verdrahtung des China-Moduls.
+# Die erste These 09.11. («Ziffernpaare 1/2 vertauscht», Commit a89a5a4)
+# beruhte auf fehlgelesenen Beobachtungen und wurde verworfen.
+# _modul_segments() kehrt deshalb jede 3-Zeichen-Haelfte der Segmentliste
+# um, damit der Text physisch richtig erscheint.
 
 def _modul_segments(segments):
-    """Passt die Segmentreihenfolge an das Modul an (Paare 1 und 2 tauschen)."""
+    """Passt die Segmentreihenfolge an das Modul an (Haelften spiegeln)."""
     s = list(segments[:6]) + [0] * (6 - len(segments))
-    return [s[2], s[3], s[0], s[1], s[4], s[5]]
+    return [s[2], s[1], s[0], s[5], s[4], s[3]]
 
 def show_clock(hours, minutes, seconds):
     """Zeigt HH:MM:SS auf dem 6-stelligen TM1637 (fuehrende Nullen inkl.)."""
@@ -1249,7 +1253,7 @@ sudo venv/bin/python3 anzeige_test.py
 | 28 | **Falsches Feld leuchtet (z. B. große Blöcke statt Einzelbälle)** | Index-Konventionen unterschieden sich: fibonacci.py nummerierte 0–4 = Werte [1,1,2,3,5], mapping.FELDER aber 0–4 = A–E = [5,3,2,1,1] – display.show_time() beleuchtete deshalb die falschen Felder. Fix: COMBINATIONS auf FELDER-Indizes umgestellt (08.11.2026), jetzt ist überall Index = A–E | hoch |
 | 29 | **Pi stürzt ab, sobald die Uhr startet (v. a. bei Minuten 0–4: sofort alle 40 LEDs an)** | Pi und Tafel am selben Netzteil → Volllast-Schlag zieht die 5-V-Schiene ein (Brownout). Fix: (1) getrennte Netzteile – Tafel ≥3 A an der DC-Buchse, Pi am eigenen USB-Netzteil, gemeinsame Masse (Kap. 5); (2) Soft-Start in main.py: Helligkeit startet bei 20 (SOFTSTART_BRIGHTNESS) und fährt in ~40 s auf LED_BRIGHTNESS hoch | mittel–hoch |
 | 30 | **Uhr zeigt nach frischem SD-Flash eine falsche Zeit, obwohl der NTP-Sync «erfolgreich» meldet** | ntp_time.sync_ntp() warf die NTP-Antwort weg – die Uhr lief still auf der Systemzeit, die nach dem Neuanfang oft noch nicht synchron ist (bis systemd-timesyncd greift). Fix (09.11.2026): get_local_time() rechnet ab dem ersten Sync ausschliesslich aus der NTP-Referenz (resp.tx_time + time.monotonic(), Europe/Zurich inkl. Sommerzeit), vorher Fallback Systemzeit; NTP-Timeout 2 s gegen Loop-Blockade | hoch |
-| 31 | **TM1637 zeigt die Ziffern durcheinander statt «HH:MM:SS» (z. B. «33:13:50» um 13:33:50; auch nach dem Fix von 09.11. weiterhin MischMasch)** | Erste These (09.11.): Modul vertauscht die Ziffernpaare 1/2 → Fix per _modul_segments()-Reorder in tm1637_display.py/steuerbox_test.py (Commit a89a5a4). Am 10.11.2026 mit bestätigt aktuellem Code getestet: KEINE Wirkung – die Paarvertausch-These ist damit widerlegt bzw. unvollständig; die tatsächliche Grid-Zuordnung des 6-stelligen Moduls ist unbekannt (Bug offen). Nächster Schritt: Grid-Map per Roh-Befehl `write(encode_string('123456'), 0)` ablesen – was steht wirklich am Modul? | niedrig |
+| 31 | **TM1637 zeigt die Ziffern durcheinander statt «HH:MM:SS» (z. B. «33:13:50» um 13:33:50)** | Das 6-stellige Modul zeigt die an write() übergebene Segmentliste **spiegelverkehrt je Hälfte**: Anzeige = [w2, w1, w0, w5, w4, w3] – gemessen 10.11. per Roh-Befehl `write(encode_string('123456'), 0)` → Anzeige «321654» (die Grid-Verdrahtung des China-Moduls spiegelt jede 3er-Hälfte; die Library schreibt laut Quellcode in Reihenfolge). Fix (10.11.2026): _modul_segments() in tm1637_display.py bzw. modul_segments() in steuerbox_test.py kehrt jede 3-Zeichen-Hälfte vor write() um. Hinweis: Erst-These 09.11. («Paare 1/2 vertauscht», Commit a89a5a4) beruhte auf fehlgelesenen Beobachtungen und wurde verworfen | hoch |
 
 ---
 
@@ -1376,7 +1380,7 @@ sudo venv/bin/python3 anzeige_test.py
 - [x] **Stromversorgung umgebaut (09.11.2026)** – getrennte Netzteile: Pi 5V/3A über Micro-USB, Tafel 5V/4A an der DC-Buchse, GND beider Netzteile verbunden (Fallstrick 29)
 - [x] NTP-Bug behoben (09.11.2026): sync_ntp() verwendete die NTP-Antwort nicht – get_local_time() rechnet jetzt aus der NTP-Referenz (Fallstrick 30)
 - [x] **Fibonacci-Anzeige-Diagnose abgeschlossen (09.11.2026)** – Fibonacci-Anzeige war korrekt (13:32 → A grün + D blau, 14:05 → C rot + E grün, fotoverifiziert); Systemzeit laut timedatectl die ganze Zeit korrekt synchronisiert
-- [ ] **TM1637 zeigt weiterhin MischMasch (Bug offen, Stand 10.11.2026)** – Paarvertausch-Fix (Fallstrick 31, Commit a89a5a4) brachte mit bestätigt aktuellem Code keine Änderung; die Grid-Zuordnung des 6-stelligen Moduls ist unbekannt – Diagnose per Roh-Befehl `write(encode_string('123456'), 0)` + Foto geplant
+- [x] **TM1637-Anzeige-Bug behoben (10.11.2026)** – Roh-Befehl `write(encode_string('123456'), 0)` zeigte «321654»: Das Modul spiegelt die Segmentliste je Hälfte (Anzeige = [w2,w1,w0,w5,w4,w3]) – Fix per _modul_segments()-Spiegelung in tm1637_display.py + steuerbox_test.py (Fallstrick 31 endgültig; Erst-These «Paarvertauschung» verworfen)
 - [x] **systemd-Autostart eingerichtet (10.11.2026)** – fibonacci-clock.service nach Kap. 7.10 (User=root, venv-Python, Restart=on-failure); Service läuft, Reboot-Test bestanden – die Uhr startet autonom
 - [x] Index-Konventions-Bug behoben + Anzeige-Test (08.11.2026): fibonacci.py-COMBINATIONS auf mapping.FELDER-Indizes (0–4 = A–E) umgestellt – vorher 0–4 = [1,1,2,3,5] → falsche Felder beleuchtet (Fallstrick 28); anzeige_test.py ergänzt (T6 = Anzeige ein/aus, 5 Felder in Farben, T1–T5 Einzelfelder)
 - [x] Anzeigetafel real vermessen und Unterlagen angepasst (07.11.2026): Feld B unten rechts (Spalten C–E, Zeilen 5–7), Feld C unten links (Spalten A–B, Zeilen 6–7), D = A5, E = B5; Daten- UND Stromkette spaltenweise → LED = Spalte × 8 + Zeile
@@ -1404,4 +1408,5 @@ sudo venv/bin/python3 anzeige_test.py
 *NTP-Auswertung behoben (sync_ntp() verwendete die Server-Antwort nicht, Fallstrick 30) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *TM1637-Ziffernpaare-Fix (Fallstrick 31) von Paul Simmen mit Vibe (GLM-5-latest-short), 09.11.2026*
 *Autostart (systemd-Service) in Betrieb genommen (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick-31-Fix ohne Wirkung – TM1637-Anzeige-Bug offen von Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026*
+*TM1637-Anzeige-Bug endgültig behoben: Modul spiegelt die Segmentliste je Hälfte («123456» → «321654»), Fix per _modul_segments()-Spiegelung von Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026*
 *Abgeleitet von der Arduino-Fibonacci-Uhr (Philippe Chretien, GNU GPL)*

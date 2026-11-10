@@ -13,17 +13,21 @@ display.brightness(TM1637_BRIGHTNESS)
 # Doku), und clear() existiert NICHT. Fuer 6 Stellen: write(segments, 0)
 # mit encode_digit()/encode_string() - write() schreibt bis 6 Segmente.
 
-# Fix 09.11.2026 (Fallstrick 31): Das 6-stellige Modul vertauscht die
-# ersten beiden Ziffernpaare - Grid 0/1 liegen physisch auf den Positionen
-# 2/3, Grid 2/3 auf 0/1 (Positionen 4/5 stimmen). Unkorrigiert zeigte das
-# Modul die Zeit deshalb als MM:HH:SS statt HH:MM:SS (beobachtet 09.11.:
-# «33:13:50» statt 13:33:50, «04:14:45» statt 14:04:45). _modul_segments()
-# sortiert die Segmentliste so um, dass der Text physisch richtig erscheint.
+# Fix 10.11.2026 (Fallstrick 31, endgueltig): Das 6-stellige Modul zeigt
+# die an write() uebergebene Segmentliste SPIEGELVERKEHRT je Haelfte an:
+# Anzeige = [w2, w1, w0, w5, w4, w3]. Gemessen 10.11. mit dem Roh-Befehl
+# d.write(d.encode_string('123456'), 0): das Modul zeigte «321654».
+# Die Library schreibt die Segmente in Reihenfolge (Quellcode geprueft) -
+# die Spiegelung liegt komplett in der Grid-Verdrahtung des China-Moduls.
+# Die erste These 09.11. («Ziffernpaare 1/2 vertauscht», Commit a89a5a4)
+# beruhte auf fehlgelesenen Beobachtungen und wurde verworfen.
+# _modul_segments() kehrt deshalb jede 3-Zeichen-Haelfte der Segmentliste
+# um, damit der Text physisch richtig erscheint.
 
 def _modul_segments(segments):
-    """Passt die Segmentreihenfolge an das Modul an (Paare 1 und 2 tauschen)."""
+    """Passt die Segmentreihenfolge an das Modul an (Haelften spiegeln)."""
     s = list(segments[:6]) + [0] * (6 - len(segments))
-    return [s[2], s[3], s[0], s[1], s[4], s[5]]
+    return [s[2], s[1], s[0], s[5], s[4], s[3]]
 
 def show_clock(hours, minutes, seconds):
     """Zeigt HH:MM:SS auf dem 6-stelligen TM1637 (fuehrende Nullen inkl.)."""
