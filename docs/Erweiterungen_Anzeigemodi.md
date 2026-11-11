@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Stufe 1 + 2 abgeschlossen und am Gerät bestätigt** (10.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 5–10 folgen in Stufe 3–4. Details: Kap. 10.
+Status: **Stufe 1 + 2 abgeschlossen und am Gerät bestätigt** (10.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 5–10 folgen in Stufe 3–4; Platz 7 wird die EierUhr (Sanduhr, 6 Kugeln à 30 s) – die Laufschrift entfällt (Entscheid Paul, 10.11.2026). Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -17,14 +17,15 @@ Ziel der Erweiterung:
 Anstoss für die neuen Modi (Ideen von Paul, 10.11.2026):
 
 1. **Binärzähler für Sekunden, Minuten, Stunden** – daraus werden zwei Varianten: drei parallele Binärzähler (Modus 3) und eine klassische Binär-BCD-Uhr (Modus 6).
-2. **Zeit mit grossen, durchlaufenden Zahlen (5 breit, 8 hoch)** – daraus werden ebenfalls zwei Varianten: statisch wechselnde grosse Ziffern (Modus 4) und eine Laufschrift, die durchs Fenster zieht (Modus 7).
+2. **Zeit mit grossen, durchlaufenden Zahlen (5 breit, 8 hoch)** – daraus wurden zwei Varianten: statisch wechselnde grosse Ziffern (Modus 4, umgesetzt in Stufe 2) und eine Laufschrift, die durchs Fenster zieht (ursprünglich Modus 7 – am 10.11.2026 zugunsten der EierUhr verworfen, siehe Punkt 3).
+3. **EierUhr (Pauls Skizze, 10.11.2026):** ein Sanduhr-Glas auf der Tafel, 6 Kugeln à 30 s fallen vom oberen in den unteren Teil – übernimmt Platz 7 (statt Laufschrift); Umsetzung in Stufe 3.
 
 ## 2. Ausgangslage und Konventionen
 
 **Tafel (massgeblich, siehe Bauanleitung):** 5 Spalten (A–E) × 8 Zeilen (0–7), hochkant, öffnende Schnecke. LED-Index = Spalte × 8 + Zeile, Datenkette spaltenweise (IN an A0). Zeile 0 oben, Zeile 7 unten.
 
 - **Hochkant (5×8):** 5 Positionen nebeneinander (Spalten A–E), 8 übereinander (Zeilen 0–7).
-- **Quer gedacht (8×5):** Breite = 8 (Zeilen 0–7), Höhe = 5 (Spalten A–E) – für Modi, die «liegend» gelesen werden (Laufschrift, Pong).
+- **Quer gedacht (8×5):** Breite = 8 (Zeilen 0–7), Höhe = 5 (Spalten A–E) – für Modi, die «liegend» gelesen werden (Pong; die geplante Laufschrift ist am 10.11.2026 der EierUhr gewichen).
 
 **Bestehende Modi:** Fibonacci (Werte 1, 1, 2, 3, 5 auf den Feldern A–E; rot = Stunde, grün = Minute ×5, blau = beides, aus = nichts; Zufallszerlegung; 5-Minuten-Genauigkeit) und Base4 (3×3 in Zeilen 0–2, Spalten B–D; minutengenau; gelb statt blau für «beides»).
 
@@ -55,7 +56,7 @@ Anstoss für die neuen Modi (Ideen von Paul, 10.11.2026):
 | 4 | T4 | Grosse Ziffern, statisch | Idee «grosse Zahlen», Variante A | 1 min |
 | 5 | T5 | Tagesfortschritt-Balken | Vibe-Vorschlag | 36 min |
 | 6 | Shift+T1 | Binär-BCD-Uhr | Idee «Binärzähler», Variante A | 1 min (1 s optional) |
-| 7 | Shift+T2 | Durchlaufende grosse Zahlen (Laufschrift) | Idee «grosse Zahlen», Variante B | 1 min |
+| 7 | Shift+T2 | EierUhr (Sanduhr: 6 Kugeln à 30 s) | Idee «EierUhr» (Paul), 10.11.2026 | 30 s |
 | 8 | Shift+T3 | Sekunden-Serpentine | Vibe-Vorschlag | 1 s |
 | 9 | Shift+T4 | Grobe Analog-Uhr | Vibe-Vorschlag (Experiment) | 5 min |
 | 10 | Shift+T5 | Pong-Uhr | Vibe-Vorschlag (Hommage) | 1 min + Animation |
@@ -172,15 +173,35 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 **Bewertung:** Für Binär-Kenner die «ehrlichste» Uhr; leichter lesbar als Modus 3, weil ziffernweise statt als grosse Zahl. Aufwand klein. LED-Last gering.
 
-### Modus 7 (Shift+T2) – Durchlaufende grosse Zahlen (Laufschrift) [Idee «grosse Zahlen», Variante B]
+### Modus 7 (Shift+T2) – EierUhr (Sanduhr) [Idee «EierUhr» von Paul, 10.11.2026 – ersetzt die Laufschrift]
 
-**Prinzip:** Die Zeit als Laufschrift, die durchs 5er-Fenster zieht: «HH:MM» im 5×7-Font (Doppelpunkt als schmale Glyphe) schiebt sich spaltenweise von rechts nach links durch die Tafel. Ziffernbreite 5 + Lücke 1, Doppelpunkt ca. 2 → «14:35» ist rund 24 Spalten breit; bei 0,3–0,5 s pro Spalte dauert ein Durchlauf etwa 10 s, plus kurze Pause.
+**Entscheid (10.11.2026, Paul):** Die geplante Laufschrift (durchlaufende grosse Zahlen) entfällt ganz – Platz 7 bekommt stattdessen die EierUhr. Sie hat einen echten Nutzen (Ei-Koch-Timer), passt zur Ping-Pong-Ball-Idee und braucht weder Schiebe-Logik noch einen 3×5-Mini-Font. font5x7.py bleibt unverändert für Modus 4 erhalten.
 
-**Farben:** Ziffern weiss (Show-Modus) oder Stunden rot / Minuten grün. **Update:** kontinuierlich (alle 0,3–0,5 s ein Frame).
+**Prinzip:** Ein Sanduhr-Glas füllt die ganze Tafel: gedimmter Umriss, sechs gelbe Kugeln à 30 Sekunden fallen einzeln vom oberen in den unteren Teil. Der 3-Minuten-Zyklus ist an die vollen Minuten gebunden – eine Runde startet immer bei x:00, x:03, x:06 …: elapsed = (Minuten mod 3) × 60 + Sekunden. Rendertakt 1 s (tick = (h, m, s)).
 
-**Beispiel 14:35:** «1» wandert ein, dann «4», Doppelpunkt, «3», «5» – nach einer Pause wiederholt sich der Vorgang mit der dann aktuellen Zeit.
+**Layout (logische Konvention LED = Spalte × 8 + Zeile, Zeile 0 oben):**
 
-**Bewertung:** Show-Modus mit hohem Wiedererkennungswert; nutzt denselben Font wie Modus 4. Aufwand mittel (Schiebe-Logik, ca. 30–50 Zeilen). LED-Last gering (je Frame nur ein Glyphenausschnitt).
+```
+      A  B  C  D  E
+Z0    #  #  #  #  #      Umriss: 0, 8, 16, 24, 32
+Z1    #  o  o  o  #      oben: Kugeln 9, 17, 25 / Wand 1, 33
+Z2    #  o  o  o  #      oben: Kugeln 10, 18, 26 / Wand 2, 34
+Z3    #  #  #  #  .      Taille: 3, 11, 19, 27
+Z4    .  #  #  #  .      Taille: 12, 20, 28
+Z5    #  o  o  o  #      unten: Kugeln 13, 21, 29 / Wand 5, 37
+Z6    #  o  o  o  #      unten: Kugeln 14, 22, 30 / Wand 6, 38
+Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
+```
+
+(# = gedimmter Glas-Umriss, o = Kugelplatz, . = dunkel.) Der Umriss umfasst 25 LEDs; dunkel bleiben nur A4, E3 und E4. Kugelplätze: oben Zeilen 1–2 (LEDs 9, 17, 25 / 10, 18, 26), unten Zeilen 5–6 (LEDs 13, 21, 29 / 14, 22, 30), jeweils Spalten B–D.
+
+**Falllogik (Variante 1 – revidierte Empfehlung):** gefallen = elapsed // 30 (0–5) – Kugel k ist gefallen, sobald elapsed ≥ k × 30 s. Der obere Raum leert sich von unten nach oben (erst Zeile 2, dann Zeile 1; je B → C → D), der untere füllt sich von unten nach oben (erst Zeile 6, dann Zeile 5). «Alle 6 Kugeln unten» ist bewusst nie zu sehen: Der Zustand dauert exakt 0 s – der Sprung zurück auf 6 Kugeln oben (bei x:00/x:03/…) markiert die 3-Minuten-Grenze. **Warum die Revision:** Bei der zuerst erwogenen Variante 2 (erste Kugel fällt zum Zyklusstart, gefallen = min(6, elapsed // 30 + 1)) läge «alle 6 unten» bereits ab 2:30 – der scheinbare «Fertig»-Zustand käme 30 s zu früh. Variante 1 zeigt die verstrichene Zeit korrekt an (gefallene Kugeln × 30 s). Falls Variante 2 am Gerät doch besser gefällt: Ein-Zeilen-Änderung in modes.py.
+
+**Optik (Entscheid 10.11.2026):** Umriss gedimmt – neue Konstante COLOR_GLAS in config.py (z. B. (40, 40, 40)); Kugeln gelb = COLOR_BASE4_BOTH (Sand-Optik). LED-Last unkritisch: maximal 31 von 40 LEDs (elapsed = 150–179 s), davon 25 nur gedimmt.
+
+**Beispiel 14:37:30:** 37 mod 3 = 1 → elapsed = 90 s → 3 Kugeln gefallen: unten gelb die LEDs 14, 22, 30 (Zeile 6), oben gelb nur noch Zeile 1 (LEDs 9, 17, 25), Umriss gedimmt. Ei-Koch-Praxis: Ei rein bei x:00/x:03/…, der Sprung «alles wieder oben» zeigt die nächste 3-Minuten-Grenze an.
+
+**Bewertung:** Nutzmodus mit Charme – Sanduhr-Prinzip auf 40 LEDs, Auflösung 30 s, Augenzwinkern zur Ping-Pong-Idee. Aufwand klein (kein Font nötig, ca. 20–30 Zeilen in modes.py plus Konstante in config.py). Status: reserviert – umgesetzt in Stufe 3.
 
 ### Modus 8 (Shift+T3) – Sekunden-Serpentine [Vibe-Vorschlag]
 
@@ -225,11 +246,11 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 | Modul | Aufgabe |
 |---|---|
 | modes.py (neu) | Modus-Registry: id, Name, render(h, m, s) → Liste aus 40 (R, G, B)-Werten; Fibonacci und Base4 als Wrapper auf die bestehenden Funktionen (kein Code-Duplikat) |
-| font5x7.py (neu) | Font-Tabelle 0–9 und Doppelpunkt als 5 Bitmasken à 7 Zeilen (gemeinfreier 5×7-Standardfont, z. B. HD44780/Arduino); Modus 7/10 nutzen zusätzlich einen 3×5-Mini-Font |
+| font5x7.py (neu) | Font-Tabelle 0–9 und Doppelpunkt als 5 Bitmasken à 7 Zeilen (gemeinfreier 5×7-Standardfont, z. B. HD44780/Arduino); Modus 10 nutzt zusätzlich einen 3×5-Mini-Font |
 | display.py | Neue generische Funktion show_frame(colors40) neben den bestehenden show_time / show_base4 / show_field |
 | buttons.py | Moduswahl (T1–T5, Shift-Zustand mit Timeout) + Langdruck (gpiozero: hold_time, when_held, hold_repeat) für die Zeitverstellung |
-| main.py | Zustandsmaschine: aktueller Modus + Shift; Rendering nur bei Änderung (last_raster wie bisher); Laufschrift/Pong mit eigenem Frametiming |
-| config.py | Modus-Konstanten, Ziffern-Wechselzeit, Scrollgeschwindigkeit, Shift-Timeout |
+| main.py | Zustandsmaschine: aktueller Modus + Shift; Rendering nur bei Änderung (last_raster wie bisher); Pong mit eigenem Frametiming |
+| config.py | Modus-Konstanten, Ziffern-Wechselzeit, EierUhr-Konstanten (COLOR_GLAS, Kugelfarbe), Shift-Timeout |
 
 ### 6.2 TM1637
 
@@ -237,7 +258,7 @@ Beim Moduswechsel kurz die Modus-Nummer (1–10, bei Shift mit «S»), danach wi
 
 ### 6.3 LED-Last und Strom
 
-Worst Case ist der Tagesfortschritt am Tagesende: 40 LEDs; bei weiss und Helligkeit 102 von 255 rund 1 A (überschlägig, Konfidenz mittel). Am 4-A-Netzteil der Tafel unkritisch. Die Soft-Start-Rampe (Fallstrick 29) bleibt für alle Modi wirksam. Laufschrift, Pong und Binär-Modi liegen weit darunter.
+Worst Case ist der Tagesfortschritt am Tagesende: 40 LEDs; bei weiss und Helligkeit 102 von 255 rund 1 A (überschlägig, Konfidenz mittel). Am 4-A-Netzteil der Tafel unkritisch. Die Soft-Start-Rampe (Fallstrick 29) bleibt für alle Modi wirksam. Pong, EierUhr (maximal 31 LEDs, Umriss nur gedimmt) und Binär-Modi liegen weit darunter.
 
 ### 6.4 Verifikation
 
@@ -251,7 +272,7 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 
 - **Stimmungsmodus:** Tageszeit als Farbe (Mitternacht blau → Sonnenaufgang orange → Mittag gelb → Abend rot), Tafel sonst dunkel – die «Zen-Uhr»: Zeit als Atmosphäre statt als Zahl.
 - **Regenbogen-/Demo-Modus** für Präsentationen (Farb- und Funktionsshow).
-- **Mini-Wortuhr:** deutsche Zeitwörter («FÜNF», «ZEHN», «VIERTEL», «VOR», «NACH», «HALB») nacheinander im 3×5-Font – statisch passt immer nur ein Wort ins 5er-Fenster, also höchstens als Laufschrift sinnvoll.
+- **Mini-Wortuhr:** deutsche Zeitwörter («FÜNF», «ZEHN», «VIERTEL», «VOR», «NACH», «HALB») nacheinander im 3×5-Font – statisch passt immer nur ein Wort ins 5er-Fenster; mit dem Wegfall der Laufschrift (10.11.2026) ist die Idee zurückgestellt.
 - **12h/24h-Umschaltung** für die Binär-Modi (Modus 3/6 zählen standardmässig 24 h).
 
 ## 8. Offene Fragen (Entscheidliste)
@@ -263,6 +284,7 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 5. **Grosse Ziffern:** 5×7-Standardfont (Zeile 7 frei für Sekundenpunkt, Empfehlung) oder eigener 5×8-Font?
 6. **Boot-Verhalten:** immer Fibonacci-Modus und Shift aus (Empfehlung), oder letzten Modus in einer Datei merken?
 7. **Tagesfortschritt:** tageszeitabhängiger Farbverlauf (Empfehlung) oder einfarbig?
+8. **Modus 7 (EierUhr):** ✅ entschieden (10.11.2026): EierUhr statt Laufschrift (die entfällt ganz); Zyklus an volle Minuten gebunden (Neustart x:00/x:03/…); Falllogik Variante 1 (semantisch korrekt, siehe Kap. 5); Umriss gedimmt, Kugeln gelb. Umsetzung in Stufe 3.
 
 ## 9. Fahrplan
 
@@ -271,8 +293,8 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 | 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) – ✅ erledigt 10.11.2026 |
 | 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
 | 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt + am Gerät bestätigt 10.11.2026 |
-| 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine) |
-| 4 | Modus 7 (Laufschrift), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
+| 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr), Modus 8 (Sekunden-Serpentine) |
+| 4 | Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
 
 Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehen.
 
@@ -310,4 +332,4 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
 - Bauanleitung: ✅ nachgezogen 10.11.2026 – Kap. 7.11 (Erweiterung Stufe 1 + 2), Fallstricke 32 + 33, Taster-Kap. 1.6/4.4, Verdrahtungs-Warnung Kap. 5.1, Intro + Revision-Log.
-- Danach Stufe 3: Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 8 (Sekunden-Serpentine).
+- Danach Stufe 3: Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr, Planung siehe Kap. 5), Modus 8 (Sekunden-Serpentine).
