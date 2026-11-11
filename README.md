@@ -117,6 +117,11 @@ sudo venv/bin/python3 main.py
   Betrieb auf dem Pi: systemd-Steuerung, Logs (journalctl), manuelle Tests,
   NTP-Kontrolle, Software-Update, System-Überwachung, Notfall-Anker.
 
+- 📖 **[Betriebsanleitung](docs/Betriebsanleitung.md)** – Handout für
+  Besucher (11.11.2026): alle zehn Anzeige-Modi mit Lese-Anleitung
+  (inkl. Fibonacci-Farbtabelle und Eierkoch-Timer), Bedienung der Taster,
+  Helligkeit einstellen – ganz ohne Technik-Vorkenntnisse.
+
 - 🧭 **[Erweiterungen: Anzeige-Modi](docs/Erweiterungen_Anzeigemodi.md)** – Planung + Umsetzung Stufe 1 (10.11.2026): zehn Zeitdarstellungen auf dem 5×8-Raster, gewählt mit T1–T5 direkt und T6 als Shift + T1–T5. Behandelt: Shift-Varianten (entschieden: Toggle mit 10-s-Timeout), Taster-Konflikt (entschieden: Langdruck), Modus-Beschreibungen mit Beispielen, Software-Skizze, Umsetzungs-Stand, offene Fragen und Fahrplan.
 
 - 💡 **[Helligkeit: Justage & LDR-Automatik](docs/Helligkeit.md)** – manuelle
@@ -238,7 +243,9 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    «HH»/«MM» in den letzten 5 s der Minute, quer im 3×5-Font); Frame-Timing
    über Registry (frame_sec) + ntp_time.get_local_time_precise (ms); 123
    Stub-Checks bestanden (`test_stufe4.py`, `test_stufe3.py` auf 66 Checks
-   umgestellt). Offen: Gerätetest. Details:
+   umgestellt). Am Gerät bestätigt (11.11.2026); Bauanleitung Kap. 7.13
+   (inkl. Helligkeits-Justage) + Taster-Kap. 4.4 nachgezogen,
+   Betriebsanleitung (Besucher-Handout) neu. Details:
    [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) (Kap. 10).
 
 ## Lizenz

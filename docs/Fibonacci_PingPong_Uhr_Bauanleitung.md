@@ -1,7 +1,7 @@
 ---
 title: "Fibonacci Ping-Pong-Ball-Uhr – Bauanleitung & Entwurf"
 date: 2026-09-14
-revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py; 10.11.2026 – systemd-Autostart in Betrieb (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick 31: Paarvertausch-Fix ohne Wirkung, TM1637-Anzeige-Bug offen (Diagnose per Grid-Map-Ablesung geplant); 10.11.2026 – Fallstrick 31 endgültig gelöst: Modul zeigt die Segmentliste spiegelt je Hälfte (Roh-Befehl «123456» → «321654»), Fix = _modul_segments() kehrt jede 3er-Hälfte um; 10.11.2026 – Erweiterung «Anzeige-Modi» Stufe 1+2 nachgezogen (Moduswahl T1–T5, Shift T6, Langdruck-Zeitverstellung, Modus 3 Binärzähler + Modus 4 grosse Ziffern mit font5x7.py, Kap. 7.11); Fallstrick 32 (main.py zwingend sudo) + Fallstrick 33 (Tafel spaltenweise gespiegelt an der Datenkette, Fix _PHYS_LED-Spiegelung in display.py); 11.11.2026 – Erweiterung «Anzeige-Modi» Stufe 3 nachgezogen: Plätze 5–8 (Tagesfortschritt, Binär-BCD, EierUhr, Sekunden-Serpentine; test_stufe3.py) am Gerät bestätigt, neues Kap. 7.12 mit Standard-Sequenz für Gerätetests, Taster-Diagramm Kap. 4.4 aktualisiert; EierUhr-Fall-Animation eingeplant (Stufe 4)"
+revision: "20.10.2026 – Schnecken-Layout 5×8 + 5 Taster; 21.10.2026 – Stromversorgung 5V, Zwei-Gehäuse-Konzept (Steuerbox + Anzeigebox), Base4-Modus mit Kippschalter; 07.11.2026 – Anpassung an die reale Anzeigetafel (B/C gespiegelt, D=A5/E=B5, spaltenweise LED-Kette LED = Spalte×8+Zeile); 07.11.2026 – Modus-Umschalter als 6. Taster (T6) statt Kippschalter, Toggle pro Druck; 08.11.2026 – OS: Raspberry Pi OS Trixie Lite (32-bit), pip in venv (PEP 668), /boot/firmware/config.txt; 08.11.2026 – Code-Module ins Repo eingecheckt (git clone), Setup-Pfade auf ~/fibonacci-clock; 08.11.2026 – Steuerbox-Selbsttest steuerbox_test.py; tm1637_display korrigiert (write/encode statt show/clear, Library ist 4-stellig ausgelegt); 08.11.2026 – Selbsttest auf dem Pi bestanden (HH:MM:SS + T1–T6), git unter Trixie Lite nachinstallieren (Fallstrick 26); 08.11.2026 – Start-Bugs behoben: LED_BRIGHTNESS int statt Float, LED_STRIP_TYPE = WS2811_STRIP_GRB (Fallstrick 27); 08.11.2026 – Index-Konventions-Bug fibonacci↔mapping behoben (Fallstrick 28), anzeige_test.py ergänzt; 09.11.2026 – Soft-Start-Rampe gegen Last-Spitzen (Fallstrick 29: Brownout-Absturz bei gemeinsamem Netzteil); 09.11.2026 – NTP-Fix (Fallstrick 30): sync_ntp() verwendete die NTP-Antwort nicht, Uhr lief auf ungesyncter Systemzeit – Zeit jetzt aus NTP-Referenz; 09.11.2026 – TM1637-Ziffernpaare-Fix (Fallstrick 31): 6-stelliges Modul zeigt Paar 1/2 vertauscht (MM:HH:SS), _modul_segments()-Reorder in tm1637_display.py + steuerbox_test.py; 10.11.2026 – systemd-Autostart in Betrieb (Reboot-Test bestanden), Fahrplan nachgeführt; Fallstrick 31: Paarvertausch-Fix ohne Wirkung, TM1637-Anzeige-Bug offen (Diagnose per Grid-Map-Ablesung geplant); 10.11.2026 – Fallstrick 31 endgültig gelöst: Modul zeigt die Segmentliste spiegelt je Hälfte (Roh-Befehl «123456» → «321654»), Fix = _modul_segments() kehrt jede 3er-Hälfte um; 10.11.2026 – Erweiterung «Anzeige-Modi» Stufe 1+2 nachgezogen (Moduswahl T1–T5, Shift T6, Langdruck-Zeitverstellung, Modus 3 Binärzähler + Modus 4 grosse Ziffern mit font5x7.py, Kap. 7.11); Fallstrick 32 (main.py zwingend sudo) + Fallstrick 33 (Tafel spaltenweise gespiegelt an der Datenkette, Fix _PHYS_LED-Spiegelung in display.py); 11.11.2026 – Erweiterung «Anzeige-Modi» Stufe 3 nachgezogen: Plätze 5–8 (Tagesfortschritt, Binär-BCD, EierUhr, Sekunden-Serpentine; test_stufe3.py) am Gerät bestätigt, neues Kap. 7.12 mit Standard-Sequenz für Gerätetests, Taster-Diagramm Kap. 4.4 aktualisiert; EierUhr-Fall-Animation eingeplant (Stufe 4); 11.11.2026 – Stufe 4 umgesetzt und am Gerät bestätigt: EierUhr-Fall-Animation, Platz 9 Analog-Uhr, Platz 10 Pong-Uhr (test_stufe4.py, 123 Checks); neues Kap. 7.13 (inkl. Helligkeits-Justage Langdruck T1), Taster-Diagramm Kap. 4.4 aktualisiert; Betriebsanleitung für Besucher neu (docs/Betriebsanleitung.md)"
 author: "Paul Simmen (mit Vibe / GLM-5-2)"
 project: "Fibonacci Clock – Ping-Pong-Ball Edition (5×8 Schnecken-Raster)"
 hardware: "Raspberry Pi Zero WH + 40 NeoPixel + TM1637 6-stellig + 6 Taster (T1–T5 Bedienung + T6 Modus Fibonacci↔Base4)"
@@ -19,10 +19,14 @@ license: "GNU GPL (abgeleitet von Philippe Chretien / Fabian Steppat)"
 > und sechs Tastern. Seit der Erweiterung **«Anzeige-Modi» (10.11.2026)**
 > wählen T1–T5 die Anzeige-Modi 1–5 direkt, T6 wirkt als **Shift-Taste** für
 > die Plätze 6–10 (Toggle, Timeout 10 s); **Langdruck T2–T5** stellt die Zeit
-> (+1/+5 min, +1 h, Normalbetrieb). Platz 1 = Fibonacci, Platz 2 = **Base4**
+> (+1/+5 min, +1 h, Normalbetrieb). **Platz-Belegung** (Stufe 1–4, seit
+> 11.11.2026 vollständig): Platz 1 = Fibonacci, Platz 2 = **Base4**
 > (9-Bälle-Wertematrix des Schwesterprojekts, minutengenau), Platz 3 = drei
-> Binärzähler h/m/s, Platz 4 = grosse Ziffern – Details: Kap. 7.11 und
-> docs/Erweiterungen_Anzeigemodi.md.
+> Binärzähler h/m/s, Platz 4 = grosse Ziffern, Platz 5 = Tagesfortschritt,
+> Platz 6 = Binär-BCD, Platz 7 = EierUhr, Platz 8 = Sekunden-Serpentine,
+> Platz 9 = Analog-Uhr, Platz 10 = Pong-Uhr – Details: Kap. 7.11–7.13 und
+> docs/Erweiterungen_Anzeigemodi.md. **Langdruck T1** startet die
+> Helligkeits-Justage (Kap. 7.13).
 >
 > **Aufbau in zwei Gehäusen:** **Steuerbox** (Pi, 6 Taster,
 > TM1637-Anzeige) und **Anzeigebox** (Lochplatte mit Bällen, NeoPixel,
@@ -325,11 +329,11 @@ GND      ──────────────>  GND
 ```
 Pi Zero WH                    Taster T1–T6
 ─────────────                 ──────────────────────────────────
-GPIO 5   ─────────────────>  T1  (Modus 1 Fibonacci; Shift: Platz 6 Binär-BCD)
+GPIO 5   ─────────────────>  T1  (Modus 1 Fibonacci; **lang**: Helligkeits-Justage; Shift: Platz 6 Binär-BCD)
 GPIO 6   ─────────────────>  T2  (Modus 2 Base4; **lang**: +1 Minute; Shift: Platz 7 EierUhr)
 GPIO 12  ─────────────────>  T3  (Modus 3 Binärzähler; **lang**: +5 Minuten; Shift: Platz 8 Sekunden-Serpentine)
-GPIO 13  ─────────────────>  T4  (Modus 4 grosse Ziffern; **lang**: +1 Stunde; Shift: Platz 9 Analog, reserviert)
-GPIO 16  ─────────────────>  T5  (Modus 5 Tagesfortschritt; **lang**: Normalbetrieb; Shift: Platz 10 Pong, reserviert)
+GPIO 13  ─────────────────>  T4  (Modus 4 grosse Ziffern; **lang**: +1 Stunde; Shift: Platz 9 Analog-Uhr)
+GPIO 16  ─────────────────>  T5  (Modus 5 Tagesfortschritt; **lang**: Normalbetrieb; Shift: Platz 10 Pong-Uhr)
 GPIO 26  ─────────────────>  T6 Shift-Taster (Plätze 6–10; Toggle, Timeout 10 s)
 GND      ─────────────────>  gemeinsame Masse aller 6 Taster
 ```
@@ -345,7 +349,9 @@ GND      ─────────────────>  gemeinsame Masse 
   identisch mit der Kippschalter-Planung. Die Software toggelt pro Druck
   (`when_pressed`, entprellt über `bounce_time`) den Shift-Modus, der nach
   SHIFT_TIMEOUT_SEC (10 s) automatisch endet; Shift + T1–T5 wählen die
-  Plätze 6–10, reservierte Plätze quittieren mit «- n». Nach dem Boot
+  Plätze 6–10 (seit Stufe 4, 11.11.2026, sind alle zehn Plätze belegt –
+  reservierte Plätze gibt es keine mehr). **Langdruck T1** startet die
+  Helligkeits-Justage (Kap. 7.13 und docs/Helligkeit.md). Nach dem Boot
   startet die Uhr im Fibonacci-Modus (Modus 1, Shift aus).
 
 ### 4.5 Gesamt-Pin-Übersicht
@@ -1235,11 +1241,60 @@ Danach den Dienst wieder starten: `sudo systemctl start fibonacci-clock`.
 **Am Gerät bestätigt (11.11.2026, Paul: «Die neuen Modi funktionieren!»):**
 Alle vier Modi geprüft – T5, Shift+T1, Shift+T2, Shift+T3.
 
-**Geplant mit Stufe 4:** Fall-Animation des Sandkorns in der EierUhr – das
-Korn wandert in der Fallssekunde sichtbar durch die Taille (C3 → C4); dazu
-braucht `main.py` ein Frame-Timing (Rendertakt unter 1 s), das auch die
-Pong-Uhr (Platz 10) nutzen wird. Design siehe
-docs/Erweiterungen_Anzeigemodi.md, Kap. 5 (Modus 7).
+**Umgesetzt mit Stufe 4 (11.11.2026):** Fall-Animation des Sandkorns in
+der EierUhr, Platz 9 (Analog-Uhr) und Platz 10 (Pong-Uhr) – Details siehe
+Kap. 7.13.
+
+---
+
+### 7.13 Erweiterung «Anzeige-Modi» Stufe 4 + Helligkeits-Justage (11.11.2026)
+
+Stufe 4 vervollständigt die zehn Anzeige-Plätze und ergänzt die manuelle
+Helligkeits-Justage. Alle Details und Designentscheide:
+docs/Erweiterungen_Anzeigemodi.md, docs/Helligkeit.md.
+
+**Helligkeits-Justage (Phase 1):**
+
+- **Langdruck T1** startet/beendet die Justage (Toggle, Timeout 10 s).
+- **T2** dunkler, **T3** heller – Schritte ±5 %, Bereich 5–100 %.
+- TM1637 zeigt während der Justage «brNN» (NN = Prozent).
+- Gespeichert in `helligkeit.txt` (persistent, Default 40 % = Rohwert 102),
+  umgesetzt in `helligkeit.py`; die Boot-Rampe (Fallstrick 29) bleibt
+  erhalten. 56 Stub-Checks: `python3 test_helligkeit.py`.
+- **Geplant, Phase 2:** Automatik mit BH1750-Lichtsensor (I2C) – Modul
+  bestellt (11.11.2026). Log-Kurve: 10 lux→10 %, 300 lux→50 %,
+  10 000 lux→100 %, Hysterese ±5 %, Update alle 30 s; manuelle Justage
+  schaltet auf MANUELL. Plan: docs/Helligkeit.md.
+
+**Stufe 4 – neue Dateien/Änderungen:**
+
+| Datei | Änderung |
+|---|---|
+| `modes.py` | Modus 7 EierUhr: **Fall-Animation** – Korn wandert in der Fallssekunde C3→C4, je `EIERUHR_FALL_MS` (150 ms), gelandet nach 300 ms; Zyklusstart (elapsed < 30 s) ohne Animation. Modus 9 **Analog-Uhr**: 12 Positionen (C0=16, D0=24, E1=33, E4=36, E5=37, D7=31, C7=23, B7=15, A5=5, A3=3, A1=1, B0=8), Stunden rot/Minuten grün im 5-min-Raster, beide auf derselben LED = gelb, Referenzpunkte 12/3/6/9 schwach weiss (`COLOR_ANALOG_REF`). Modus 10 **Pong-Uhr**: quer gelesen (Uhr 90° im Uhrzeigersinn drehen, Spalte A oben, Zeile 0 bleibt frei), Ball auf Dreieckwellen `tri(frame,7)`/`tri(frame,4)`, `PONG_FRAME_MS` 200 (Zyklus 56 Frames), Schläger (je 2 LEDs, rot) folgen der Ballhöhe, Score in den letzten 5 s der Minute (s ≥ 55): «HH» rot / «MM» grün, je 2500 ms, quer im 3×5-Font. Registry: `tick`/`render` mit `ms`-Parameter (Default 0, abwärtskompatibel), Feld `frame_sec`. |
+| `ntp_time.py` | `get_local_time_precise()` → `(h, m, s, ms)`; `get_local_time()` delegiert daran. |
+| `font5x7.py` | `FONT3x5` (3×5-Mini-Font, Bit 0 = links) + `mini_glyph()` für den Pong-Score. |
+| `config.py` | Neu: `EIERUHR_FALL_MS`, `PONG_FRAME_MS`, `PONG_SCORE_SEC`, `PONG_SCORE_WECHSEL_MS`, `COLOR_ANALOG_REF`, `FRAME_FAST_SEC` (0.1). |
+| `main.py` | Adaptives Sleep: Modi mit Untersekunden-Takt (EierUhr-Fall, Pong) holen ihr Loop-Intervall aus der Registry (`frame_sec`), sonst `UPDATE_INTERVAL_SEC`. |
+| `test_stufe4.py` | NEU, 123 Stub-Checks (NTP-präzise, EierUhr-Animation, Analog, Pong inkl. unabhängiger Ballbahn-Simulation, Registry). |
+| `test_stufe3.py` | Umgestellt (Plätze 9/10 aktiv, ms-Tests), 66 Checks. |
+
+**Betrieb:**
+
+```bash
+sudo systemctl stop fibonacci-clock
+cd ~/fibonacci-clock && git pull
+sudo venv/bin/python3 main.py        # zwingend sudo (Fallstrick 32)
+```
+
+Bedienung: **Shift+T2** = EierUhr (Kornfall in der Fallssekunde sichtbar,
+alle 30 s), **Shift+T4** = Analog-Uhr, **Shift+T5** = Pong-Uhr (Ball
+dauernd, Score in den letzten 5 s jeder Minute); **Langdruck T1** =
+Helligkeits-Justage. Für Besucher gibt es das Handout
+docs/Betriebsanleitung.md.
+
+**Am Gerät bestätigt (11.11.2026, Paul: «Programmierung läuft
+hervorragend!»):** Stufe 4 geprüft; Bauanleitung und Betriebsanleitung
+nachgezogen. Offen bleibt nur Phase 2 (BH1750-Automatik).
 
 ---
 
@@ -1425,7 +1480,7 @@ sudo venv/bin/python3 anzeige_test.py
 
 | Idee | Beschreibung | Aufwand |
 |------|--------------|--------|
-| LDR (Helligkeitssensor) | Auto-Dim je Raumbeleuchtung | gering |
+| LDR (Helligkeitssensor) | Auto-Dim je Raumbeleuchtung | erledigt: Phase 1 manuelle Justage umgesetzt (Kap. 7.13, docs/Helligkeit.md); Phase 2 BH1750-Automatik geplant – Modul bestellt (11.11.2026) |
 | Nachtabschaltung | 22:00–06:00 LEDs dimmen/aus | gering |
 | Web-Interface | Uhrzeit/Modus im Browser stellen | mittel |
 | Modus-Umschalter | ✅ integriert: Modus-Taster T6 Fibonacci ↔ Base4 (GPIO 26, seit 07.11.2026 als Taster statt Kippschalter) | erledigt |
