@@ -86,10 +86,11 @@ Nach dem Boot: Modus 1 (Fibonacci), Shift aus, Offset 0, Helligkeit 40 %
 
 Die Module liegen einsatzbereit im Repo (aus der Bauanleitung, Kap. 7):
 `config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`, `modes.py` (Registry der Anzeige-Modi),
-`font5x7.py` (5×7-Ziffernfont für Modus 4), `helligkeit.py` (Helligkeit der Tafel), `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
+`font5x7.py` (5×7-Ziffernfont für Modus 4; seit Stufe 4 zusätzlich 3×5-Mini-Font FONT3x5 für den Pong-Score), `helligkeit.py` (Helligkeit der Tafel), `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
 der Steuerbox (Uhrzeit + Tasten, ohne Anzeigebox): `steuerbox_test.py`.
 Zum Test der Anzeige-Tafel (T6 = Anzeige ein/aus, T1–T5 = Felder einzeln): `anzeige_test.py`.
 Stub-Test der Modus-Logik Stufe 3 (ohne Hardware): `python3 test_stufe3.py`.
+Stub-Test der Modus-Logik Stufe 4 (ohne Hardware): `python3 test_stufe4.py`.
 Stub-Test der Helligkeits-Justage (ohne Hardware): `python3 test_helligkeit.py`.
 Setup auf dem Pi
 (Raspberry Pi OS Lite 32-bit, Trixie):
@@ -201,7 +202,7 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    Hälfte vor write() um (tm1637_display.py + steuerbox_test.py).
    Fibonacci-Anzeige verifiziert korrekt (14:05 → Feld C rot + E grün).
 
-✅ Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 und Stufe 2 am Gerät bestätigt: Modus 3 (Binärzähler h/m/s, T3) und Modus 4 (grosse Ziffern, T4) mit font5x7.py; Platz 9–10 folgen in Stufe 4. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
+✅ Erweiterung Anzeige-Modi (10.11.2026): 10 Darstellungen auf dem 5×8-Raster über T1–T5 (direkt) und T6 als Shift + T1–T5. Entscheidungen: Shift = Toggle mit 10-s-Timeout, Zeitverstellung per Langdruck (T2–T5). Stufe 1 und Stufe 2 am Gerät bestätigt: Modus 3 (Binärzähler h/m/s, T3) und Modus 4 (grosse Ziffern, T4) mit font5x7.py. Details: [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md).
 
 ✅ Fallstrick 33 behoben (10.11.2026, am Gerät bestätigt): Der Modus-4-Gerätetest zeigte die
    grossen Ziffern spiegelverkehrt (Fotos IMG_8947–8950) – die Tafel hängt
@@ -229,6 +230,16 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    zeigt «br NN»; persistent in `helligkeit.txt` (überlebt Reboot); 56
    Stub-Checks bestanden (`test_helligkeit.py`); LDR-Automatik vorbereitet –
    Plan: [docs/Helligkeit.md](docs/Helligkeit.md).
+
+✅ Stufe 4 umgesetzt (11.11.2026): Fall-Animation der EierUhr (Korn wandert
+   in der Fallssekunde durch die Taille C3 → C4, je 150 ms), Modus 9
+   (Analog-Uhr: 12 Positionen, Doppelzeiger gelb, Ref-Punkte 12/3/6/9) und
+   Modus 10 (Pong-Uhr: deterministische Ballbahn, Schläger folgen, Score
+   «HH»/«MM» in den letzten 5 s der Minute, quer im 3×5-Font); Frame-Timing
+   über Registry (frame_sec) + ntp_time.get_local_time_precise (ms); 123
+   Stub-Checks bestanden (`test_stufe4.py`, `test_stufe3.py` auf 66 Checks
+   umgestellt). Offen: Gerätetest. Details:
+   [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) (Kap. 10).
 
 ## Lizenz
 

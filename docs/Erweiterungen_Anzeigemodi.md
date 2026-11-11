@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Stufe 1–3 abgeschlossen und am Gerät bestätigt** (Stufe 3: 11.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–8 laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 7 = EierUhr – die Laufschrift entfiel (Entscheid Paul 10.11.2026); Platz 9–10 folgen in Stufe 4 (zurückgestellt bis Pauls Go, 11.11.2026). Details: Kap. 10.
+Status: **Stufe 1–3 abgeschlossen und am Gerät bestätigt** (Stufe 3: 11.11.2026), **Stufe 4 umgesetzt** (11.11.2026; Gerätetest offen). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Alle 10 Plätze laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 7 = EierUhr mit Fall-Animation – die Laufschrift entfiel (Entscheid Paul 10.11.2026). Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -203,7 +203,7 @@ Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
 
 **Bewertung:** Nutzmodus mit Charme – Sanduhr-Prinzip auf 40 LEDs, Auflösung 30 s, Augenzwinkern zur Ping-Pong-Idee. Aufwand klein (kein Font nötig, ca. 20–30 Zeilen in modes.py plus Konstante in config.py). **Status:** ✅ umgesetzt und am Gerät bestätigt (Stufe 3, 11.11.2026; 65 Stub-Checks, test_stufe3.py).
 
-**Geplant: Fall-Animation des Sandkorns (Idee Paul, 11.11.2026 – Umsetzung mit Stufe 4):** Statt des Sprungs von «oben» nach «unten» wandert das Korn in der Fallssekunde (elapsed = k × 30 s) sichtbar durch die Taille: Es leuchtet nacheinander auf den Taille-LEDs C3 (LED 19) und C4 (LED 20) – je ca. 150 ms (geplante Konstante EIERUHR_FALL_MS), gelb wie die Kugeln – und erst danach erscheint die Kugel auf ihrem unteren Platz; die Fallzeit zählt trotzdem schon ab k × 30 s. Dafür braucht main.py ein Frame-Timing (Rendertakt unter 1 s während der Animation; geplante Funktion get_local_time_precise() mit Millisekunden in ntp_time.py) – derselbe Mechanismus, den die Pong-Uhr (Modus 10) ohnehin braucht; die EierUhr ist der erste Nutzniesser. Einfache Alternative (3 Zeilen, kein Umbau): Nur die Taille-LEDs C3+C4 leuchten in der Fallssekunde 1 s gelb auf. Entscheid (11.11.2026, Paul): fliessende Variante eingeplant, Umsetzung mit Stufe 4.
+**Umgesetzt: Fall-Animation des Sandkorns (Idee Paul, 11.11.2026 – Stufe 4, 11.11.2026):** Statt des Sprungs von «oben» nach «unten» wandert das Korn in der Fallssekunde (elapsed = k × 30 s) sichtbar durch die Taille: Es leuchtet nacheinander auf den Taille-LEDs C3 (LED 19) und C4 (LED 20) – je `EIERUHR_FALL_MS` = 150 ms, gelb wie die Kugeln, über dem gedimmten Umriss. Erst nach 300 ms (2 × EIERUHR_FALL_MS) erscheint die Kugel auf ihrem unteren Platz; oben fehlt sie schon ab k × 30 s, unten zählt die Fallzeit trotzdem ab k × 30 s (Falllogik Variante 1 unveraendert). Beim Zyklusstart (elapsed < 30 s, Sprung auf 6 Kugeln oben) faellt bewusst kein Korn. Umsetzung: ntp_time.get_local_time_precise() liefert Millisekunden (NTP-Epoch + monotonic, derselbe Ursprung wie get_local_time – Sekunde und ms koennen nie auseinanderlaufen); der Rendertakt des Modus enthaelt die Animationsphase (0 = gelandet, 1 = C3, 2 = C4); main.py holt das Loop-Intervall aus der Registry (frame_sec = FRAME_FAST_SEC = 0.1 s statt 1 s, nur solange der Modus aktiv ist) – derselbe Mechanismus, den die Pong-Uhr (Modus 10) nutzt. **Status:** ✅ umgesetzt (Stufe 4, 11.11.2026; 123 Stub-Checks, test_stufe4.py).
 
 ### Modus 8 (Shift+T3) – Sekunden-Serpentine [Vibe-Vorschlag]
 
@@ -233,6 +233,8 @@ Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
 
 **Bewertung (Konfidenz niedrig):** Charmant, aber auf 5×8 grob – nur 12 statt 60 Minutenpositionen, Auflösung 5 min. Die Lesbarkeit ist am Gerät zu testen; wenn er sich nicht bewährt, bekommt der Platz eine Reserve-Idee (Kap. 7). Aufwand mittel.
 
+**Umsetzung (Stufe 4, 11.11.2026):** Positionstabelle exakt wie oben (LED = Spalte × 8 + Zeile: C0 = 16, D0 = 24, E1 = 33, E4 = 36, E5 = 37, D7 = 31, C7 = 23, B7 = 15, A5 = 5, A3 = 3, A1 = 1, B0 = 8). Stundenzeiger rot (h mod 12, 0 → 12), Minutenzeiger grün (m ÷ 5, 0 → 12); stehen beide auf derselben Position, leuchtet sie gelb (COLOR_BASE4_BOTH – gleiche «beide»-Optik wie Base4/EierUhr). Die vier Referenzpunkte 12/3/6/9 schwach weiss (COLOR_ANALOG_REF = (40, 40, 40)), ausser wenn ein Zeiger darauf steht. Rendertakt 5 min (tick = (h, m ÷ 5)). **Status:** ✅ umgesetzt (Stufe 4, 11.11.2026; 123 Stub-Checks, test_stufe4.py) – Lesbarkeit am Gerät zu prüfen (Kap. 8.3).
+
 ### Modus 10 (Shift+T5) – Pong-Uhr [Vibe-Vorschlag, Hommage]
 
 **Prinzip:** Hommage an die Ping-Pong-Bälle: quer gespielt (8 Breitenpositionen = Zeilen 0–7, 5 hoch = Spalten A–E) läuft ein Endlos-Pong: der Ball (weiss) fliegt diagonal, oben und unten (Spalten A und E) prallt er ab, die Schläger (rot, je 2 LEDs hoch) an Zeile 0 und 7 bewegen sich so, dass sie ihn immer erreichen. Das Spiel ist Dekoration – die Zeit steht auf dem «Scoreboard»: Das TM1637 zeigt ja ohnehin HH:MM:SS; zusätzlich blendet die Tafel periodisch (z. B. alle 60 s für 5 s) den Spielstand quer im 3×5-Font ein: abwechselnd «14» und «35» (Breite 3 + 1 + 3 = 7, passt ins 8er-Fenster).
@@ -241,18 +243,20 @@ Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
 
 **Bewertung:** Der aufwendigste Modus (Spiellogik + Animation, geschätzt 100–150 Zeilen) und rein dekorativ – bewusst als letzter geplant. Thematisch passt er perfekt zur Ping-Pong-Uhr; das Konzept ist von Matrix-Uhren bekannt («Pong Clock»). LED-Last gering (max. ca. 6 LEDs).
 
+**Umsetzung (Stufe 4, 11.11.2026):** Frame-Timing: `PONG_FRAME_MS` = 200 (5 Frames/s), Ballbahn rein zeitbasiert ueber Dreieckwellen (tri(frame, 7) horizontal, tri(frame, 4) vertikal) – deterministisch, kein Spielzustand, Zyklus 56 Frames. Die roten Schläger (je 2 LEDs an Zeile 0/7) folgen der Ballhöhe. Score-Fenster: In den letzten 5 s jeder Minute (s ≥ 55; `PONG_SCORE_SEC` = 5) zeigt die Matrix abwechslungsweise «HH» (rot, `PONG_SCORE_WECHSEL_MS` = 2500 ms) und «MM» (grün, 2500 ms) quer (Uhr 90° im Uhrzeigersinn gedreht: Spalte A = oben, Zeile 0 bleibt frei; 3×5-Mini-Font FONT3x5 in font5x7.py mit mini_glyph(), Bit 0 = links). Rendertakt frame_sec = FRAME_FAST_SEC (0.1 s). **Status:** ✅ umgesetzt (Stufe 4, 11.11.2026; 123 Stub-Checks, test_stufe4.py).
+
 ## 6. Software-Skizze
 
 ### 6.1 Architektur
 
 | Modul | Aufgabe |
 |---|---|
-| modes.py (neu) | Modus-Registry: id, Name, render(h, m, s) → Liste aus 40 (R, G, B)-Werten; Fibonacci und Base4 als Wrapper auf die bestehenden Funktionen (kein Code-Duplikat) |
-| font5x7.py (neu) | Font-Tabelle 0–9 und Doppelpunkt als 5 Bitmasken à 7 Zeilen (gemeinfreier 5×7-Standardfont, z. B. HD44780/Arduino); Modus 10 nutzt zusätzlich einen 3×5-Mini-Font |
+| modes.py (neu) | Modus-Registry: id, Name, render(h, m, s, ms) → Liste aus 40 (R, G, B)-Werten (ms-Parameter ab Stufe 4, Default 0 – abwärtskompatibel); Fibonacci und Base4 als Wrapper auf die bestehenden Funktionen (kein Code-Duplikat); Registry-Feld frame_sec für Modi mit Untersekunden-Takt (Stufe 4: EierUhr-Fall, Pong) |
+| font5x7.py (neu) | Font-Tabelle 0–9 und Doppelpunkt als 5 Bitmasken à 7 Zeilen (gemeinfreier 5×7-Standardfont, z. B. HD44780/Arduino); seit Stufe 4 ausserdem 3×5-Mini-Font FONT3x5 mit mini_glyph() (Bit 0 = links) für den Pong-Score |
 | display.py | Neue generische Funktion show_frame(colors40) neben den bestehenden show_time / show_base4 / show_field |
 | buttons.py | Moduswahl (T1–T5, Shift-Zustand mit Timeout) + Langdruck (gpiozero: hold_time, when_held, hold_repeat) für die Zeitverstellung |
-| main.py | Zustandsmaschine: aktueller Modus + Shift; Rendering nur bei Änderung (last_raster wie bisher); Pong mit eigenem Frametiming |
-| config.py | Modus-Konstanten, Ziffern-Wechselzeit, EierUhr-Konstanten (COLOR_GLAS, Kugelfarbe), Shift-Timeout |
+| main.py | Zustandsmaschine: aktueller Modus + Shift; Rendering nur bei Änderung (last_raster wie bisher); Modi mit Untersekunden-Takt holen ihr Loop-Intervall aus der Registry (frame_sec: EierUhr-Fall, Pong) – sonst UPDATE_INTERVAL_SEC |
+| config.py | Modus-Konstanten, Ziffern-Wechselzeit, EierUhr-Konstanten (COLOR_GLAS, Kugelfarbe), Shift-Timeout; Stufe 4: EIERUHR_FALL_MS, PONG_FRAME_MS, PONG_SCORE_SEC, PONG_SCORE_WECHSEL_MS, COLOR_ANALOG_REF, FRAME_FAST_SEC |
 
 ### 6.2 TM1637
 
@@ -281,15 +285,15 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 
 1. **Shift-Mechanik:** ✅ entschieden (10.11.2026): Toggle mit 10-s-Timeout.
 2. **Zeitverstellung:** ✅ entschieden (10.11.2026): Langdruck (T2–T5).
-3. **Modus 9 (Analog):** erst am Gerät testen; bei ungenügender Lesbarkeit Platz an eine Reserve-Idee vergeben.
-4. **Tasten-Zuordnung** der acht Neuen: Vorschlag in Kap. 3.1 – nach den ersten Demos festzurren.
+3. **Modus 9 (Analog):** ✅ umgesetzt (Stufe 4, 11.11.2026); Lesbarkeit am Gerät prüfen – bei ungenügender Lesbarkeit Platz an eine Reserve-Idee vergeben.
+4. **Tasten-Zuordnung** der acht Neuen: ✅ festgezurrt – alle 10 Plätze belegt (T1–T5 = Modus 1–5, Shift+T1–T5 = Modus 6–10).
 5. **Grosse Ziffern:** 5×7-Standardfont (Zeile 7 frei für Sekundenpunkt, Empfehlung) oder eigener 5×8-Font?
 6. **Boot-Verhalten:** immer Fibonacci-Modus und Shift aus (Empfehlung), oder letzten Modus in einer Datei merken?
 7. **Tagesfortschritt:** ✅ entschieden (11.11.2026): tageszeitabhängiger Farbverlauf (Nacht blau, Morgen orange, Mittag gelb, Abend rot).
 8. **Modus 7 (EierUhr):** ✅ entschieden (10.11.2026): EierUhr statt Laufschrift (die entfällt ganz); Zyklus an volle Minuten gebunden (Neustart x:00/x:03/…); Falllogik Variante 1 (semantisch korrekt, siehe Kap. 5); Umriss gedimmt, Kugeln gelb. Umsetzung in Stufe 3.
 9. **Modus 6 (BCD):** ✅ entschieden (11.11.2026): mit Sekunden (Spalte E = Sekunden-Einer, gelb; Rendertakt 1 s).
 10. **Modus 8 (Serpentine):** ✅ entschieden (11.11.2026): erweiterte Variante (Runde-1-LEDs bleiben gedimmt stehen, Runde 2 übermalt orange).
-11. **EierUhr-Fall-Animation:** ✅ eingeplant (11.11.2026, Paul): fliessende Variante – Korn wandert in der Fallssekunde durch die Taille (C3 → C4), die Kugel landet erst danach; Umsetzung mit Stufe 4 (bringt das Frame-Timing, das Pong ebenfalls braucht).
+11. **EierUhr-Fall-Animation:** ✅ umgesetzt (Stufe 4, 11.11.2026): fliessende Variante – Korn wandert in der Fallssekunde durch die Taille (C3 → C4), die Kugel landet erst danach.
 
 ## 9. Fahrplan
 
@@ -299,7 +303,7 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 | 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
 | 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt + am Gerät bestätigt 10.11.2026 |
 | 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr), Modus 8 (Sekunden-Serpentine) – ✅ umgesetzt + am Gerät bestätigt 11.11.2026 (siehe Kap. 10) |
-| 4 | EierUhr-Fall-Animation (Modus 7), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt; nutzt das Frame-Timing der Fall-Animation) |
+| 4 | EierUhr-Fall-Animation (Modus 7), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt; nutzt das Frame-Timing der Fall-Animation) – ✅ umgesetzt 11.11.2026 (siehe Kap. 10; Gerätetest offen) |
 
 Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehen.
 
@@ -344,8 +348,16 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 
 **Am Gerät bestätigt (11.11.2026, Paul: «Die neuen Modi funktionieren!»):** T5 = Tagesfortschritt, Shift+T1 = Binär-BCD, Shift+T2 = EierUhr, Shift+T3 = Sekunden-Serpentine. Bauanleitung nachgezogen (neues Kap. 7.12 inkl. Standard-Sequenz für Gerätetests, ebenfalls in docs/Betriebsbefehle.md Kap. 3; Taster-Diagramm Kap. 4.4).
 
+**Umgesetzt (Stufe 4, 11.11.2026):**
+
+- **EierUhr-Fall-Animation (Modus 7, wie Kap. 5 beschrieben):** In der Fallssekunde (elapsed = k × 30 s) wandert das gelbe Korn durch die Taille – C3 (LED 19) und C4 (LED 20) je `EIERUHR_FALL_MS` = 150 ms; erst nach 300 ms landet die Kugel unten, oben fehlt sie schon ab k × 30 s. Zyklusstart (elapsed < 30 s) ohne Animation. Rendertakt: Registry-Feld frame_sec = FRAME_FAST_SEC = 0.1 s.
+- **Modus 9 (Shift+T4) – Analog-Uhr:** Positionstabelle nach Kap. 5 (C0 = 16, D0 = 24, E1 = 33, E4 = 36, E5 = 37, D7 = 31, C7 = 23, B7 = 15, A5 = 5, A3 = 3, A1 = 1, B0 = 8); Stundenzeiger rot (h mod 12), Minutenzeiger grün (m ÷ 5), beide auf derselben Position → gelb (COLOR_BASE4_BOTH); vier Referenzpunkte 12/3/6/9 schwach weiss (COLOR_ANALOG_REF). Rendertakt 5 min (tick = (h, m ÷ 5)).
+- **Modus 10 (Shift+T5) – Pong-Uhr:** quer gelesen (Uhr 90° im Uhrzeigersinn gedreht: Spalte A = oben, Zeile 7 = links, Zeile 0 bleibt frei); Ball weiss-gelb auf deterministischer Dreieckwellen-Bahn (tri(frame, 7) horizontal, tri(frame, 4) vertikal; `PONG_FRAME_MS` = 200, Zyklus 56 Frames, kein Spielzustand), rote Schläger (je 2 LEDs an Zeile 0/7) folgen der Ballhöhe; Score in den letzten 5 s der Minute (`PONG_SCORE_SEC`): «HH» rot / «MM» grün je 2500 ms (`PONG_SCORE_WECHSEL_MS`) quer im 3×5-Mini-Font. Rendertakt frame_sec = FRAME_FAST_SEC.
+- **Software:** ntp_time.py um get_local_time_precise(offset_sec) → (h, m, s, ms) ergänzt (NTP-Epoch + monotonic, microsecond // 1000; get_local_time delegiert daran – Sekunde und ms aus demselben Ursprung); Registry-Signatur tick/render mit ms-Parameter (Default 0, abwärtskompatibel) + frame_sec-Feld; main.py adaptives Sleep (frame_sec oder UPDATE_INTERVAL_SEC); font5x7.py um FONT3x5 + mini_glyph() ergänzt; config.py um EIERUHR_FALL_MS, PONG_FRAME_MS, PONG_SCORE_SEC, PONG_SCORE_WECHSEL_MS, COLOR_ANALOG_REF, FRAME_FAST_SEC ergänzt.
+- **Verifikation (Stub-Tests, 11.11.2026):** test_stufe4.py NEU mit 123 Checks bestanden – get_local_time_precise (Fake-ntplib, ms-Grenzen 750/0, offset, Fallback), EierUhr-Fall (Phasen-Grenzen ms 0/150/299/300, Zyklusstart, Invariante «immer genau 6 gelbe, nie beide Korn-LEDs, oben nie leer» über 10 800 Frames), Analog (unabhängige Notationstabelle, 288 Fälle), Pong (unabhängige Ballbahn-Simulation mit Richtungsumkehr über 112 Frames, Schläger-Referenzen, Score-Referenz aus String-Mustern), Registry/Konstanten/Regression. test_stufe3.py auf 66 Checks umgestellt (Platz 9/10 jetzt verfügbar statt reserviert; Modus-7-Tick = 4-Tupel; EierUhr-Regression mit ms). test_helligkeit.py unverändert 56 Checks (Regression). Auffälligkeiten: FONT3x5-Glyphen waren anfangs bitgespiegelt notiert (Kreuzcheck gegen String-Muster deckte es auf, gefixt – Bit 0 = links); der Fibonacci-Modus ist nie frame-deterministisch (random.choice in fibonacci.py) – Determinismus-Checks laufen deshalb über Modus 6.
+
 **Noch offen:**
 
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
 - Bauanleitung: ✅ nachgezogen 10.11.2026 – Kap. 7.11 (Erweiterung Stufe 1 + 2), Fallstricke 32 + 33, Taster-Kap. 1.6/4.4, Verdrahtungs-Warnung Kap. 5.1, Intro + Revision-Log.
-- Stufe 4 (auf Pauls Go, zurückgestellt 11.11.2026): EierUhr-Fall-Animation (Modus 7, Design siehe Kap. 5), Modus 9 (Analog, erst am Gerät testen), Modus 10 (Pong, zuletzt). Offene Doku-Fragen Kap. 8: Analog-Modus 8.3, Tasten-Zuordnung 8.4.
+- Stufe 4: ✅ umgesetzt 11.11.2026 (siehe Abschnitt oben) – **Gerätetest durch Paul offen** (inkl. Analog-Lesbarkeit, Kap. 8.3); danach Bauanleitung nachziehen (Kap. 7.13 + Taster-Kap. 4.4).

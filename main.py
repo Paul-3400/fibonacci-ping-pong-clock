@@ -18,6 +18,11 @@ docs/Erweiterungen_Anzeigemodi.md):
   helligkeit.py (persistente Datei, Justage ueber Langdruck T1 + T2/T3);
   die Boot-Rampe (Fallstrick 29) faehrt weiterhin stufenweise hoch,
   spaetere Aenderungen (manuelle Justage) setzen sofort um.
+- Stufe 4 (11.11.2026, docs/Erweiterungen_Anzeigemodi.md): Millisekunden-
+  genaue Zeit (ntp_time.get_local_time_precise) fuer die EierUhr-Fall-
+  Animation (Modus 7) und die Pong-Uhr (Modus 10). Modi mit Untersekunden-
+  Takt setzen ihr Loop-Intervall selbst ("frame_sec" in der Registry,
+  FRAME_FAST_SEC), alle anderen bleiben beim 1-s-Raster.
 """
 import time
 import signal
@@ -28,7 +33,7 @@ from modes import MODES, get_frame, get_tick
 from buttons import ButtonController
 from display import strip, show_frame, clear_all
 from tm1637_display import show_clock, show_text, clear_display
-from ntp_time import sync_ntp, get_local_time, needs_resync
+from ntp_time import sync_ntp, get_local_time_precise, needs_resync
 import helligkeit
 
 running = True
@@ -102,7 +107,7 @@ def main():
         if needs_resync(NTP_SYNC_INTERVAL_MIN):
             sync_ntp()
 
-        h, m, s = get_local_time(state["offset"])
+        h, m, s, ms = get_local_time_precise(state["offset"])
 
         # --- TM1637: Feedback (Modus/Shift/Zeit) hat kurz Vorrang ---
         if state["feedback"] is not None:
@@ -117,9 +122,11 @@ def main():
             last_display_time = current_display
 
         # --- Tafel: nur neu zeichnen, wenn sich Modus oder Takt aendert ---
-        tick = get_tick(state["mode"], h, m, s)
+        # Stufe 4: ms-Genauigkeit - der Takt der EierUhr enthaelt die
+        # Animationsphase (Korn C3 -> C4), der des Pong den Ballframe.
+        tick = get_tick(state["mode"], h, m, s, ms)
         if tick is not None and last_raster != (state["mode"], tick):
-            frame = get_frame(state["mode"], h, m, s)
+            frame = get_frame(state["mode"], h, m, s, ms)
             if frame is not None:
                 show_frame(frame)
                 last_raster = (state["mode"], tick)
@@ -129,8 +136,12 @@ def main():
                           f"{h:02d}:{m:02d}:{s:02d}")
                     last_log = log_key
 
-        # Kurze Pause
-        time.sleep(UPDATE_INTERVAL_SEC)
+        # Kurze Pause: Modi mit Untersekunden-Takt (EierUhr-Fall-Animation,
+        # Pong) holen sich ihr Loop-Intervall aus der Registry (frame_sec),
+        # alle anderen laufen im 1-s-Raster weiter
+        sleep_sec = MODES.get(state["mode"], {}).get("frame_sec") \
+            or UPDATE_INTERVAL_SEC
+        time.sleep(sleep_sec)
 
 if __name__ == "__main__":
     main()

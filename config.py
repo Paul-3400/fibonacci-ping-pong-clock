@@ -64,6 +64,14 @@ DAY_PHASES = ((0,  COLOR_BOTH),        # Nacht 0-6 Uhr: blau
               (17, COLOR_HOURS),      # Abend 17-21 Uhr: rot
               (21, COLOR_BOTH))        # Nacht 21-24 Uhr: blau
 
+# --- Anzeige-Modi Stufe 4 (11.11.2026, docs/Erweiterungen_Anzeigemodi.md) ---
+EIERUHR_FALL_MS = 150     # Modus 7: Sandkorn je Taille-LED (C3 -> C4), gelb wie die Kugeln
+PONG_FRAME_MS = 200       # Modus 10: Ballgeschwindigkeit (ms je Diagonalschritt)
+PONG_SCORE_SEC = 5        # Modus 10: Spielstand in den letzten N Sekunden jeder Minute
+PONG_SCORE_WECHSEL_MS = 2500   # Modus 10: Stunden-/Minuten-Score wechseln alle 2500 ms
+COLOR_ANALOG_REF = (40, 40, 40)   # Modus 9: Referenzpunkte 12/3/6/9 schwach weiss
+FRAME_FAST_SEC = 0.1      # Haupt-Loop-Intervall fuer Modi mit Untersekunden-Takt (Modus 7, 10)
+
 # --- Helligkeit der Tafel (Justage 11.11.2026, docs/Helligkeit.md; LDR geplant) ---
 # Entscheid Paul 11.11.2026: Langdruck T1 startet die Justage, darin
 # T2 = dunkler / T3 = heller (kurz oder halten), 5%-Schritte, 5-100 %.

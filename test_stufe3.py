@@ -89,20 +89,24 @@ def ref_modus8(s):
 
 
 # ---------- G1: Registry ----------
+# Stufe-4-Update (11.11.2026): Plaetze 9-10 sind seither implementiert
+# (Modus 9 Analog-Uhr, Modus 10 Pong-Uhr) - geprueft in test_stufe4.py.
 
 check(all(modes.is_available(i) for i in range(1, 9)),
       "Plaetze 1-8 muessen verfuegbar sein")
-check(not modes.is_available(9) and not modes.is_available(10),
-      "Plaetze 9-10 muessen reserviert bleiben")
-check(modes.get_frame(9, 14, 35, 49) is None and
-      modes.get_tick(9, 14, 35, 49) is None,
-      "reservierte Plaetze liefern None")
+check(all(modes.is_available(i) for i in (9, 10)),
+      "Plaetze 9-10 verfuegbar (Stufe 4, 11.11.2026)")
+check(modes.get_frame(11, 14, 35, 49) is None and
+      modes.get_tick(0, 14, 35, 49) is None,
+      "unbekannte Plaetze liefern None")
 check(modes.MODES[7]["name"] == "EierUhr (Sanduhr)",
       "Platz 7 heisst EierUhr (Laufschrift ersetzt)")
 check(modes.get_tick(5, 14, 35, 49) == (14, 35),
       "Modus 5: Minutentakt (h, m)")
-check(all(modes.get_tick(i, 14, 35, 49) == (14, 35, 49) for i in (6, 7, 8)),
-      "Modi 6-8: Sekundentakt (h, m, s)")
+check(all(modes.get_tick(i, 14, 35, 49) == (14, 35, 49) for i in (6, 8)),
+      "Modi 6+8: Sekundentakt (h, m, s)")
+check(modes.get_tick(7, 14, 35, 49) == (14, 35, 49, 0),
+      "Modus 7: Sekundentakt + Animationsphase 0 (kein Fall um 35:49, Stufe 4)")
 
 # ---------- G2: Modus 5 (Tagesfortschritt) ----------
 
@@ -157,8 +161,13 @@ for h in range(24):
 check(True, "Modus 6: komplette Referenz ueber 24 h (14976 Faelle)")
 
 # ---------- G4: Modus 7 (EierUhr) ----------
+# Stufe-4-Update (11.11.2026): Seit der Fall-Animation (docs/Erweiterungen_
+# Anzeigemodi.md Kap. 5) ist die erste halbe Sekunde jeder Fallssekunde das
+# durch die Taille wandernde Korn. Diese Stufe-3-Regression prueft darum den
+# GELANDETEN Zustand (ms=400 >= 2 x EIERUHR_FALL_MS); die Animation selbst
+# und der Zyklusstart-Ausschluss testet test_stufe4.py.
 
-f7 = modes.get_frame(7, 14, 37, 30)
+f7 = modes.get_frame(7, 14, 37, 30, 400)
 check(frame_ok(f7), "Modus 7: Frame-Form")
 check(sum(c == COLOR_GLAS for c in f7) == 25, "Umriss: 25 gedimmte LEDs")
 check({i for i, c in enumerate(f7) if c == COLOR_BASE4_BOTH} ==
@@ -169,13 +178,13 @@ f7a = modes.get_frame(7, 14, 36, 0)
 check({i for i, c in enumerate(f7a) if c == COLOR_BASE4_BOTH} ==
       {9, 17, 25, 10, 18, 26},
       "x:36:00 (elapsed 0): alle 6 Kugeln oben")
-f7b = modes.get_frame(7, 14, 38, 30)
+f7b = modes.get_frame(7, 14, 38, 30, 400)
 check({i for i, c in enumerate(f7b) if c == COLOR_BASE4_BOTH} ==
       {25, 14, 22, 30, 13, 21},
       "x:38:30 (elapsed 150 s): 1 oben (25), 5 unten")
 for m in range(60):
     for s in range(60):
-        f = modes.get_frame(7, 14, m, s)
+        f = modes.get_frame(7, 14, m, s, 400)
         assert f == ref_modus7(m, s), f"Modus 7 weicht ab bei m={m} s={s}"
         assert sum(c == COLOR_BASE4_BOTH for c in f) <= 6, \
             f"Modus 7: mehr als 6 Kugeln bei m={m} s={s}"

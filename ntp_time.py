@@ -41,15 +41,18 @@ def sync_ntp():
         print(f"NTP-Fehler: {e}")
         return False
 
-def get_local_time(offset_sec=0):
+def get_local_time_precise(offset_sec=0):
     """
-    Gibt lokale Zeit als (hour, minute, second) zurueck.
-    offset_sec: Handbetrieb-Offset in Sekunden (Taster 2-4),
-    0 = Normalbetrieb mit NTP-Zeit.
+    Gibt lokale Zeit als (hour, minute, second, millisekunde) zurueck -
+    Stufe 4 (11.11.2026): Millisekunden fuer die EierUhr-Fall-Animation
+    (Modus 7) und die Pong-Uhr (Modus 10), siehe
+    docs/Erweiterungen_Anzeigemodi.md Kap. 5.
 
-    Nach dem ersten erfolgreichen NTP-Sync laeuft die Uhr ausschliesslich
-    auf der NTP-Referenz (unabhaengig von der Systemzeit). Vor dem ersten
-    Sync: Fallback auf Systemzeit.
+    Gleiche Referenz-Logik wie get_local_time(): NTP-Epoch +
+    time.monotonic() (+ offset), Fallback auf Systemzeit vor dem ersten
+    erfolgreichen Sync. Die Millisekunde kommt vom Bruchteil der Epoche
+    (microsecond // 1000) - nicht aus einer zweiten Zeitquelle, damit
+    Sekunde und Millisekunde nie auseinanderlaufen.
     """
     if _ntp_epoch is not None and _last_sync is not None:
         epoch = _ntp_epoch + (time_module.monotonic() - _last_sync) \
@@ -59,10 +62,25 @@ def get_local_time(offset_sec=0):
             jetzt = jetzt.astimezone(_tz)
         else:
             jetzt = jetzt.astimezone()   # Systemzeitzone
-        return jetzt.hour, jetzt.minute, jetzt.second
+        return jetzt.hour, jetzt.minute, jetzt.second, jetzt.microsecond // 1000
     # Fallback vor dem ersten Sync: Systemzeit
     now = datetime.now() + timedelta(seconds=offset_sec)
-    return now.hour, now.minute, now.second
+    return now.hour, now.minute, now.second, now.microsecond // 1000
+
+def get_local_time(offset_sec=0):
+    """
+    Gibt lokale Zeit als (hour, minute, second) zurueck.
+    offset_sec: Handbetrieb-Offset in Sekunden (Taster 2-4),
+    0 = Normalbetrieb mit NTP-Zeit.
+
+    Nach dem ersten erfolgreichen NTP-Sync laeuft die Uhr ausschliesslich
+    auf der NTP-Referenz (unabhaengig von der Systemzeit). Vor dem ersten
+    Sync: Fallback auf Systemzeit.
+    Seit Stufe 4 (11.11.2026) delegiert diese Funktion an
+    get_local_time_precise() - beide liefern garantiert dieselbe Sekunde.
+    """
+    stunde, minute, sekunde, _ms = get_local_time_precise(offset_sec)
+    return stunde, minute, sekunde
 
 def needs_resync(interval_min=30):
     """Prueft, ob eine NTP-Resynchronisation faellig ist."""

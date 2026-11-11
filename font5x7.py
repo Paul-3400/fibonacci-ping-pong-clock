@@ -3,14 +3,18 @@
 # Projekt fibonacci-ping-pong-clock - Erweiterung Anzeige-Modi (Stufe 2)
 """5x7-Ziffernfont fuer die Anzeige-Modi der Erweiterung.
 
-Modus 4 (grosse statische Ziffern) und spaeter Modus 7 (Laufschrift,
-Stufe 4) nutzen diese Glyphen. Jedes Zeichen besteht aus 5 Spaltenbytes,
-Bit 0 = oberste Zeile (klassischer 5x7-Standardfont wie beim HD44780 /
-Arduino; die Glyphenmuster sind gemeinfrei und seit Jahrzehnten in
-unzaehligen Open-Source-Projekten ueblich).
+Modus 4 (grosse statische Ziffern) nutzt die 5x7-Glyphen (5 Spaltenbytes,
+Bit 0 = oberste Zeile; klassischer Standardfont wie beim HD44780 / Arduino,
+gemeinfrei). Die Laufschrift (frueher fuer Platz 7 geplant, 10.11.2026 der
+EierUhr gewichen) entfiel - die Glyphen blieben fuer Modus 4.
 
-glyph(ch) liefert das 5-Byte-Tupel eines Zeichens;
-unbekannte Zeichen sind leer (alles 0).
+Stufe 4 (11.11.2026): Pong-Uhr (Modus 10) zeigt den Spielstand (Stunden
+resp. Minuten) quer im 3x5-Mini-Font (3 Pixel breit, 5 Zeilen hoch):
+zwei Ziffern + 1 Pixel Spalt = 7 von 8 Zeilen. mini_glyph(ch) liefert
+5 Zeilenwerte (Bit 0 = links), unbekannte Zeichen sind leer.
+
+glyph(ch)   -> 5 Spaltenbytes des 5x7-Fonts (Bit 0 = oben)
+mini_glyph(ch) -> 5 Zeilenwerte des 3x5-Fonts (Bit 0 = links)
 """
 
 FONT5x7 = {
@@ -29,7 +33,31 @@ FONT5x7 = {
 
 assert all(len(v) == 5 for v in FONT5x7.values()), "Glyphen muessen 5 Spaltenbytes haben!"
 
+# 3x5-Mini-Font (Stufe 4, 11.11.2026): Wert je Zeile = 3 Bit (Bit 0 = links)
+# Kreuzgeprueft gegen unabhaengige String-Muster in test_stufe4.py (G4)
+FONT3x5 = {
+    '0': (0b111, 0b101, 0b101, 0b101, 0b111),
+    '1': (0b010, 0b011, 0b010, 0b010, 0b111),
+    '2': (0b111, 0b100, 0b111, 0b001, 0b111),
+    '3': (0b111, 0b100, 0b111, 0b100, 0b111),
+    '4': (0b101, 0b101, 0b111, 0b100, 0b100),
+    '5': (0b111, 0b001, 0b111, 0b100, 0b111),
+    '6': (0b111, 0b001, 0b111, 0b101, 0b111),
+    '7': (0b111, 0b100, 0b100, 0b100, 0b100),
+    '8': (0b111, 0b101, 0b111, 0b101, 0b111),
+    '9': (0b111, 0b101, 0b111, 0b100, 0b111),
+}
+
+assert all(len(v) == 5 and 0 <= z <= 7 for v in FONT3x5.values() for z in v), \
+    "Mini-Glyphen muessen 5 Zeilenwerte 0-7 haben!"
+assert len(set(FONT3x5.values())) == 10, "Ziffern 0-9 muessen eindeutig sein!"
+
 
 def glyph(ch):
     """Liefert die 5 Spaltenbytes des Zeichens (leer bei unbekanntem Zeichen)."""
     return FONT5x7.get(ch, (0, 0, 0, 0, 0))
+
+
+def mini_glyph(ch):
+    """Liefert die 5 Zeilenwerte des 3x5-Mini-Fonts (leer bei unbekanntem Zeichen)."""
+    return FONT3x5.get(ch, (0, 0, 0, 0, 0))
