@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Stufe 1 + 2 abgeschlossen und am Gerät bestätigt** (10.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 1–8 laufen durch modes.py (Stufe 3 umgesetzt am 11.11.2026, Gerätetest offen; Platz 7 = EierUhr – die Laufschrift entfiel, Entscheid Paul 10.11.2026); Platz 9–10 folgen in Stufe 4. Details: Kap. 10.
+Status: **Stufe 1–3 abgeschlossen und am Gerät bestätigt** (Stufe 3: 11.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–8 laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 7 = EierUhr – die Laufschrift entfiel (Entscheid Paul 10.11.2026); Platz 9–10 folgen in Stufe 4 (zurückgestellt bis Pauls Go, 11.11.2026). Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -153,7 +153,7 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 **Beispiel 14:35** = 875 min → 875 / 36 = 24,3 → LEDs 0–24 leuchten (25 LEDs).
 
-**Bewertung:** Intuitiv und philosophisch reizvoll («der Tag füllt sich»). Als alleinige Uhr zu grob (36 min) – deshalb bewusst mit der TM1637-Klartextanzeige kombiniert, die ja ohnehin läuft. LED-Last am Tagesende bis 40 LEDs (Volllast, siehe 6.3). Aufwand klein. **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
+**Bewertung:** Intuitiv und philosophisch reizvoll («der Tag füllt sich»). Als alleinige Uhr zu grob (36 min) – deshalb bewusst mit der TM1637-Klartextanzeige kombiniert, die ja ohnehin läuft. LED-Last am Tagesende bis 40 LEDs (Volllast, siehe 6.3). Aufwand klein. **Status:** ✅ umgesetzt und am Gerät bestätigt (Stufe 3, 11.11.2026; 65 Stub-Checks, test_stufe3.py).
 
 ### Modus 6 (Shift+T1) – Binär-BCD-Uhr [Idee «Binärzähler», Variante A]
 
@@ -171,7 +171,7 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 **Beispiel 14:35:49:** rot A7 (Zehner 1) und B5 (Einer 4); grün C7 + C6 (3 = 2+1) und D7 + D5 (5 = 4+1); gelb E7 + E4 (9 = 8+1).
 
-**Bewertung:** Für Binär-Kenner die «ehrlichste» Uhr; leichter lesbar als Modus 3, weil ziffernweise statt als grosse Zahl. Aufwand klein. LED-Last gering. **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
+**Bewertung:** Für Binär-Kenner die «ehrlichste» Uhr; leichter lesbar als Modus 3, weil ziffernweise statt als grosse Zahl. Aufwand klein. LED-Last gering. **Status:** ✅ umgesetzt und am Gerät bestätigt (Stufe 3, 11.11.2026; 65 Stub-Checks, test_stufe3.py).
 
 ### Modus 7 (Shift+T2) – EierUhr (Sanduhr) [Idee «EierUhr» von Paul, 10.11.2026 – ersetzt die Laufschrift]
 
@@ -201,7 +201,9 @@ Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
 
 **Beispiel 14:37:30:** 37 mod 3 = 1 → elapsed = 90 s → 3 Kugeln gefallen: unten gelb die LEDs 14, 22, 30 (Zeile 6), oben gelb nur noch Zeile 1 (LEDs 9, 17, 25), Umriss gedimmt. Ei-Koch-Praxis: Ei rein bei x:00/x:03/…, der Sprung «alles wieder oben» zeigt die nächste 3-Minuten-Grenze an.
 
-**Bewertung:** Nutzmodus mit Charme – Sanduhr-Prinzip auf 40 LEDs, Auflösung 30 s, Augenzwinkern zur Ping-Pong-Idee. Aufwand klein (kein Font nötig, ca. 20–30 Zeilen in modes.py plus Konstante in config.py). **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
+**Bewertung:** Nutzmodus mit Charme – Sanduhr-Prinzip auf 40 LEDs, Auflösung 30 s, Augenzwinkern zur Ping-Pong-Idee. Aufwand klein (kein Font nötig, ca. 20–30 Zeilen in modes.py plus Konstante in config.py). **Status:** ✅ umgesetzt und am Gerät bestätigt (Stufe 3, 11.11.2026; 65 Stub-Checks, test_stufe3.py).
+
+**Geplant: Fall-Animation des Sandkorns (Idee Paul, 11.11.2026 – Umsetzung mit Stufe 4):** Statt des Sprungs von «oben» nach «unten» wandert das Korn in der Fallssekunde (elapsed = k × 30 s) sichtbar durch die Taille: Es leuchtet nacheinander auf den Taille-LEDs C3 (LED 19) und C4 (LED 20) – je ca. 150 ms (geplante Konstante EIERUHR_FALL_MS), gelb wie die Kugeln – und erst danach erscheint die Kugel auf ihrem unteren Platz; die Fallzeit zählt trotzdem schon ab k × 30 s. Dafür braucht main.py ein Frame-Timing (Rendertakt unter 1 s während der Animation; geplante Funktion get_local_time_precise() mit Millisekunden in ntp_time.py) – derselbe Mechanismus, den die Pong-Uhr (Modus 10) ohnehin braucht; die EierUhr ist der erste Nutzniesser. Einfache Alternative (3 Zeilen, kein Umbau): Nur die Taille-LEDs C3+C4 leuchten in der Fallssekunde 1 s gelb auf. Entscheid (11.11.2026, Paul): fliessende Variante eingeplant, Umsetzung mit Stufe 4.
 
 ### Modus 8 (Shift+T3) – Sekunden-Serpentine [Vibe-Vorschlag]
 
@@ -211,7 +213,7 @@ Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
 
 **Update:** jede Sekunde. **Beispiel 23:57:47:** 47 mod 40 = 7 → LEDs 0–7 orange, Rest dunkel (bzw. in der erweiterten Variante orange über gedimmtem grünem Rest).
 
-**Bewertung:** Sehr lebendig – die Uhr «atmet» im Sekundentakt; ideal für Demo und Besucher. Auflösung 1 s. Aufwand klein. LED-Last: bei Sekunde 39 kurz alle 40 LEDs, aber nur einfarbig (Strom unkritisch). **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
+**Bewertung:** Sehr lebendig – die Uhr «atmet» im Sekundentakt; ideal für Demo und Besucher. Auflösung 1 s. Aufwand klein. LED-Last: bei Sekunde 39 kurz alle 40 LEDs, aber nur einfarbig (Strom unkritisch). **Status:** ✅ umgesetzt und am Gerät bestätigt (Stufe 3, 11.11.2026; 65 Stub-Checks, test_stufe3.py).
 
 ### Modus 9 (Shift+T4) – Grobe Analog-Uhr [Vibe-Vorschlag, Experiment]
 
@@ -287,6 +289,7 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 8. **Modus 7 (EierUhr):** ✅ entschieden (10.11.2026): EierUhr statt Laufschrift (die entfällt ganz); Zyklus an volle Minuten gebunden (Neustart x:00/x:03/…); Falllogik Variante 1 (semantisch korrekt, siehe Kap. 5); Umriss gedimmt, Kugeln gelb. Umsetzung in Stufe 3.
 9. **Modus 6 (BCD):** ✅ entschieden (11.11.2026): mit Sekunden (Spalte E = Sekunden-Einer, gelb; Rendertakt 1 s).
 10. **Modus 8 (Serpentine):** ✅ entschieden (11.11.2026): erweiterte Variante (Runde-1-LEDs bleiben gedimmt stehen, Runde 2 übermalt orange).
+11. **EierUhr-Fall-Animation:** ✅ eingeplant (11.11.2026, Paul): fliessende Variante – Korn wandert in der Fallssekunde durch die Taille (C3 → C4), die Kugel landet erst danach; Umsetzung mit Stufe 4 (bringt das Frame-Timing, das Pong ebenfalls braucht).
 
 ## 9. Fahrplan
 
@@ -295,12 +298,12 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 | 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) – ✅ erledigt 10.11.2026 |
 | 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
 | 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt + am Gerät bestätigt 10.11.2026 |
-| 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr), Modus 8 (Sekunden-Serpentine) – ✅ umgesetzt 11.11.2026 (Gerätetest offen, siehe Kap. 10) |
-| 4 | Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
+| 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr), Modus 8 (Sekunden-Serpentine) – ✅ umgesetzt + am Gerät bestätigt 11.11.2026 (siehe Kap. 10) |
+| 4 | EierUhr-Fall-Animation (Modus 7), Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt; nutzt das Frame-Timing der Fall-Animation) |
 
 Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehen.
 
-## 10. Umsetzungs-Stand (10.11.2026)
+## 10. Umsetzungs-Stand (Stand: 11.11.2026)
 
 **Stufe 1 am Gerät bestätigt (10.11.2026):** Tastensteuerung inkl. Taste 6 = Shift funktioniert – Moduswahl T1–T5, Shift-Toggle mit 10-s-Timeout, Langdruck-Zeitverstellung und TM1637-Feedback live geprüft.
 
@@ -339,8 +342,10 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 - **Software:** modes.py um vier Frame-Funktionen ergänzt (Platz 5–8 aktiviert, Platz 7 heisst jetzt «EierUhr (Sanduhr)»), config.py um COLOR_GLAS, COLOR_ORANGE, SERPENTINE_DIM_FAKTOR und DAY_PHASES ergänzt. main.py, buttons.py, display.py unverändert – die Registry-Schnittstelle aus Stufe 1 greift ohne Änderung (T5/Shift+T1–T3 schalten jetzt auf die neuen Modi, TM1637-Feedback «M 5» … «M 8» automatisch).
 - **Verifikation (Stub-Test test_stufe3.py, 11.11.2026):** 65 Checks bestanden – Registry (Platz 1–8 verfügbar, 9/10 reserviert, Takte), Modus 5 gegen Referenz über 24 h × 4 Minuten + Phasenfarben + Doku-Beispiel 14:35 (LEDs 0–24 gelb), Modus 6 gegen Referenz über 24 h (14 976 Fälle) + Doku-Beispiele 14:35:49 und 23:59:59, Modus 7 gegen Referenz über 60 min (3 600 Fälle; nie mehr als 6 Kugeln, «alle 6 Kugeln unten» nie sichtbar, dunkel nur A4/E3/E4 + leerer unterer Raum) + Doku-Beispiel 14:37:30, Modus 8 gegen Referenz über 60 s (Grenzfall Sekunde 39 → 40) + Doku-Beispiel 23:57:47, Regression Stufe 1 + 2 (Modi 1–4 rendern, u. a. Modus-3-Live-Fall 14:35:49 und Modus-4-Sekundenpunkt). Bemerkung: Die ersten Testläufe deckten vier Rechenfehler in den handgerechneten Sollwerten des Tests auf (BCD 23:59:59, EierUhr-Grenzfall 149 s, Serpentine-Testargument, fehlender Import) – die Implementierung selbst blieb dabei unverändert.
 
+**Am Gerät bestätigt (11.11.2026, Paul: «Die neuen Modi funktionieren!»):** T5 = Tagesfortschritt, Shift+T1 = Binär-BCD, Shift+T2 = EierUhr, Shift+T3 = Sekunden-Serpentine. Bauanleitung nachgezogen (neues Kap. 7.12 inkl. Standard-Sequenz für Gerätetests, ebenfalls in docs/Betriebsbefehle.md Kap. 3; Taster-Diagramm Kap. 4.4).
+
 **Noch offen:**
 
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
 - Bauanleitung: ✅ nachgezogen 10.11.2026 – Kap. 7.11 (Erweiterung Stufe 1 + 2), Fallstricke 32 + 33, Taster-Kap. 1.6/4.4, Verdrahtungs-Warnung Kap. 5.1, Intro + Revision-Log.
-- Danach Gerätetest Stufe 3 (Dienst stoppen, zwingend sudo, siehe Betriebsbefehle.md): T5 = Tagesfortschritt, Shift+T1 = BCD, Shift+T2 = EierUhr, Shift+T3 = Serpentine; danach Bauanleitung Kap. 7 nachziehen, dann Stufe 4 (Modus 9 Analog-Test, Modus 10 Pong).
+- Stufe 4 (auf Pauls Go, zurückgestellt 11.11.2026): EierUhr-Fall-Animation (Modus 7, Design siehe Kap. 5), Modus 9 (Analog, erst am Gerät testen), Modus 10 (Pong, zuletzt). Offene Doku-Fragen Kap. 8: Analog-Modus 8.3, Tasten-Zuordnung 8.4.

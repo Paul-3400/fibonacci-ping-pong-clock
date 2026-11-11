@@ -211,7 +211,7 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    tageszeitabhängige Farbe), Modus 6 (Binär-BCD mit Sekunden), Modus 7
    (EierUhr/Sanduhr: 6 Kugeln à 30 s) und Modus 8 (Sekunden-Serpentine,
    erweiterte Variante) – 65 Stub-Checks bestanden (`test_stufe3.py`),
-   Gerätetest offen. Details:
+   am Gerät bestätigt (11.11.2026). Details:
    [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) (Kap. 10).
 
 ## Lizenz

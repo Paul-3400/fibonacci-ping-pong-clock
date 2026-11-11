@@ -66,6 +66,18 @@ Dienst und Testprogramm würden sich die GPIOs streitig machen – deshalb zuers
 sudo systemctl stop fibonacci-clock
 ```
 
+**Standard-Sequenz «neue Software am Gerät testen» (11.11.2026):**
+
+```bash
+sudo systemctl stop fibonacci-clock
+cd ~/fibonacci-clock && git pull
+sudo venv/bin/python3 main.py
+```
+
+Dienst stoppen → Software aktualisieren → Hauptprogramm im Vordergrund
+testen (Modi über die Taster, Ende mit Strg+C). Danach den Dienst wieder
+starten: `sudo systemctl start fibonacci-clock`.
+
 Alle Testbefehle im Projektordner `~/fibonacci-clock`:
 
 | Zweck | Befehl |
