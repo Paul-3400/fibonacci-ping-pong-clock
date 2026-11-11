@@ -67,7 +67,7 @@ Geschätzte Gesamtkosten: ~115 CHF.
 
 | Taster | GPIO (Pi) | Funktion (Erweiterung Anzeige-Modi, 10.11.2026) |
 |---|---|---|
-| T1 | 5  | Anzeige-Modus 1 (Fibonacci) wählen |
+| T1 | 5  | Anzeige-Modus 1 (Fibonacci) wählen; **lang**: Helligkeits-Justage |
 | T2 | 6  | Modus 2 (Base4) wählen; **lang**: +1 Minute |
 | T3 | 12 | Modus 3 (Binärzähler h/m/s) wählen; **lang**: +5 Minuten |
 | T4 | 13 | Modus 4 (grosse Ziffern) wählen; **lang**: +1 Stunde |
@@ -76,16 +76,21 @@ Geschätzte Gesamtkosten: ~115 CHF.
 
 Kurzer Druck = Moduswahl (TM1637 zeigt kurz «M n»; reservierte Plätze «- n»),
 langer Druck (≥ 1 s) = Zeitverstellung (wiederholend bei gehaltener Taste).
-Nach dem Boot: Modus 1 (Fibonacci), Shift aus, Offset 0.
+T1 lang startet/beendet die **Helligkeits-Justage** (11.11.2026): darin T2 =
+dunkler, T3 = heller in 5-%-Schritten (5–100 %), TM1637 zeigt «br NN» –
+Details: [docs/Helligkeit.md](docs/Helligkeit.md).
+Nach dem Boot: Modus 1 (Fibonacci), Shift aus, Offset 0, Helligkeit 40 %
+(oder letzter Justagewert aus `helligkeit.txt`).
 
 ## Software
 
 Die Module liegen einsatzbereit im Repo (aus der Bauanleitung, Kap. 7):
 `config.py`, `mapping.py`, `buttons.py`, `fibonacci.py`, `base4.py`, `modes.py` (Registry der Anzeige-Modi),
-`font5x7.py` (5×7-Ziffernfont für Modus 4), `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
+`font5x7.py` (5×7-Ziffernfont für Modus 4), `helligkeit.py` (Helligkeit der Tafel), `display.py`, `tm1637_display.py`, `ntp_time.py`, `main.py`. Zum Allein-Test
 der Steuerbox (Uhrzeit + Tasten, ohne Anzeigebox): `steuerbox_test.py`.
 Zum Test der Anzeige-Tafel (T6 = Anzeige ein/aus, T1–T5 = Felder einzeln): `anzeige_test.py`.
 Stub-Test der Modus-Logik Stufe 3 (ohne Hardware): `python3 test_stufe3.py`.
+Stub-Test der Helligkeits-Justage (ohne Hardware): `python3 test_helligkeit.py`.
 Setup auf dem Pi
 (Raspberry Pi OS Lite 32-bit, Trixie):
 
@@ -112,6 +117,11 @@ sudo venv/bin/python3 main.py
   NTP-Kontrolle, Software-Update, System-Überwachung, Notfall-Anker.
 
 - 🧭 **[Erweiterungen: Anzeige-Modi](docs/Erweiterungen_Anzeigemodi.md)** – Planung + Umsetzung Stufe 1 (10.11.2026): zehn Zeitdarstellungen auf dem 5×8-Raster, gewählt mit T1–T5 direkt und T6 als Shift + T1–T5. Behandelt: Shift-Varianten (entschieden: Toggle mit 10-s-Timeout), Taster-Konflikt (entschieden: Langdruck), Modus-Beschreibungen mit Beispielen, Software-Skizze, Umsetzungs-Stand, offene Fragen und Fahrplan.
+
+- 💡 **[Helligkeit: Justage & LDR-Automatik](docs/Helligkeit.md)** – manuelle
+  Helligkeits-Justage (11.11.2026): Langdruck T1 + T2/T3, 5-%-Schritte 5–100 %,
+  persistent in `helligkeit.txt`; Plan für die spätere LDR-Automatik
+  (BH1750-Empfehlung, Log-Kurve, Hysterese).
 
 - 🧪 **[Wokwi-Prototyp](wokwi/)** – vollständige Simulation der Uhr mit dem
   **Seeed XIAO ESP32-S3** statt dem Raspberry Pi Zero WH (Wokwi kennt den Pi nicht):
@@ -213,6 +223,12 @@ Aufbau fertig, Uhr im Regelbetrieb mit systemd-Autostart – siehe Fahrplan in d
    erweiterte Variante) – 65 Stub-Checks bestanden (`test_stufe3.py`),
    am Gerät bestätigt (11.11.2026). Details:
    [docs/Erweiterungen_Anzeigemodi.md](docs/Erweiterungen_Anzeigemodi.md) (Kap. 10).
+
+✅ Helligkeits-Justage (11.11.2026): Langdruck T1 startet die Justage,
+   kurz/gehalten T2 = dunkler, T3 = heller (5-%-Schritte, 5–100 %), TM1637
+   zeigt «br NN»; persistent in `helligkeit.txt` (überlebt Reboot); 56
+   Stub-Checks bestanden (`test_helligkeit.py`); LDR-Automatik vorbereitet –
+   Plan: [docs/Helligkeit.md](docs/Helligkeit.md).
 
 ## Lizenz
 

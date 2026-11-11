@@ -25,11 +25,11 @@ TM1637_BRIGHTNESS = 4        # 0–7
 # T1-T5 KURZ = Anzeige-Modus 1-5 waehlen (mit Shift T6: Platz 6-10);
 # T2-T5 LANGDRUCK = Zeitverstellung. Die alte Belegung (Feld-Durchschaltung,
 # Handbetrieb kurz, Normalbetrieb kurz) ist damit abgeloest.
-BTN_FIELD_PIN = 5            # T1: Modus 1 (Fibonacci) waehlen; Langdruck ohne Funktion
-BTN_MIN_PIN   = 6            # T2: Modus 2 (Base4) waehlen; Langdruck +1 Minute
-BTN_MIN5_PIN  = 12           # T3: Modus 3 (reserviert); Langdruck +5 Minuten
-BTN_HOUR_PIN  = 13           # T4: Modus 4 (reserviert); Langdruck +1 Stunde
-BTN_NORM_PIN  = 16           # T5: Modus 5 (reserviert); Langdruck = Normalbetrieb (Offset 0)
+BTN_FIELD_PIN = 5            # T1: Modus 1 (Fibonacci) waehlen; Langdruck = Helligkeits-Justage (11.11.2026)
+BTN_MIN_PIN   = 6            # T2: Modus 2 (Base4) waehlen; Langdruck +1 Minute (Justage: dunkler)
+BTN_MIN5_PIN  = 12           # T3: Modus 3 (Binärzähler) waehlen; Langdruck +5 Minuten (Justage: heller)
+BTN_HOUR_PIN  = 13           # T4: Modus 4 (grosse Ziffern) waehlen; Langdruck +1 Stunde
+BTN_NORM_PIN  = 16           # T5: Modus 5 (Tagesfortschritt) waehlen; Langdruck = Normalbetrieb (Offset 0)
 BTN_BOUNCE_SEC = 0.05        # Prellen abfangen
 BTN_HOLD_SEC  = 1.0          # Langdruck-Schwelle (gpiozero hold_time); gehaltene Taste wiederholt
 SHIFT_TIMEOUT_SEC = 10       # Shift (T6) schaltet nach 10 s automatisch aus
@@ -63,6 +63,16 @@ DAY_PHASES = ((0,  COLOR_BOTH),        # Nacht 0-6 Uhr: blau
               (9,  COLOR_BASE4_BOTH),  # Mittag 9-17 Uhr: gelb
               (17, COLOR_HOURS),      # Abend 17-21 Uhr: rot
               (21, COLOR_BOTH))        # Nacht 21-24 Uhr: blau
+
+# --- Helligkeit der Tafel (Justage 11.11.2026, docs/Helligkeit.md; LDR geplant) ---
+# Entscheid Paul 11.11.2026: Langdruck T1 startet die Justage, darin
+# T2 = dunkler / T3 = heller (kurz oder halten), 5%-Schritte, 5-100 %.
+HELL_SCHRITT_PCT = 5         # Justage-Schritt in Prozent
+HELL_MIN_PCT     = 5         # untere Grenze (Tafel nie ganz aus)
+HELL_MAX_PCT     = 100       # obere Grenze (255 = volle Last, ~2.4 A bei weiss)
+HELL_DEFAULT_PCT = 40        # ohne Datei: 40 % = Rohwert 102 (wie bisher LED_BRIGHTNESS)
+HELL_TIMEOUT_SEC = 10        # Justage endet automatisch (analog Shift)
+HELL_DATEI       = "helligkeit.txt"   # Prozent-Wert im Projektordner (ueberlebt Reboot)
 
 # --- NTP ---
 NTP_SERVER   = "ch.pool.ntp.org"

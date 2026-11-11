@@ -14,6 +14,10 @@ docs/Erweiterungen_Anzeigemodi.md):
 - TM1637: kurzes Feedback bei Modus/Shift/Zeitverstellung
   ("M n", "- n", "SHIFT", "1MIN", "5MIN", "1STD", "NORM"), sonst HH:MM:SS.
 - Shift (T6) endet automatisch nach SHIFT_TIMEOUT_SEC (buttons.poll()).
+- Helligkeit (11.11.2026, docs/Helligkeit.md): Zielwert kommt aus
+  helligkeit.py (persistente Datei, Justage ueber Langdruck T1 + T2/T3);
+  die Boot-Rampe (Fallstrick 29) faehrt weiterhin stufenweise hoch,
+  spaetere Aenderungen (manuelle Justage) setzen sofort um.
 """
 import time
 import signal
@@ -25,6 +29,7 @@ from buttons import ButtonController
 from display import strip, show_frame, clear_all
 from tm1637_display import show_clock, show_text, clear_display
 from ntp_time import sync_ntp, get_local_time, needs_resync
+import helligkeit
 
 running = True
 state = {"mode": 1, "shift": False, "offset": 0, "feedback": None}
@@ -70,16 +75,28 @@ def main():
     # (wichtig, wenn Pi und Tafel am selben Netzteil haengen - Fallstrick 29)
     brightness = SOFTSTART_BRIGHTNESS
     strip.setBrightness(brightness)
+    hell_rampe_fertig = False   # Boot-Rampe laeuft bis zum Zielwert aus helligkeit.py
 
     while running:
         # Shift-Timeout pruefen (T6 schaltet nach SHIFT_TIMEOUT_SEC aus)
         buttons.poll()
 
-        # Soft-Start: Helligkeit stufenweise hochfahren
-        if brightness < LED_BRIGHTNESS:
-            brightness = min(LED_BRIGHTNESS, brightness + SOFTSTART_STEP)
+        # Helligkeit: Boot-Rampe (Fallstrick 29) bis zum Zielwert aus
+        # helligkeit.py; danach folgen manuelle Justage-Aenderungen sofort
+        soll_hell = helligkeit.ziel_raw()
+        if brightness != soll_hell:
+            manuelle_aenderung = hell_rampe_fertig
+            if not hell_rampe_fertig:
+                brightness = min(soll_hell, brightness + SOFTSTART_STEP)
+            else:
+                brightness = soll_hell          # Justage: sofort umsetzen
             strip.setBrightness(brightness)
             strip.show()
+            if brightness == soll_hell:
+                hell_rampe_fertig = True
+            if manuelle_aenderung:
+                print(f"Helligkeit: {helligkeit.lese_prozent()} % "
+                      f"(Rohwert {brightness} von 255)")
 
         # NTP gelegentlich resynchronisieren
         if needs_resync(NTP_SYNC_INTERVAL_MIN):
