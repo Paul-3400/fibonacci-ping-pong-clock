@@ -2,7 +2,7 @@
 
 Autor: Paul Simmen mit Vibe (GLM-5-latest-short), 10.11.2026
 Lizenz: GNU GPL v2 (abgeleitet von github.com/pchretien/fibo)
-Status: **Stufe 1 + 2 abgeschlossen und am Gerät bestätigt** (10.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 5–10 folgen in Stufe 3–4; Platz 7 wird die EierUhr (Sanduhr, 6 Kugeln à 30 s) – die Laufschrift entfällt (Entscheid Paul, 10.11.2026). Details: Kap. 10.
+Status: **Stufe 1 + 2 abgeschlossen und am Gerät bestätigt** (10.11.2026). Entscheidungen: Shift = Toggle mit 10-s-Timeout; Zeitverstellung = Langdruck T2–T5. Platz 1–4 (Fibonacci, Base4, Binärzähler, grosse Ziffern) laufen durch modes.py (Fallstrick-33-Spiegelfix in display.py live verifiziert); Platz 1–8 laufen durch modes.py (Stufe 3 umgesetzt am 11.11.2026, Gerätetest offen; Platz 7 = EierUhr – die Laufschrift entfiel, Entscheid Paul 10.11.2026); Platz 9–10 folgen in Stufe 4. Details: Kap. 10.
 
 ## 1. Ziel
 
@@ -55,7 +55,7 @@ Anstoss für die neuen Modi (Ideen von Paul, 10.11.2026):
 | 3 | T3 | Drei Binärzähler h/m/s | Idee «Binärzähler», Originalform | 1 s |
 | 4 | T4 | Grosse Ziffern, statisch | Idee «grosse Zahlen», Variante A | 1 min |
 | 5 | T5 | Tagesfortschritt-Balken | Vibe-Vorschlag | 36 min |
-| 6 | Shift+T1 | Binär-BCD-Uhr | Idee «Binärzähler», Variante A | 1 min (1 s optional) |
+| 6 | Shift+T1 | Binär-BCD-Uhr | Idee «Binärzähler», Variante A | 1 s |
 | 7 | Shift+T2 | EierUhr (Sanduhr: 6 Kugeln à 30 s) | Idee «EierUhr» (Paul), 10.11.2026 | 30 s |
 | 8 | Shift+T3 | Sekunden-Serpentine | Vibe-Vorschlag | 1 s |
 | 9 | Shift+T4 | Grobe Analog-Uhr | Vibe-Vorschlag (Experiment) | 5 min |
@@ -149,11 +149,11 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 
 **Prinzip:** «Wie viel vom Tag ist schon?» – die Tafel als Fortschrittsbalken: 40 LEDs = 1440 min, also 36 min je LED. In Kettenreihenfolge (LED 0 = A0 oben links … LED 39 = E7 unten rechts) leuchten alle LEDs bis zum aktuellen Stand: LED i leuchtet, wenn floor(Minuten_seit_Mitternacht / 36) mindestens i ist.
 
-**Farben:** Vorschlag: tageszeitabhängiger Verlauf – Nacht blau, Morgen orange, Mittag gelb, Abend rot (Stimmungsanzeige); alternativ einfarbig weiss. **Update:** minütlich genügt.
+**Farben:** ✅ entschieden (11.11.2026): tageszeitabhängiger Verlauf (Stimmungsanzeige) – die ganze Leiste leuchtet in der Farbe der aktuellen Tagesphase (config.DAY_PHASES): Nacht (0–6, 21–24 h) blau, Morgen (6–9 h) orange, Mittag (9–17 h) gelb, Abend (17–21 h) rot. **Update:** minütlich genügt.
 
 **Beispiel 14:35** = 875 min → 875 / 36 = 24,3 → LEDs 0–24 leuchten (25 LEDs).
 
-**Bewertung:** Intuitiv und philosophisch reizvoll («der Tag füllt sich»). Als alleinige Uhr zu grob (36 min) – deshalb bewusst mit der TM1637-Klartextanzeige kombiniert, die ja ohnehin läuft. LED-Last am Tagesende bis 40 LEDs (Volllast, siehe 6.3). Aufwand klein.
+**Bewertung:** Intuitiv und philosophisch reizvoll («der Tag füllt sich»). Als alleinige Uhr zu grob (36 min) – deshalb bewusst mit der TM1637-Klartextanzeige kombiniert, die ja ohnehin läuft. LED-Last am Tagesende bis 40 LEDs (Volllast, siehe 6.3). Aufwand klein. **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
 
 ### Modus 6 (Shift+T1) – Binär-BCD-Uhr [Idee «Binärzähler», Variante A]
 
@@ -167,11 +167,11 @@ Unverändert: 3×3-Matrix in Zeilen 0–2, Spalten B–D, minutengenau, rot/grü
 | D | Minuten-Einer 0–9 | 1 (Z7) … 8 (Z4) |
 | E | Sekunden-Einer 0–9 (optional; ohne Sekunden dunkel) | 1 (Z7) … 8 (Z4) |
 
-**Farben:** A/B rot, C/D grün, E gelb. **Update:** mit Spalte E jede Sekunde, sonst jede Minute.
+**Farben:** A/B rot, C/D grün, E gelb. **Update:** ✅ entschieden (11.11.2026): mit Spalte E (Sekunden-Einer, gelb) – Rendertakt jede Sekunde.
 
 **Beispiel 14:35:49:** rot A7 (Zehner 1) und B5 (Einer 4); grün C7 + C6 (3 = 2+1) und D7 + D5 (5 = 4+1); gelb E7 + E4 (9 = 8+1).
 
-**Bewertung:** Für Binär-Kenner die «ehrlichste» Uhr; leichter lesbar als Modus 3, weil ziffernweise statt als grosse Zahl. Aufwand klein. LED-Last gering.
+**Bewertung:** Für Binär-Kenner die «ehrlichste» Uhr; leichter lesbar als Modus 3, weil ziffernweise statt als grosse Zahl. Aufwand klein. LED-Last gering. **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
 
 ### Modus 7 (Shift+T2) – EierUhr (Sanduhr) [Idee «EierUhr» von Paul, 10.11.2026 – ersetzt die Laufschrift]
 
@@ -201,17 +201,17 @@ Z7    #  #  #  #  #      Umriss: 7, 15, 23, 31, 39
 
 **Beispiel 14:37:30:** 37 mod 3 = 1 → elapsed = 90 s → 3 Kugeln gefallen: unten gelb die LEDs 14, 22, 30 (Zeile 6), oben gelb nur noch Zeile 1 (LEDs 9, 17, 25), Umriss gedimmt. Ei-Koch-Praxis: Ei rein bei x:00/x:03/…, der Sprung «alles wieder oben» zeigt die nächste 3-Minuten-Grenze an.
 
-**Bewertung:** Nutzmodus mit Charme – Sanduhr-Prinzip auf 40 LEDs, Auflösung 30 s, Augenzwinkern zur Ping-Pong-Idee. Aufwand klein (kein Font nötig, ca. 20–30 Zeilen in modes.py plus Konstante in config.py). Status: reserviert – umgesetzt in Stufe 3.
+**Bewertung:** Nutzmodus mit Charme – Sanduhr-Prinzip auf 40 LEDs, Auflösung 30 s, Augenzwinkern zur Ping-Pong-Idee. Aufwand klein (kein Font nötig, ca. 20–30 Zeilen in modes.py plus Konstante in config.py). **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
 
 ### Modus 8 (Shift+T3) – Sekunden-Serpentine [Vibe-Vorschlag]
 
 **Prinzip:** Die laufende Minute sichtbar machen: Sekunde 0–59 als Zähler, der die Tafel in Kettenreihenfolge (A0 → E7) füllt. 60 Sekunden auf 40 LEDs: LED = Sekunde mod 40, die Farbe zeigt die Runde – Runde 1 (0–39 s) grün, Runde 2 (40–59 s) orange.
 
-**Variante erweitert:** Die LEDs der Runde 1 bleiben gedimmt (z. B. 30 % Helligkeit) stehen, Runde 2 übermalt mit voller Helligkeit – der Fortschritt der Minute wird doppelt genau sichtbar.
+**Variante erweitert:** ✅ entschieden (11.11.2026): Die LEDs der Runde 1 bleiben nach Sekunde 39 gedimmt stehen (30 % Helligkeit, SERPENTINE_DIM_FAKTOR in config.py), Runde 2 übermalt mit voller Helligkeit orange – der Fortschritt der Minute wird doppelt genau sichtbar.
 
 **Update:** jede Sekunde. **Beispiel 23:57:47:** 47 mod 40 = 7 → LEDs 0–7 orange, Rest dunkel (bzw. in der erweiterten Variante orange über gedimmtem grünem Rest).
 
-**Bewertung:** Sehr lebendig – die Uhr «atmet» im Sekundentakt; ideal für Demo und Besucher. Auflösung 1 s. Aufwand klein. LED-Last: bei Sekunde 39 kurz alle 40 LEDs, aber nur einfarbig (Strom unkritisch).
+**Bewertung:** Sehr lebendig – die Uhr «atmet» im Sekundentakt; ideal für Demo und Besucher. Auflösung 1 s. Aufwand klein. LED-Last: bei Sekunde 39 kurz alle 40 LEDs, aber nur einfarbig (Strom unkritisch). **Status:** ✅ umgesetzt (Stufe 3, 11.11.2026, test_stufe3.py), Gerätetest offen.
 
 ### Modus 9 (Shift+T4) – Grobe Analog-Uhr [Vibe-Vorschlag, Experiment]
 
@@ -283,8 +283,10 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 4. **Tasten-Zuordnung** der acht Neuen: Vorschlag in Kap. 3.1 – nach den ersten Demos festzurren.
 5. **Grosse Ziffern:** 5×7-Standardfont (Zeile 7 frei für Sekundenpunkt, Empfehlung) oder eigener 5×8-Font?
 6. **Boot-Verhalten:** immer Fibonacci-Modus und Shift aus (Empfehlung), oder letzten Modus in einer Datei merken?
-7. **Tagesfortschritt:** tageszeitabhängiger Farbverlauf (Empfehlung) oder einfarbig?
+7. **Tagesfortschritt:** ✅ entschieden (11.11.2026): tageszeitabhängiger Farbverlauf (Nacht blau, Morgen orange, Mittag gelb, Abend rot).
 8. **Modus 7 (EierUhr):** ✅ entschieden (10.11.2026): EierUhr statt Laufschrift (die entfällt ganz); Zyklus an volle Minuten gebunden (Neustart x:00/x:03/…); Falllogik Variante 1 (semantisch korrekt, siehe Kap. 5); Umriss gedimmt, Kugeln gelb. Umsetzung in Stufe 3.
+9. **Modus 6 (BCD):** ✅ entschieden (11.11.2026): mit Sekunden (Spalte E = Sekunden-Einer, gelb; Rendertakt 1 s).
+10. **Modus 8 (Serpentine):** ✅ entschieden (11.11.2026): erweiterte Variante (Runde-1-LEDs bleiben gedimmt stehen, Runde 2 übermalt orange).
 
 ## 9. Fahrplan
 
@@ -293,7 +295,7 @@ Der Entscheid vom 21.10./07.11.2026 bleibt: keine neuen Wokwi-Demos. Neue Modi w
 | 0 | Entscheidungen zu Kap. 8.1 und 8.2 (Shift + Zeitverstellung) – ✅ erledigt 10.11.2026 |
 | 1 | Schnittstelle: modes.py, display.show_frame, Shift-/Moduswahl und Langdruck in buttons.py – ✅ umgesetzt 10.11.2026 (siehe Kap. 10) |
 | 2 | Modus 3 (Binärzähler) + Modus 4 (grosse Ziffern) mit font5x7.py – erster Mehrwert-Stand – ✅ umgesetzt + am Gerät bestätigt 10.11.2026 |
-| 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr), Modus 8 (Sekunden-Serpentine) |
+| 3 | Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr), Modus 8 (Sekunden-Serpentine) – ✅ umgesetzt 11.11.2026 (Gerätetest offen, siehe Kap. 10) |
 | 4 | Modus 9 (Analog, Test), Modus 10 (Pong, zuletzt) |
 
 Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehen.
@@ -328,8 +330,17 @@ Jede Stufe: Verifikation, Funktionstest am Gerät, README/Bauanleitung nachziehe
 - **Verifikation (Stub-Test, 10.11.2026):** 22 Checks bestanden – Spiegel-Tabelle als Bijektion (A0 → physisch Segment E), Ziffern 1/4/5/7 aufrecht in Panel-Sicht, Sekundenpunkt unten Mitte (nur bei gerader Sekunde), Fibonacci-Feld C unten links, Base4-Wert 48 links in der Matrix, Modus-3-Spalten rot links / grün Mitte / gelb rechts, clear_all/show_frame-Randfälle, logische Frame-Regression unveraendert.
 - **Fix am Gerät BESTÄTIGT (10.11.2026, Paul):** «Jetzt ist die gesamte Anzeige kohärent!» – Modus 4 aufrecht, Modus 3 Stunden-Spalte rot links, Base4 seitenrichtig, Fibonacci unverändert. Stufe 2 damit vollständig am Gerät bestätigt.
 
+**Umgesetzt (Stufe 3, 11.11.2026):**
+
+- **Modus 5 (T5) – Tagesfortschritt-Balken:** 40 LEDs = 1440 min (36 min je LED) in Kettenreihenfolge; LED i leuchtet, wenn floor(Minuten/36) ≥ i. Ganze Leiste in der Farbe der aktuellen Tagesphase (DAY_PHASES: Nacht 0–6/21–24 blau, Morgen 6–9 orange, Mittag 9–17 gelb, Abend 17–21 rot; Entscheid 11.11.2026). Rendertakt minütlich (tick = (h, m)).
+- **Modus 6 (Shift+T1) – Binär-BCD-Uhr:** eine Spalte je Dezimalziffer, LSB unten (Zeile 7): A = H-Zehner (2 bit), B = H-Einer (4 bit), C = M-Zehner (3 bit), D = M-Einer (4 bit), E = S-Einer (4 bit; Entscheid 11.11.2026: mit Sekunden). A/B rot, C/D grün, E gelb. Rendertakt 1 s.
+- **Modus 7 (Shift+T2) – EierUhr (Sanduhr):** exakt wie Kap. 5 – Umriss 25 LEDs gedimmt (COLOR_GLAS), 6 gelbe Kugeln à 30 s (COLOR_BASE4_BOTH), Zyklus elapsed = (m mod 3) × 60 + s, Falllogik Variante 1, oberer Raum leert sich von unten nach oben, unterer füllt sich von unten nach oben. Rendertakt 1 s.
+- **Modus 8 (Shift+T3) – Sekunden-Serpentine:** LED = s mod 40 in Kettenreihenfolge; Runde 1 (0–39 s) grün füllend, Runde 2 (40–59 s) orange (COLOR_ORANGE) über den gedimmten Runde-1-LEDs (SERPENTINE_DIM_FAKTOR = 30 %; Entscheid 11.11.2026: erweiterte Variante). Rendertakt 1 s.
+- **Software:** modes.py um vier Frame-Funktionen ergänzt (Platz 5–8 aktiviert, Platz 7 heisst jetzt «EierUhr (Sanduhr)»), config.py um COLOR_GLAS, COLOR_ORANGE, SERPENTINE_DIM_FAKTOR und DAY_PHASES ergänzt. main.py, buttons.py, display.py unverändert – die Registry-Schnittstelle aus Stufe 1 greift ohne Änderung (T5/Shift+T1–T3 schalten jetzt auf die neuen Modi, TM1637-Feedback «M 5» … «M 8» automatisch).
+- **Verifikation (Stub-Test test_stufe3.py, 11.11.2026):** 65 Checks bestanden – Registry (Platz 1–8 verfügbar, 9/10 reserviert, Takte), Modus 5 gegen Referenz über 24 h × 4 Minuten + Phasenfarben + Doku-Beispiel 14:35 (LEDs 0–24 gelb), Modus 6 gegen Referenz über 24 h (14 976 Fälle) + Doku-Beispiele 14:35:49 und 23:59:59, Modus 7 gegen Referenz über 60 min (3 600 Fälle; nie mehr als 6 Kugeln, «alle 6 Kugeln unten» nie sichtbar, dunkel nur A4/E3/E4 + leerer unterer Raum) + Doku-Beispiel 14:37:30, Modus 8 gegen Referenz über 60 s (Grenzfall Sekunde 39 → 40) + Doku-Beispiel 23:57:47, Regression Stufe 1 + 2 (Modi 1–4 rendern, u. a. Modus-3-Live-Fall 14:35:49 und Modus-4-Sekundenpunkt). Bemerkung: Die ersten Testläufe deckten vier Rechenfehler in den handgerechneten Sollwerten des Tests auf (BCD 23:59:59, EierUhr-Grenzfall 149 s, Serpentine-Testargument, fehlender Import) – die Implementierung selbst blieb dabei unverändert.
+
 **Noch offen:**
 
 - **Achtung (gemessen 10.11.2026):** main.py ohne sudo crasht sofort beim Start: RuntimeError: ws2811_init failed with code -9 (Failed to create mailbox device), gefolgt von Segmentation fault (Aufräumcode der SWIG-Bindung nach fehlgeschlagenem strip.begin()). rpi_ws281x braucht root für den DMA-/Mailbox-Zugriff (dev/vcio) – manuelle Tests deshalb immer mit sudo, wie in docs/Betriebsbefehle.md beschrieben. Kandidat für Fallstrick 32 in der Bauanleitung (mit Kap.-7-Nachzug).
 - Bauanleitung: ✅ nachgezogen 10.11.2026 – Kap. 7.11 (Erweiterung Stufe 1 + 2), Fallstricke 32 + 33, Taster-Kap. 1.6/4.4, Verdrahtungs-Warnung Kap. 5.1, Intro + Revision-Log.
-- Danach Stufe 3: Modus 5 (Tagesfortschritt), Modus 6 (BCD), Modus 7 (EierUhr, Planung siehe Kap. 5), Modus 8 (Sekunden-Serpentine).
+- Danach Gerätetest Stufe 3 (Dienst stoppen, zwingend sudo, siehe Betriebsbefehle.md): T5 = Tagesfortschritt, Shift+T1 = BCD, Shift+T2 = EierUhr, Shift+T3 = Serpentine; danach Bauanleitung Kap. 7 nachziehen, dann Stufe 4 (Modus 9 Analog-Test, Modus 10 Pong).

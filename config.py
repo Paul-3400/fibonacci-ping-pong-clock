@@ -52,6 +52,18 @@ COLOR_BASE4_BOTH = (255, 255, 0) # gelb (Base4: Stunde + Minute)
 # --- Anzeige-Modi: grosse Ziffern (Modus 4, Stufe 2) ---
 ZIFFERN_WECHSEL_SEC = 2   # Anzeigedauer je Ziffer (H-Zehner/H-Einer/M-Zehner/M-Einer)
 
+# --- Anzeige-Modi Stufe 3 (11.11.2026, docs/Erweiterungen_Anzeigemodi.md) ---
+COLOR_GLAS = (40, 40, 40)        # Modus 7 EierUhr: gedimmter Glas-Umriss
+COLOR_ORANGE = (255, 120, 0)    # Modus 8 Serpentine Runde 2 / Modus 5 Morgenfarbe
+SERPENTINE_DIM_FAKTOR = 0.3     # Modus 8: Rest-Helligkeit der Runde 1 in Runde 2
+# Modus 5 Tagesfortschritt: Tagesphasen-Farben = (Stunde ab der die Farbe gilt)
+# Entscheid 11.11.2026: tageszeitabhaengiger Verlauf (Stimmungsanzeige)
+DAY_PHASES = ((0,  COLOR_BOTH),        # Nacht 0-6 Uhr: blau
+              (6,  COLOR_ORANGE),      # Morgen 6-9 Uhr: orange
+              (9,  COLOR_BASE4_BOTH),  # Mittag 9-17 Uhr: gelb
+              (17, COLOR_HOURS),      # Abend 17-21 Uhr: rot
+              (21, COLOR_BOTH))        # Nacht 21-24 Uhr: blau
+
 # --- NTP ---
 NTP_SERVER   = "ch.pool.ntp.org"
 TIMEZONE     = "Europe/Zurich"
